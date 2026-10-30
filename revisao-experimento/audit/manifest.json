@@ -1,0 +1,33 @@
+{
+  "repository": "yhsww/sast-llm",
+  "review_branch": "review/organized-experiment-2026-10-30",
+  "base_branch": "main",
+  "experiment_conditions": [
+    {
+      "branch": "branch-1-direct-llm",
+      "context": "SAST alert only"
+    },
+    {
+      "branch": "branch-2-rag-cwe-wstg",
+      "context": "SAST alert + CWE/WSTG via RAG"
+    },
+    {
+      "branch": "branch-3-rag-code-context",
+      "context": "SAST alert + CWE/WSTG + local code snippet"
+    }
+  ],
+  "reference_alerts": 8,
+  "existing_results": {
+    "model": "GPT5.5",
+    "per_condition": 8,
+    "total": 24
+  },
+  "checks": {
+    "GT01_GT08_hashes_identical_across_three_received_snapshots": true,
+    "complete_results_for_Gemini": false,
+    "complete_results_for_Claude": false,
+    "complete_results_for_Kimi": false,
+    "branch3_snippet_to_alert_correspondence_requires_review": true
+  },
+  "note": "This manifest summarizes the received ZIP snapshots; it does not certify the technical correctness of generated test procedures."
+}
