@@ -34,3 +34,11 @@ Cada estratégia tem os resultados GT01–GT08, totalizando 24 arquivos de resul
 1. Comece pelos relatórios SAST em `relatorios-sast/`.
 2. Compare cada GT com os resultados correspondentes de cada estratégia.
 3. Registre divergências, alertas não cobertos, falsos positivos e problemas de contexto.
+
+## Auditoria dos demais provedores
+
+- [Status de Gemini, Kimi e Claude](./auditoria/outros_modelos/LEIA-ME.md)
+- [Matriz resumida de status por estratégia e provedor](./auditoria/matriz_status_resultados.csv)
+- [Notas metodológicas para revisão](./auditoria/NOTAS_METODOLOGIA.md)
+
+A branch contém os relatórios SAST e os 24 JSONs GPT-5.5 disponíveis. Os resultados reais de Gemini, Kimi e Claude não foram incluídos porque os arquivos JSON/ERROR correspondentes não estavam entre os arquivos recebidos; os logs são registrados como evidência auxiliar, não como resultados.
