@@ -37,6 +37,7 @@ Cada estratégia tem os resultados GT01–GT08, totalizando 24 arquivos de resul
 
 ## Auditoria dos demais provedores
 
+- [Ponto de controle para Rubens — resultados parciais Gemini, Claude e Kimi](./auditoria/PONTO_DE_CONTROLE_PARA_RUBENS.md)
 - [Status de Gemini, Kimi e Claude](./auditoria/outros_modelos/LEIA-ME.md)
 - [Matriz resumida de status por estratégia e provedor](./auditoria/matriz_status_resultados.csv)
 - [Notas metodológicas para revisão](./auditoria/NOTAS_METODOLOGIA.md)
