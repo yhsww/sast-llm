@@ -36,3 +36,10 @@ Incluir `GT##_LLM.json` e `GT##_ERROR.txt` (se houver). Pode enviar um ZIP apena
 ## Credenciais — não publicar segredos
 
 Um log posterior registra a chave Claude configurada e um teste de autenticação bem-sucedido; isso não significa que os relatórios GT foram executados. Os logs também mostram chaves configuradas para Gemini e Kimi. Nunca colocar valores de chaves no GitHub; usar somente variáveis de ambiente no computador de execução.
+
+
+## Materiais adicionais arquivados nesta branch
+
+- [Evidências de execução disponíveis](./evidencias_execucao_modelos.md)
+- [Artefatos pendentes e como completar a revisão](./README_ARTEFATOS_PENDENTES.md)
+- [Script de execução multi-provedor disponível](./scripts/generate_all_reports.py) — cópia para inspeção; não foi executado nesta atualização.
