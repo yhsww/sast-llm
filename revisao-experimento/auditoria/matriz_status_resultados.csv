@@ -1,0 +1,25 @@
+estrategia,provedor,caso,status_nos_artefatos_deste_pacote,evidencia
+branch-1-direct-llm,GPT5.5,GT01,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-1-direct-llm,GPT5.5,GT02,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-1-direct-llm,GPT5.5,GT03,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-1-direct-llm,GPT5.5,GT04,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-1-direct-llm,GPT5.5,GT05,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-1-direct-llm,GPT5.5,GT06,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-1-direct-llm,GPT5.5,GT07,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-1-direct-llm,GPT5.5,GT08,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-2-rag-cwe-wstg,GPT5.5,GT01,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-2-rag-cwe-wstg,GPT5.5,GT02,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-2-rag-cwe-wstg,GPT5.5,GT03,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-2-rag-cwe-wstg,GPT5.5,GT04,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-2-rag-cwe-wstg,GPT5.5,GT05,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-2-rag-cwe-wstg,GPT5.5,GT06,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-2-rag-cwe-wstg,GPT5.5,GT07,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-2-rag-cwe-wstg,GPT5.5,GT08,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-3-rag-code-context,GPT5.5,GT01,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-3-rag-code-context,GPT5.5,GT02,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-3-rag-code-context,GPT5.5,GT03,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-3-rag-code-context,GPT5.5,GT04,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-3-rag-code-context,GPT5.5,GT05,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-3-rag-code-context,GPT5.5,GT06,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-3-rag-code-context,GPT5.5,GT07,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+branch-3-rag-code-context,GPT5.5,GT08,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
