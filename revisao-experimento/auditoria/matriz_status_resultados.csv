@@ -1,25 +1,16 @@
-estrategia,provedor,caso,status_nos_artefatos_deste_pacote,evidencia
-branch-1-direct-llm,GPT5.5,GT01,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-1-direct-llm,GPT5.5,GT02,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-1-direct-llm,GPT5.5,GT03,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-1-direct-llm,GPT5.5,GT04,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-1-direct-llm,GPT5.5,GT05,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-1-direct-llm,GPT5.5,GT06,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-1-direct-llm,GPT5.5,GT07,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-1-direct-llm,GPT5.5,GT08,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-2-rag-cwe-wstg,GPT5.5,GT01,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-2-rag-cwe-wstg,GPT5.5,GT02,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-2-rag-cwe-wstg,GPT5.5,GT03,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-2-rag-cwe-wstg,GPT5.5,GT04,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-2-rag-cwe-wstg,GPT5.5,GT05,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-2-rag-cwe-wstg,GPT5.5,GT06,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-2-rag-cwe-wstg,GPT5.5,GT07,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-2-rag-cwe-wstg,GPT5.5,GT08,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-3-rag-code-context,GPT5.5,GT01,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-3-rag-code-context,GPT5.5,GT02,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-3-rag-code-context,GPT5.5,GT03,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-3-rag-code-context,GPT5.5,GT04,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-3-rag-code-context,GPT5.5,GT05,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-3-rag-code-context,GPT5.5,GT06,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-3-rag-code-context,GPT5.5,GT07,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
-branch-3-rag-code-context,GPT5.5,GT08,JSON incluído,8 JSONs por estratégia GPT-5.5 presentes
+estrategia,provedor,casos,status_nos_artefatos_deste_pacote,evidencia
+branch-1-direct-llm,GPT5.5,GT01-GT08,8 JSONs incluídos,24 resultados GPT-5.5 estão presentes no total nas três estratégias
+branch-2-rag-cwe-wstg,GPT5.5,GT01-GT08,8 JSONs incluídos,24 resultados GPT-5.5 estão presentes no total nas três estratégias
+branch-3-rag-code-context,GPT5.5,GT01-GT08,8 JSONs incluídos,24 resultados GPT-5.5 estão presentes no total nas três estratégias
+branch-1-direct-llm,Gemini,GT01 e GT03,JSONs indicados em logs locais mas ausentes deste pacote,Conteúdo real dos JSONs não foi disponibilizado para inclusão ou validação
+branch-1-direct-llm,Gemini,GT02 GT04 GT05,Erro indicado nos logs; arquivos de erro ausentes,Logs locais sem os arquivos de erro originais
+branch-1-direct-llm,Gemini,GT06-GT08,Sem JSON confirmado nos logs disponíveis,Não presumir execução concluída
+branch-2-rag-cwe-wstg,Gemini,GT01-GT08,JSON existente indicado por simulação mas arquivos ausentes,Logs disseram JSON already exists; não é confirmação do conteúdo nem inclusão dos arquivos
+branch-3-rag-code-context,Gemini,GT01-GT02,JSONs indicados em logs locais mas ausentes deste pacote,Conteúdo real dos JSONs não foi disponibilizado para inclusão ou validação
+branch-3-rag-code-context,Gemini,GT03-GT08,Erro indicado nos logs; arquivos de erro ausentes,Logs locais indicam arquivos de erro para esses casos
+branch-1-direct-llm,Kimi,GT01-GT08,Falha live indicada nos logs; arquivos de erro ausentes,Execução all sem --execute era simulação e não conta como resultado real
+branch-2-rag-cwe-wstg,Kimi,GT01-GT08,Sem evidência suficiente de resultados live,Logs disponíveis não comprovam resultados completos
+branch-3-rag-code-context,Kimi,GT01-GT08,Sem evidência suficiente de resultados live,Logs disponíveis não comprovam resultados completos
+branch-1-direct-llm,Claude,GT01-GT08,Falha live indicada nos logs; arquivos de erro ausentes,Nenhum JSON real de resultado foi fornecido
+branch-2-rag-cwe-wstg,Claude,GT01-GT08,Sem evidência suficiente de resultados live,Logs disponíveis não comprovam resultados completos
+branch-3-rag-code-context,Claude,GT01-GT08,Sem evidência suficiente de resultados live,Logs disponíveis não comprovam resultados completos
