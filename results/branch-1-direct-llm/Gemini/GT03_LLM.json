@@ -1,0 +1,33 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S6268",
+        "arquivo": "frontend/src/app/about/about.component.ts",
+        "linha": 119,
+        "severidade_sast": "CRITICAL",
+        "regra": "typescript:S6268",
+        "categoria": "Cross-Site Scripting (XSS)"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-79",
+        "owasp_top_10": "A03:2021-Injection",
+        "wstg": "WSTG-CLNT-01",
+        "justificativa": "O uso de metodos como DomSanitizer.bypassSecurityTrust desabilita o mecanismo padrao de protecao contra XSS do Angular. Caso o conteudo envolva dados dinamicos ou configuracoes externas nao tratadas, pode permitir a execucao arbitraria de scripts no navegador do cliente."
+      },
+      "descricao_tecnica": "A regra typescript:S6268 sinaliza a desativacao manual da sanitizacao nativa do Angular no arquivo about.component.ts na linha 119 via DomSanitizer, criando uma superficie de ataque para Cross-Site Scripting (XSS) caso o valor confiado contenha dados influenciados pelo usuario.",
+      "pre_condicoes_para_verificacao": [
+        "Ambiente com codigo-fonte frontend/src/app/about/about.component.ts disponivel para inspecao",
+        "Ambiente de testes do frontend configurado para execucao local"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "O dado processado por DomSanitizer e derivado de fontes externas, parametros ou respostas de API sem validacao ou sanitizacao secundaria adequada.",
+          "resultado_esperado_falso_positivo": "O dado passado para o metodo e uma constante imutavel totalmente hardcoded ou passa por biblioteca de higienizacao robusta antes do bypass."
+        }
+      ]
+    }
+  ]
+}

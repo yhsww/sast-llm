@@ -1,0 +1,51 @@
+﻿{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "6829619d-3476-446f-8922-d2cb10e8a2c7",
+        "arquivo": "juice-shop:server.ts",
+        "linha": 182,
+        "severidade_sast": "MINOR",
+        "regra": "typescript:S5122",
+        "categoria": "Security Hotspot - CORS / Security Misconfiguration"
+      },
+      "classificacao": {
+        "veredicto": "A verificar",
+        "cwe": "CWE-942: Permissive Cross-domain Policy with Untrusted Domains",
+        "owasp_top_10": "OWASP Top 10 2021 A05: Security Misconfiguration",
+        "wstg": "WSTG-CLNT-07: Testing Cross Origin Resource Sharing",
+        "justificativa": "O alerta ├® um Security Hotspot indicando uso de CORS em server.ts:182. Aconfirma├º├úo depende da configura├º├úo efetiva em tempo de execu├º├úo: ser├í verdadeiro positivo se a aplica├º├úo permitir origens arbitr├írias ou n├úo confi├íveis, especialmente com credenciais e endpoints sens├¡veis; ser├í falso positivo ou risco aceito se houver allowlist restritiva, aus├¬ncia de credenciais e/ou apenas recursos p├║blicos expostos."
+      },
+      "descricao_tecnica": "A regra typescript:S5122 sinaliza a habilita├º├úo de CORS. CORS mal configurado pode permitir que um site controlado por atacante leia respostas da aplica├º├úo a partir do navegador da v├¡tima quando a aplica├º├úo retorna cabe├ºalhos permissivos como Access-Control-Allow-Origin refletindo qualquer Origin ou '*' combinado indevidamente com fluxos autenticados. A verifica├º├úodeve confirmar se a linha 182 habilita CORS de forma global/permissiva, se h├í lista de origens confi├íveis, se Access-Control-Allow-Credentials ├® usado, e se endpoints com dados sens├¡veis podem ser acessados a partir de uma origem n├úo confi├ível.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao arquivo juice-shop:server.ts e ├á configura├º├úo relacionada a CORS no projeto.",
+        "Aplica├º├úo executando em ambiente controlado de teste ou homologa├º├úo.",
+        "Ferramenta para enviar requisi├º├Áes HTTP com cabe├ºalho Origin customizado, como curl, BurpSuite, Postman ou navegador com p├ígina de teste.",
+        "Conta de teste autenticada, se a aplica├º├úo possuir endpoints protegidos por sess├úo/cookie/token.",
+        "Identifica├º├úo de ao menos um endpoint que retorne dados sens├¡veis ou espec├¡ficos do usu├írio para validar impacto."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "O c├│digo em server.ts:182 habilita CORS de forma global/permissiva, por exemplo usando cors() sem restri├º├Áes, origin: '*', reflex├úo din├ómica de Origin sem valida├º├úo, regex ampla, ou credentials: true com origens n├úo confi├íveis.",
+          "resultado_esperado_falso_positivo": "O c├│digo usa uma allowlist expl├¡cita de origens confi├íveis, valida exatamente scheme/host/porta, n├úo reflete qualquer Origin recebido e n├úo habilita credenciais para origens n├úo confi├íveis."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Ao enviar requisi├º├úo HTTP/OPTIONS ou GET com Origin como https://evil.example, a aplica├º├úo responde com Access-Control-Allow-Origin: https://evil.example ou '*'. Se houver autentica├º├úo por cookie/token em navegador, tamb├®m retorna Access-Control-Allow-Credentials: true para origem n├úo confi├ível.",
+          "resultado_esperado_falso_positivo": "Ao enviar requisi├º├úo com Origin n├úo confi├ível, a resposta n├úo cont├®m Access-Control-Allow-Origin para essa origem, n├úo retorna Access-Control-Allow-Credentials: true, ou bloqueia a origem conforme a allowlist configurada."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Com uma sess├úo v├ílida da v├¡tima ou credenciais equivalentes em ambiente de teste, uma p├ígina hospedada em origem n├úo confi├ível consegue fazer fetch/XMLHttpRequest para endpoint sens├¡vel da aplica├º├úo e ler o conte├║do da resposta devido aos cabe├ºalhos CORS permissivos.",
+          "resultado_esperado_falso_positivo": "Um endpoint autenticado ou sens├¡vel n├úo pode ser lido por JavaScript executado em origem n├úo confi├ível; o navegador bloqueia a leitura por CORS ou a resposta n├úo cont├®m dados sens├¡veis acess├¡veis."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "A configura├º├úo permissiva aplica-se a endpoints que retornam dados de usu├írio, informa├º├Áes administrativas, tokens, pedidos, perfil, carrinho ouqualquer informa├º├úo sens├¡vel, tornando poss├¡vel exposi├º├úo cross-origin.",
+          "resultado_esperado_falso_positivo": "A configura├º├úo permissiva, se existente, aplica-sesomente a endpoints p├║blicos sem dados sens├¡veis e sem credenciais, com justificativa documentada e controles compensat├│rios adequados."
+        }
+      ]
+    }
+  ]
+}

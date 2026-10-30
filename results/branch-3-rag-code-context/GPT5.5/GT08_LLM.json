@@ -1,0 +1,50 @@
+﻿{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S6437",
+        "arquivo": "juice-shop:lib/insecurity.ts",
+        "linha": 44,
+        "severidade_sast": "BLOCKER",
+        "regra": "Revoke and change this password, as it is compromised.",
+        "categoria": "Hardcoded secret / Cryptographic key management"
+      },
+      "classificacao": {
+        "veredicto": "Potencial verdadeiro positivo",
+        "cwe": "CWE-798: Use of Hard-coded Credentials",
+        "owasp_top_10": "OWASP Top 10 2021 A02: Cryptographic Failures",
+        "wstg": "WSTG-CRYP-04 / WSTG-ATHN-07",
+        "justificativa": "O alerta aponta um valor secreto literal no c├│digo-fonte usado como chave de HMAC: crypto.createHmac('sha256', 'pa4qacea4VK9t9nGv7yZtwmj'). Embora a refer├¬ncia fornecida no achado cite CWE-620/CWE-640, o trecho evidenciado caracteriza principalmente credencial/segredo hardcoded. Deve ser confirmado se essa chave ├® usada em contexto sens├¡vel, como assinatura ou valida├º├úo de tokens, sess├Áes, links de recupera├º├úo ou outros artefatos de autentica├º├úo/integridade."
+      },
+      "descricao_tecnica": "Foi identificado um segredo fixo no arquivo lib/insecurity.ts, linha 44, utilizado como chave em crypto.createHmac com SHA-256. Chaves HMAC devem ser tratadas como segredos criptogr├íficos e n├úo devem permanecer hardcoded em reposit├│rios, imagens, pacotes distribu├¡dos ou c├│digo versionado. Caso esse valor seja usado para assinar dados de autentica├º├úo, tokens, cookies, URLs ou mecanismos de recupera├º├úo, qualquer pessoa com acesso ao c├│digo-fonte ou ao artefato compilado pode reproduzir assinaturas v├ílidas, forjar dados protegidos por HMAC ou comprometer a integridade/autenticidade do fluxo dependente dessa chave. A corre├º├úo esperada envolve revogar/substituir a chave, remov├¬-la do c├│digo e carreg├í-la por mecanismo seguro de configura├º├úo/secret management.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao reposit├│rio ou artefato contendo juice-shop:lib/insecurity.ts na vers├úo analisada pelo SonarQube.",
+        "Ambiente local ou de homologa├º├úo dispon├¡vel para executar a aplica├º├úo, caso seja necess├írio validar impacto din├ómico.",
+        "Permiss├úo para pesquisar refer├¬ncias ├á fun├º├úo exportada hmac no c├│digo-fonte.",
+        "Garantia de que qualquer teste de assinatura/forja seja realizado apenas em ambiente autorizado e com dados de teste."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Confirmar no arquivo lib/insecurity.ts, linha44, a presen├ºa do literal 'pa4qacea4VK9t9nGv7yZtwmj' como segundo argumento de crypto.createHmac('sha256', ...).",
+          "resultado_esperado_falso_positivo": "O valor literal n├úo existe no branch/artefato analisado, est├í presente apenas em c├│digo de teste n├úo implantado, ou n├úo ├® utilizado em nenhum fluxo execut├ível ou sens├¡vel."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Identificar chamadas ├á fun├º├úo exportada hmac e confirmar que ela participa de um fluxo sens├¡vel, por exemplo assinatura/verifica├º├úo de tokens, cookies, links, par├ómetros, senhas tempor├írias ou dados de sess├úo.",
+          "resultado_esperado_falso_positivo": "A fun├º├úo hmac n├úo ├® referenciada por fluxos de autentica├º├úo, autoriza├º├úo, assinatura, valida├º├úo de integridade, recupera├º├úo de senha, gera├º├úo de token ou prote├º├úo de dados; ou ├® usada apenas em testes isolados sem exposi├º├úo em ambiente real."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Confirmar que o mesmo segredo hardcoded ├® empacotado ou executado em runtime, sem substitui├º├úo por vari├ível de ambiente ou servi├ºo de gerenciamento de segredos.",
+          "resultado_esperado_falso_positivo": "A aplica├º├úo em ambiente implantado utiliza uma chave externa segura, por vari├ível de ambiente, vault ou secret manager, e o literal apontado n├úo ├® empacotado nem usado em runtime."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Em ambiente controlado, gerar uma assinatura HMAC-SHA256 com o valor hardcoded para um payload aceito pelo fluxo identificado e demonstrar que aaplica├º├úo aceita o artefato assinado como v├ílido.",
+          "resultado_esperado_falso_positivo": "Mesmo conhecendo o literal, n├úo ├® poss├¡vel produzir artefatos aceitos pela aplica├º├úo porque h├í outro controle secreto independente, rota├º├úo por ambiente, valida├º├úo server-side adicional ou o HMAC n├úo ├® usado para decis├úo de seguran├ºa."
+        }
+      ]
+    }
+  ]
+}

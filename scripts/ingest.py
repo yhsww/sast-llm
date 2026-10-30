@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import chromadb
-from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
+from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
 from backend.config import settings
 
 CWE_DIR = Path("data/knowledge_base/cwe")
@@ -66,10 +66,7 @@ def main():
     parser.add_argument("--reset", action="store_true", help="Drop collections before ingesting")
     args = parser.parse_args()
 
-    embed_fn = OpenAIEmbeddingFunction(
-        api_key=settings.openai_api_key,
-        model_name=settings.openai_embedding_model,
-    )
+    embed_fn = DefaultEmbeddingFunction()
     client = chromadb.PersistentClient(path=settings.chroma_persist_path)
 
     cwe_col = _get_or_create(client, settings.chroma_collection_cwe, embed_fn, args.reset)

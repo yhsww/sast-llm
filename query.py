@@ -5,7 +5,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from backend.schemas import SonarReport, SecurityTestCase, RetrievedDocument
+from backend.schemas import SonarReport, SecurityTestCase
+from backend.retrieved_doc import RetrievedDoc
 from backend.chroma_service import query_knowledge
 from backend.openai_service import generate_test_cases
 
@@ -37,10 +38,6 @@ def main() -> None:
         test_cases.append(
             SecurityTestCase(
                 **llm_tc.model_dump(),
-                retrieved_context=[
-                    RetrievedDocument(id=d.id, source=d.source, title=d.title)
-                    for d in docs
-                ],
             )
         )
 

@@ -1,0 +1,50 @@
+﻿{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "fe05cc96-7ed2-4ea0-9c61-48e5a0304238",
+        "arquivo": "juice-shop:lib/insecurity.ts",
+        "linha": 44,
+        "severidade_sast": "BLOCKER",
+        "regra": "typescript:S6437",
+        "categoria": "Credencial hardcoded / senha comprometida"
+      },
+      "classificacao": {
+        "veredicto": "A verificar",
+        "cwe": "CWE-798 - Use of Hard-coded Credentials",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-ATHN-02 - Testing for Default Credentials",
+        "justificativa": "O alerta indica a presen├ºa de uma senha comprometida em texto claro no c├│digo-fonte. Se o valor na linha indicada for uma credencial real, reutiliz├ível ou utilizada pela aplica├º├úo em ambiente execut├ível, trata-se de verdadeiro positivo, pois exp├Áe segredo sens├¡vel e exige revoga├º├úo/rota├º├úo. Pode ser falso positivo apenas se o valor for comprovadamente fict├¡cio, n├úo funcional, usado exclusivamente em teste/demonstra├º├úo e ausente de qualquer ambiente produtivo."
+      },
+      "descricao_tecnica": "A regra typescript:S6437 reporta uma senha comprometida ou sens├¡vel hardcoded no arquivo lib/insecurity.ts, linha 44. A verifica├º├úo deve confirmar se h├í um literal de senha/credencial no c├│digo, se ele ├® utilizado por fluxos de autentica├º├úo, inicializa├º├úo de usu├írios,configura├º├úo de servi├ºos ou outras rotinas executadas, e se o segredo precisa ser revogado e substitu├¡do por mecanismo seguro de configura├º├úo, como vari├ível de ambiente, cofre de segredos ou secretmanager.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso de leitura ao reposit├│rio ou ao arquivo juice-shop:lib/insecurity.ts na vers├úo analisada pelo SonarQube.",
+        "Acesso ao resultado completo do SonarQube para confirmar a linha 44 e o trecho sinalizado, sem expor a senha em registros desnecess├írios.",
+        "Capacidade de pesquisar refer├¬ncias ao valor ou ├á constante no c├│digo-fonte.",
+        "Conhecimento do escopo de implanta├º├úo da aplica├º├úo para diferenciar c├│digo produtivo, exemplo, teste ou fixture."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A linha 44 cont├®m uma senha ou valor de credencial em texto claro no c├│digo-fonte.",
+          "resultado_esperado_falso_positivo": "A linha 44 n├úo cont├®m senha, token, chave ou valorsens├¡vel real; ou cont├®m apenas valor de exemplo inequivocamente fict├¡cio, sem capacidade de autentica├º├úo e n├úo utilizado por nenhum fluxo execut├ível."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "A credencial ├® referenciada por c├│digo execut├ível, por exemplo em autentica├º├úo, cria├º├úo de usu├írio, configura├º├úo de servi├ºo, seed de dados ou compara├º├úo de senha.",
+          "resultado_esperado_falso_positivo": "A busca por refer├¬ncias mostra que o valor n├úo ├® importado, carregado, usado em autentica├º├úo, provisionamento de usu├írios, conex├úo a servi├ºos ou configura├º├úo em qualquer ambiente execut├ível."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "O arquivo faz parte do artefato da aplica├º├úo ou do reposit├│rio principal e pode ser acessado por desenvolvedores, pipelines, builds ou ambientesimplantados, expondo a senha.",
+          "resultado_esperado_falso_positivo": "H├í evid├¬ncia documentada de que o arquivo/valor ├® restrito a teste local, demonstra├º├úo isolada ou fixture sem implanta├º├úo, sem acesso a sistemas reais e sem reutiliza├º├úo em ambientes compartilhados."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "A senha precisa ser considerada comprometida:deve ser revogada/alterada, removida do hist├│rico ou tratada conforme processo de gest├úo de segredos, e substitu├¡da por refer├¬ncia segura fora do c├│digo.",
+          "resultado_esperado_falso_positivo": "N├úo h├í necessidade de rota├º├úo porque o valor nuncafoi segredo real, nunca foi v├ílido e n├úo autentica contra nenhum sistema ou usu├írio."
+        }
+      ]
+    }
+  ]
+}

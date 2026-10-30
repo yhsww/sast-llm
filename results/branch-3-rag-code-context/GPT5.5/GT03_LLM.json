@@ -1,0 +1,50 @@
+﻿{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S6268",
+        "arquivo": "frontend/src/app/about/about.component.ts",
+        "linha": 119,
+        "severidade_sast": "CRITICAL",
+        "regra": "Make sure disabling Angular built-in sanitization is safe here.",
+        "categoria": "Cross-Site Scripting (XSS) / Angular sanitizer bypass"
+      },
+      "classificacao": {
+        "veredicto": "A verificar",
+        "cwe": "CWE-83, CWE-87",
+        "owasp_top_10": "A03:2021 - Injection / Cross-Site Scripting (XSS)",
+        "wstg": "WSTG-CLNT-15",
+        "justificativa": "O c├│digo concatena feedbacks[i].comment em uma string HTML e em seguida chama DomSanitizer.bypassSecurityTrustHtml, desabilitando a sanitiza├º├úo nativa do Angular antes de repassar o conte├║do para galleryRef.addImage. O veredicto depende da confirma├º├úo de que comment ├® control├ível por usu├írio/atacante e renderizado como HTML no DOM. Ser├í verdadeiro positivo se payloads HTML com atributos/eventos ou URIs perigosas forem preservados e executados; ser├í falso positivo se houver sanitiza├º├úo/allowlist efetiva antes desse ponto ou se o valor nunca for renderizado como HTML execut├ível."
+      },
+      "descricao_tecnica": "A chamada a this.sanitizer.bypassSecurityTrustHtml(feedbacks[i].comment) marca explicitamente o conte├║do como HTML confi├ível e impede que o Angular remova elementos, atributos de evento, URLs javascript: ou outras constru├º├Áes perigosas. Como o valor original de feedbacks[i].comment ├® usado dentro de uma marca├º├úo HTML e depois entregue ao componente de galeria, um coment├írio malicioso persistido ou retornado pela API de feedbacks pode resultar em XSS no cliente quando a p├ígina About renderizar a galeria/legenda.",
+      "pre_condicoes_para_verificacao": [
+        "Executar a aplica├º├úo em ambiente de teste/homologa├º├úo, sem usar dados de produ├º├úo.",
+        "Ter acesso ao fluxo funcional ou API que cria/retorna feedbacks consumidos pela p├ígina About.",
+        "Ter um navegador com DevTools habilitado para inspecionar DOM, console e requisi├º├Áes de rede.",
+        "Usar payloads inofensivos de prova de conceito que apenas definam uma vari├ível global ou exibam um marcador controlado, sem exfiltrar dados."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Confirmar que feedbacks[i].comment vem de umafonte control├ível pelo usu├írio, como formul├írio/API de feedback, banco de dados ou resposta intercept├ível, e chega ao componente about.component.ts sem uma allowlist de HTML segura.",
+          "resultado_esperado_falso_positivo": "O campo comment n├úo ├® control├ível por usu├írios n├úoconfi├íveis, ou h├í sanitiza├º├úo/normaliza├º├úo robusta no backend antes de o dado ser retornado para ofrontend, com remo├º├úo de tags, atributos de evento e URIs perigosas."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Em ambiente de teste, inserir um coment├írio de feedback com payload controlado, por exemplo <img src=x onerror=\"window.__s6268_xss=1\"> ou <svgonload=\"window.__s6268_xss=1\"></svg>, usando o fluxo funcional de cria├º├úo de feedback ou, se necess├írio para triagem, interceptando a resposta da API de feedbacks para conter esse valor.",
+          "resultado_esperado_falso_positivo": "Ao cadastrar ou injetar o payload, a aplica├º├úo rejeita a entrada ou armazena/retorna o conte├║do codificado/sanitizado, por exemplo removendo onerror/onload e mantendo apenas texto inofensivo."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Acessar a p├ígina About e acionar a visualiza├º├úo da galeria/legenda que usa args: feedbacks[i].comment. O payload ├® inserido como HTML confi├ível e o evento executa, definindo window.__s6268_xss=1 ou produzindo outro indicador controlado de execu├º├úo JavaScript.",
+          "resultado_esperado_falso_positivo": "Ao acessar a p├ígina About, o payload ├® exibido como texto, removido do DOM ou renderizado sem atributos/eventos perigosos; window.__s6268_xss permanece indefinido."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "A inspe├º├úo do DOM nas ferramentas de desenvolvedor mostra o payload preservado como HTML ativo dentro da legenda/galeria, com atributos de evento ou outra sintaxe perigosa mantida, comprovando que a sanitiza├º├úo do Angular foi efetivamente contornada.",
+          "resultado_esperado_falso_positivo": "A inspe├º├úo do DOM mostra que o conte├║do foi codificado ou que atributos como onerror/onload e href=\"javascript:\" foram removidos antes da renderiza├º├úo, apesar da chamada a bypassSecurityTrustHtml."
+        }
+      ]
+    }
+  ]
+}

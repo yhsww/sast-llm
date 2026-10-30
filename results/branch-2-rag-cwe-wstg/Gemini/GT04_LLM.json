@@ -1,0 +1,34 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S7790",
+        "arquivo": "juice-shop:routes/userProfile.ts",
+        "linha": 87,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S7790",
+        "categoria": "Security Vulnerability"
+      },
+      "classificacao": {
+        "veredicto": "A Confirmar",
+        "cwe": "CWE-1336",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-18",
+        "justificativa": "A regra typescript:S7790 aponta para o uso de templates construídos ou avaliados dinamicamente. Caso dados controlados pelo usuário (como nome, bio ou outros atributos de perfil) sejam concatenados diretamente na string de template antes da renderização pelo mecanismo de template (por exemplo, Pug ou outro renderizador em Node.js), pode ocorrer Server-Side Template Injection (SSTI)."
+      },
+      "descricao_tecnica": "A rota routes/userProfile.ts parece manipular a geracao do perfil de usuario utilizando compilacao ou renderizacao dinâmica de template. Se a string do template incorpora variáveis de entrada nao sanitizadas sem o uso de passagem estruturada de contexto (dados desacoplados do layout do template), expressoes de template podem ser interpretadas e avaliadas pelo motor no servidor.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao codigo-fonte completo da funcao em routes/userProfile.ts para analise do fluxo de dados.",
+        "Ambiente de execucao local ou de desenvolvimento com a aplicacao em execucao.",
+        "Conta de usuario autenticada para interagir com o endpoint de perfil de usuario."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A inspecao do codigo-fonte confirma que valores enviados pelo usuario sao concatenados diretamente na string de definicao do template, permitindo que delimitadores de template sejam interpretados e avaliados dinamicamente pelo renderizador.",
+          "resultado_esperado_falso_positivo": "O template e estatico e os dados do usuario sao transmitidos exclusivamente via objeto de contexto (locals), ou a funcao implementa sanitizacao estrita que neutraliza sintaxe de template antes da compilacao."
+        }
+      ]
+    }
+  ]
+}

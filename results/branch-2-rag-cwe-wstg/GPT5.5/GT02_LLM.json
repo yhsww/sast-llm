@@ -1,0 +1,55 @@
+﻿{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "Finding 1",
+        "arquivo": "juice-shop:lib/insecurity.ts",
+        "linha": 23,
+        "severidade_sast": "BLOCKER",
+        "regra": "secrets:S6706",
+        "categoria": "Secrets / Hardcoded Private Key"
+      },
+      "classificacao": {
+        "veredicto": "A verificar",
+        "cwe": "CWE-1291, CWE-324",
+        "owasp_top_10": "A02:2021 - Cryptographic Failures",
+        "wstg": "WSTG-CRYP-04",
+        "justificativa": "O alerta indica presen├ºa de uma chave privada no c├│digo-fonte em lib/insecurity.ts. Uma chave privada versionada ou empacotada com a aplica├º├úo deve ser tratada como comprometida, pois qualquer pessoa com acesso ao reposit├│rio, artefato ou imagem de deploy pode reutiliz├í-la para assinar, descriptografar ou se autenticar conforme o uso da chave. A confirma├º├úo depende de validar se o material ├® uma chave privada real e se ├® utilizado pela aplica├º├úo fora de um contexto puramente demonstrativo/teste."
+      },
+      "descricao_tecnica": "Verificar se o arquivo juice-shop:lib/insecurity.ts, linha 23, cont├®m material de chave privada hardcoded, por exemplo bloco PEM como -----BEGIN PRIVATE KEY-----, -----BEGIN RSA PRIVATE KEY----- ou equivalente, e se essa chave ├® usada pela aplica├º├úo para opera├º├Áes criptogr├íficas ou de autentica├º├úo. Caso a chave seja real, esteja no hist├│rico do reposit├│rio ou seja inclu├¡da em builds/deploys, o achado deve ser tratado como verdadeiro positivo, exigindo remo├º├úo do c├│digo, rota├º├úo/revoga├º├úo da chave e substitui├º├úo por mecanismo seguro de gest├úo de segredos.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao reposit├│rio contendo o arquivo lib/insecurity.ts e ├á linha indicada pelo SonarQube.",
+        "Permiss├úo para pesquisar refer├¬ncias da chave no c├│digo, hist├│rico Git e artefatos de build/deploy.",
+        "Conhecimento do ambiente em que a aplica├º├úo ├® executada para diferenciar c├│digo de teste, demonstra├º├úo e produ├º├úo.",
+        "Ferramentas locais para inspe├º├úo de chave, como git grep, git log e openssl, quando aplic├ível."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A linha 23 cont├®m material compat├¡vel com chave privada, como um bloco PEM ou valor codificado que representa uma chave privada.",
+          "resultado_esperado_falso_positivo": "A linha apontada n├úo cont├®m chave privada real, mas apenas texto inofensivo, placeholder, documenta├º├úo, fixture de teste isolada ou exemplo n├úo empacotado e n├úo usado em execu├º├úo."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "A chave ├® importada ou referenciada por c├│digo executado pela aplica├º├úo, por exemplo para assinatura de tokens, criptografia, descriptografia, autentica├º├úo, TLS ou outra opera├º├úo sens├¡vel.",
+          "resultado_esperado_falso_positivo": "N├úo h├í refer├¬ncia funcional ├á chave em fluxos da aplica├º├úo, ou ela est├í restrita a testes locais/dados fict├¡cios n├úo publicados em artefatos de produ├º├úo."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "A chave est├í versionada no reposit├│rio, presente no hist├│rico Git, inclu├¡da em artefatos de build/deploy ou acess├¡vel a pessoas/sistemas al├®m dos operadores autorizados.",
+          "resultado_esperado_falso_positivo": "A chave n├úo aparece no hist├│rico relevante, n├úo ├® distribu├¡da em pacotes/imagens e n├úo ├® acess├¡vel a usu├írios, pipelines ou ambientes fora do contexto controlado de teste."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "├ë poss├¡vel associar a chave a um ativo real ou fluxo de seguran├ºa, e seu conhecimento permitiria forjar assinatura, gerar token v├ílido, descriptografar dados, autenticar-se ou comprometer integridade/confidencialidade.",
+          "resultado_esperado_falso_positivo": "N├úo existe servi├ºo, certificado, token, JWT, cliente OAuth, integra├º├úo ou ambiente que aceite artefatos assinados ou autenticados por essa chave."
+        },
+        {
+          "passo": "Passo 05",
+          "resultado_esperado_verdadeiro_positivo": "N├úo h├í evid├¬ncia de dummy seguro, ou a chave protege qualquer ambiente/ativo real; portanto deve ser revogada/rotacionada, removida do c├│digo e substitu├¡da por segredo gerenciado em cofre ou vari├ível segura.",
+          "resultado_esperado_falso_positivo": "H├í evid├¬ncia documentada de que a chave ├® dummy, foi criada apenas para aplica├º├úo deliberadamente vulner├ível/laborat├│rio, n├úo protege dados ou acessos reais e n├úo ├® usada em produ├º├úo."
+        }
+      ]
+    }
+  ]
+}

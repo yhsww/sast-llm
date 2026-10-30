@@ -1,0 +1,34 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "Finding 1",
+        "arquivo": "routes/b2bOrder.ts",
+        "linha": 23,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S1523",
+        "categoria": "Code Injection"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-94",
+        "owasp_top_10": "A03:2021-Injection",
+        "wstg": "WSTG-INPV-11",
+        "justificativa": "O endpoint recebe o dado orderLinesData diretamente do corpo da requisicao HTTP e o executa utilizando vm.runInContext associado ao safeEval. O uso de vm em Node.js nao providencia isolamento seguro de seguranca por design, permitindo escape de contexto e execucao arbitraria de codigo (RCE) via payloads de prototipo ou construtores de objetos."
+      },
+      "descricao_tecnica": "No arquivo routes/b2bOrder.ts, a funcao b2bOrder extrai body.orderLinesData sem sanitizacao previa e o insere no objeto sandbox compartilhado. Em seguida, vm.runInContext executa 'safeEval(orderLinesData)' dentro deste contexto. Como modulos de sandbox baseados em Node vm/safe-eval sao suscetiveis a escapes atraves de referencias a Function ou ao Object prototype, a passagem direta de dados controlados pelo usuario caracteriza uma vulnerabilidade critica de execucao dinamica de codigo.",
+      "pre_condicoes_para_verificacao": [
+        "Instancia da aplicacao em execucao em ambiente controlado de testes.",
+        "Acesso HTTP permitido a rota de pedidos B2B (/b2b-v2/orders ou endpoint correspondente).",
+        "Desafio rceChallenge ou rceOccupyChallenge habilitado na configuracao."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Ao enviar uma requisicao POST com payload sintatico simples em orderLinesData (por exemplo, expressoes aritmeticas ou operacoes que forcem timeout/erro no interpretador), a aplicacao processa a expressao e reflete o comportamento esperado de avaliacao dinamica (resposta 200 com calculo ou 503 com erro de timeout), confirmando que a entrada foi interpretada e executada pelo motor de script.",
+          "resultado_esperado_falso_positivo": "A aplicacao rejeita a entrada com validacao de schema estrito, trata o valor estritamente como string literal sem avaliar codigo ou lanca erro de tipo antes de invocar vm.runInContext."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+﻿{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "208dea17-f27a-4e83-b216-484334328793",
+        "arquivo": "juice-shop:routes/b2bOrder.ts",
+        "linha": 23,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S1523",
+        "categoria": "SECURITY_HOTSPOT"
+      },
+      "classificacao": {
+        "veredicto": "A verificar",
+        "cwe": "CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code ('Eval Injection')",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-11 - Testing for Code Injection",
+        "justificativa": "O alerta indica uso de inje├º├úo ou execu├º├úo din├ómica de c├│digo em TypeScript. Sem evid├¬ncia do fluxo de dados e das valida├º├Áes aplicadas, deve ser tratado como Security Hotspot a ser revisado: ser├í verdadeiro positivo se dados control├íveis pelo usu├írio ou por arquivos externos alcan├ºarem a execu├º├úo din├ómica sem valida├º├úo estrita; ser├í falso positivo se a express├úo executada for constante, controlada apenas pelo servidor ou suficientemente restringida por allowlist/sandbox segura."
+      },
+      "descricao_tecnica": "Revisar o uso de execu├º├úo din├ómica de c├│digo em `routes/b2bOrder.ts` na linha 23, associado ├á regra SonarQube `typescript:S1523`. A verifica├º├úo deve confirmar se a chamada din├ómica, como `eval`, `Function`, importa├º├úo din├ómica ou mecanismo equivalente, recebe direta ou indiretamente dados control├íveis pelo usu├írio. Caso receba, avaliar se existe valida├º├úo por allowlist, normaliza├º├úo, isolamento/sandbox e aus├¬ncia de concatena├º├úo de c├│digo execut├ível.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao reposit├│rio e ao arquivo `routes/b2bOrder.ts` na revis├úo analisada pelo SonarQube.",
+        "Capacidade de identificar o trecho exato da linha 23 e suas depend├¬ncias/chamadores.",
+        "Ambiente local ou de homologa├º├úo para executar a aplica├º├úo, sem uso de ambiente produtivo.",
+        "Conhecimento dos endpoints ou fluxos funcionais relacionados ├á rota B2B order.",
+        "Logs de aplica├º├úo habilitados para observar erros controlados durante os testes."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A linha 23 cont├®m execu├º├úo din├ómica de c├│digo, por exemplo `eval`, `new Function`, importa├º├úo din├ómica ou mecanismo equivalente, capaz de interpretar strings ou express├Áes em tempo de execu├º├úo.",
+          "resultado_esperado_falso_positivo": "A linha 23 n├úo cont├®m execu├º├úo din├ómica de c├│digo ou a execu├º├úo utiliza apenas valores constantes definidos no c├│digo-fonte, sem influ├¬ncia de requisi├º├Áes, arquivos enviados, banco de dados, vari├íveis de ambiente control├íveis externamente ou outros dados n├úo confi├íveis."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Existe fluxo de dados control├ível pelo usu├írio ou por fonte externa at├® a chamada de execu├º├úo din├ómica na linha 23, direta ou indiretamente por vari├íveis intermedi├írias.",
+          "resultado_esperado_falso_positivo": "A an├ílise de fluxo mostra que nenhum par├ómetro HTTP, corpo da requisi├º├úo, cabe├ºalho, cookie, arquivo carregado ou dado persistido por usu├írio alcan├ºa a chamada din├ómica."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "A entrada externa ├® concatenada, interpolada ou repassada para o c├│digo din├ómico sem allowlist estrita, permitindo alterar a express├úo/comando executado.",
+          "resultado_esperado_falso_positivo": "Quando h├í entrada externa, ela ├® convertida para um conjunto finito de op├º├Áes por allowlist estrita antes da execu├º├úo, sem concatena├º├úo de c├│digo, sem interpreta├º├úo de express├Áes arbitr├írias e com tratamento seguro de erros."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Em ambiente de teste, payloads inofensivos inseridos no ponto de entrada relacionado ├á rota conseguem modificar o comportamento da execu├º├úo, produzir erro caracter├¡stico de interpreta├º├úo de c├│digo ou executar express├úo n├úo prevista pela l├│gica funcional.",
+          "resultado_esperado_falso_positivo": "Em ambiente de teste, payloads inofensivos de quebra de sintaxe ou tentativa de express├úo arbitr├íria s├úo rejeitados, geram erro controlado e n├úo alteram o comportamento esperado da rota."
+        },
+        {
+          "passo": "Passo 05",
+          "resultado_esperado_verdadeiro_positivo": "N├úo h├í testes, valida├º├Áes ou controles suficientes para impedir execu├º├úo de c├│digo arbitr├írio, ou a explora├º├úo controlada confirma que a express├úo executada pode ser influenciada externamente.",
+          "resultado_esperado_falso_positivo": "A implementa├º├úo possui testes automatizados ou controles documentados demonstrando que apenas opera├º├Áes autorizadas s├úo executadas e que a chamada din├ómica n├úo processa c├│digo fornecido externamente."
+        }
+      ]
+    }
+  ]
+}

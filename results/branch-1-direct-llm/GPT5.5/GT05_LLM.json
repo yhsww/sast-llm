@@ -1,0 +1,50 @@
+﻿{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "87daf531-960b-43e8-a596-ca1b9293b5af",
+        "arquivo": "juice-shop:frontend/src/app/change-password/change-password.component.ts",
+        "linha": 92,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S5852",
+        "categoria": "Regular Expression Denial of Service (ReDoS)"
+      },
+      "classificacao": {
+        "veredicto": "A verificar",
+        "cwe": "CWE-1333: Inefficient Regular Expression Complexity",
+        "owasp_top_10": "OWASP Top 10 2021: A04 - Insecure Design",
+        "wstg": "WSTG-DENL-01 - Testing for Denial of Service",
+        "justificativa": "O alerta ├® um SECURITY_HOTSPOT do SonarQube para a regra typescript:S5852, que indica poss├¡vel express├úo regular com backtracking superlinear. A confirma├º├úo depende de verificar se a regex da linha 92 recebe entrada control├ível por usu├írio e se entradas especialmente constru├¡das conseguem causar consumo excessivo de CPU/tempo. Sem essa confirma├º├úo, o veredicto deve permanecer como pendente de valida├º├úo."
+      },
+      "descricao_tecnica": "A express├úo regular referenciada em frontend/src/app/change-password/change-password.component.ts, linha 92, deve ser avaliada quanto a risco de Regular Expression Denial of Service (ReDoS). Regexes com quantificadores aninhados, altern├óncias amb├¡guas ou grupos repetidos podem apresentar tempo de execu├º├úo superlinear/exponencial quando aplicadas a entradas longas e maliciosas, causando travamento da thread do navegador ou degrada├º├úo de desempenho da aplica├º├úo durante a valida├º├úo de troca de senha.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao c├│digo-fonte do arquivo frontend/src/app/change-password/change-password.component.ts na vers├úo analisada pelo SonarQube.",
+        "Ambiente local ou de teste da aplica├º├úo dispon├¡vel para executar o fluxo de troca de senha sem impactar usu├írios reais.",
+        "Permiss├úo para instrumentar ou medir tempo de execu├º├úo da valida├º├úo no navegador ou em testes unit├írios.",
+        "Identifica├º├úo exata da express├úo regular localizada na linha 92 e do campo/fluxo que a utiliza."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A regex da linha 92 cont├®m constru├º├úo suscet├¡vel a backtracking superlinear, como grupos repetidos com alternativas amb├¡guas, quantificadores aninhados ou padr├Áes capazes de consumir a mesma sequ├¬ncia de m├║ltiplas formas.",
+          "resultado_esperado_falso_positivo": "A regex da linha 92 n├úo possui padr├Áes amb├¡guos relevantes, como quantificadores aninhados ou altern├óncias com prefixos sobrepostos, ou o uso apontado pelo SAST n├úo corresponde a uma regex executada em fluxo real da aplica├º├úo."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "A regex ├® aplicada a dados control├íveis pelo usu├írio no fluxo de troca de senha, por exemplo campos de senha, confirma├º├úo de senha ou valida├º├úo associada, sem limite de tamanho efetivo antes da execu├º├úo da express├úo regular.",
+          "resultado_esperado_falso_positivo": "A entrada processada pela regex n├úo ├® control├ível por usu├írio externo ou ├® rigidamente limitada antes da avalia├º├úo por tamanho baixo e seguro, impedindo explora├º├úo pr├ítica de ReDoS."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Entradas longas especialmente constru├¡das para quase corresponder ao padr├úo provocam aumento desproporcional do tempo de valida├º├úo, alto uso de CPU ou congelamento da interface durante a troca de senha.",
+          "resultado_esperado_falso_positivo": "Ao testar em ambiente controlado com entradas longas e varia├º├Áes maliciosas compat├¡veis com a regex, o tempo de valida├º├úo cresce de forma aproximadamente linear e n├úo causa congelamento percept├¡vel do navegador nem uso anormal de CPU."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "N├úo h├í mitiga├º├úo antes da execu├º├úo da regex, e a corre├º├úo recomendada requer reescrever a express├úo para eliminar ambiguidade/backtracking ou aplicar valida├º├úo de tamanho estrita antes da avalia├º├úo.",
+          "resultado_esperado_falso_positivo": "H├í mitiga├º├úo efetiva, como limite de comprimento aplicado antes da regex, substitui├º├úo por regex linear segura, uso de valida├º├úo incremental simples ou outra l├│gica que impe├ºa backtracking excessivo."
+        }
+      ]
+    }
+  ]
+}
