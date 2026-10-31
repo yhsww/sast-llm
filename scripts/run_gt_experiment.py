@@ -13,75 +13,132 @@ from backend.chroma_service import query_knowledge
 from backend.openai_service import generate_test_cases
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Run GT01-GT08 using CWE + WSTG RAG."
+PROVIDERS = [
+    {
+        "key": "openai",
+        "name": "GPT",
+        "model_attr": "openai_chat_model",
+        "api_key_attr": "openai_api_key",
+    },
+    {
+        "key": "gemini",
+        "name": "Gemini",
+        "model_attr": "gemini_model",
+        "api_key_attr": "google_api_key",
+    },
+    {
+        "key": "kimi",
+        "name": "Kimi",
+        "model_attr": "kimi_model",
+        "api_key_attr": "kimi_api_key",
+    },
+    {
+        "key": "claude",
+        "name": "Claude",
+        "model_attr": "claude_model",
+        "api_key_attr": "anthropic_api_key",
+    },
+]
+
+
+def concise_error(exc):
+    message = str(exc).lower()
+
+    if any(term in message for term in (
+        "exceeded_current_quota_error",
+        "insufficient balance",
+        "quota exceeded",
+        "resource_exhausted",
+    )):
+        return "API quota or balance exceeded."
+
+    if "rate_limit" in message or "rate limit" in message:
+        return "API rate limit reached."
+
+    if any(term in message for term in (
+        "authentication",
+        "invalid api key",
+        "unauthorized",
+        "401",
+    )):
+        return "API authentication failed."
+
+    if any(term in message for term in (
+        "timeout",
+        "timed out",
+    )):
+        return "Request timed out."
+
+    if any(term in message for term in (
+        "503",
+        "service unavailable",
+        "overloaded",
+    )):
+        return "Provider temporarily unavailable."
+
+    if isinstance(exc, FileNotFoundError):
+        return "Required file not found."
+
+    if isinstance(exc, json.JSONDecodeError):
+        return "Invalid JSON."
+
+    if isinstance(exc, ValueError):
+        return "Invalid data or unexpected model output."
+
+    return f"{type(exc).__name__}: operation failed."
+
+
+def save_error(path, exc):
+    path.write_text(
+        f"Error type: {type(exc).__name__}\n"
+        f"Error message: {exc}\n",
+        encoding="utf-8",
     )
-    parser.add_argument(
-        "--execute",
-        action="store_true",
-        help="Authorize real API calls to the configured provider.",
-    )
-    args = parser.parse_args()
 
-    if settings.llm_provider.strip().lower() != "gemini":
-        raise SystemExit(
-            "Execution cancelled: LLM_PROVIDER is not set to gemini."
-        )
 
-    input_dir = ROOT / "data" / "sast_reports"
-    output_dir = (
-        ROOT / "results" / "branch-2-rag-cwe-wstg" / "Gemini"
-    )
+def run_provider(provider, reports, execute):
+    key = provider["key"]
+    name = provider["name"]
+    model = getattr(settings, provider["model_attr"], None)
+    api_key = getattr(settings, provider["api_key_attr"], None)
 
-    files = [
-        input_dir / f"GT{i:02d}.json"
-        for i in range(1, 9)
-    ]
+    output_dir = ROOT / "results" / name
 
-    missing = [
-        str(path)
-        for path in files
-        if not path.is_file()
-    ]
+    print(f"\n{'=' * 50}")
+    print(f"LLM: {name}")
+    print(f"Model: {model or 'not configured'}")
+    print(f"Output: results/{name}")
+    print(f"Mode: {'LIVE EXECUTION' if execute else 'SIMULATION'}")
+    print("=" * 50)
 
-    if missing:
-        raise SystemExit(
-            "Missing reports:\n" + "\n".join(missing)
-        )
+    if not model:
+        print(f"[SKIP] {name}: model is not configured.")
+        return {"ok": 0, "error": 0, "skip": len(reports)}
 
-    output_dir.mkdir(parents=True, exist_ok=True)
+    if execute and not api_key:
+        print(f"[SKIP] {name}: API key is not configured.")
+        return {"ok": 0, "error": 0, "skip": len(reports)}
 
-    print(f"Configured provider: Gemini ({settings.gemini_model})")
-    print(f"Output directory: {output_dir.relative_to(ROOT)}")
-    print(
-        f"Mode: {'LIVE EXECUTION' if args.execute else 'LOCAL SIMULATION'}"
-    )
+    try:
+        output_dir.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        print(f"[ERROR] {name}: cannot create output directory.")
+        return {"ok": 0, "error": len(reports), "skip": 0}
 
-    for report_path in files:
-        name = report_path.stem
-        output_path = output_dir / f"{name}_LLM.json"
-        error_path = output_dir / f"{name}_ERROR.txt"
+    totals = {"ok": 0, "error": 0, "skip": 0}
 
-        # Preserve results that have already been generated.
+    # generate_test_cases() selects its implementation using this setting.
+    settings.llm_provider = key
+
+    for report_path in reports:
+        gt = report_path.stem
+        output_path = output_dir / f"{gt}_LLM.json"
+        error_path = output_dir / f"{gt}_ERROR.txt"
+
         if output_path.exists():
-            print(f"{name}: skipped; result already exists.")
+            print(f"[SKIP] {gt}: result already exists.")
+            totals["skip"] += 1
             continue
-
-        # Allow previously failed GTs to be retried.
-        if error_path.exists():
-            if not args.execute:
-                print(
-                    f"{name}: previous error exists; "
-                    "eligible for retry during live execution."
-                )
-                continue
-
-            error_path.unlink()
-            print(
-                f"{name}: previous error record removed "
-                "to allow a retry."
-            )
 
         try:
             data = json.loads(
@@ -103,12 +160,12 @@ def main():
             ]
 
             print(
-                f"{name}: {len(report.issues)} finding(s); "
-                f"RAG context={retrieved_ids}"
+                f"[INFO] {gt}: {len(report.issues)} finding(s); "
+                f"RAG documents={retrieved_ids}"
             )
 
-            # Local simulation does not call the generative model.
-            if not args.execute:
+            if not execute:
+                totals["ok"] += 1
                 continue
 
             generated = generate_test_cases(
@@ -119,7 +176,7 @@ def main():
 
             if len(generated.test_cases) != len(report.issues):
                 raise ValueError(
-                    f"Expected {len(report.issues)} test case(s); "
+                    f"Expected {len(report.issues)} test cases; "
                     f"received {len(generated.test_cases)}."
                 )
 
@@ -129,41 +186,81 @@ def main():
                 indent=2,
             )
 
-            # Exclusive mode prevents overwriting existing results.
+            # Exclusive creation protects previously generated results.
             with output_path.open("x", encoding="utf-8") as file:
                 file.write(payload + "\n")
 
-            print(
-                f"{name}: result saved to {output_path.name}"
-            )
+            if error_path.exists():
+                error_path.unlink()
+
+            print(f"[OK] {gt}: result saved.")
+            totals["ok"] += 1
 
         except Exception as exc:
-            if not args.execute:
-                raise
+            print(f"[ERROR] {gt}: {concise_error(exc)}")
+            totals["error"] += 1
 
-            message = f"{type(exc).__name__}: {exc}\n"
+            if execute:
+                try:
+                    save_error(error_path, exc)
+                except OSError:
+                    print(f"[WARN] {gt}: could not save error log.")
 
-            try:
-                with error_path.open("x", encoding="utf-8") as file:
-                    file.write(message)
+    print(
+        f"[SUMMARY] {name}: "
+        f"OK={totals['ok']}, "
+        f"ERROR={totals['error']}, "
+        f"SKIPPED={totals['skip']}"
+    )
 
-                print(
-                    f"{name}: error recorded in {error_path.name}"
-                )
+    return totals
 
-            except FileExistsError:
-                print(
-                    f"{name}: failed; error record already exists."
-                )
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Run GT01-GT08 across all configured LLM providers."
+    )
+    parser.add_argument(
+        "--execute",
+        action="store_true",
+        help="Enable real LLM API calls.",
+    )
+    args = parser.parse_args()
+
+    input_dir = ROOT / "data" / "sast_reports"
+    reports = [
+        input_dir / f"GT{i:02d}.json"
+        for i in range(1, 9)
+    ]
+
+    missing = [p.name for p in reports if not p.is_file()]
+
+    if missing:
+        raise SystemExit(
+            f"[ERROR] Missing input reports: {', '.join(missing)}."
+        )
+
+    print("SAST LLM Experiment")
+    print("Providers: GPT, Gemini, Kimi, Claude")
+    print(f"Reports: {len(reports)}")
+
+    total = {"ok": 0, "error": 0, "skip": 0}
+
+    for provider in PROVIDERS:
+        result = run_provider(provider, reports, args.execute)
+
+        for key in total:
+            total[key] += result[key]
+
+    print("\n" + "=" * 50)
+    print("FINAL SUMMARY")
+    print(f"[OK] Succeeded: {total['ok']}")
+    print(f"[ERROR] Failed: {total['error']}")
+    print(f"[SKIP] Skipped: {total['skip']}")
 
     if not args.execute:
-        print(
-            "\nSimulation completed. "
-            "No generation API calls were made."
-        )
-        print(
-            "To start live generation, run the script with --execute."
-        )
+        print("\nSimulation only. No generation API calls were made.")
+        print("Run with --execute for actual generation.")
 
 
 if __name__ == "__main__":
