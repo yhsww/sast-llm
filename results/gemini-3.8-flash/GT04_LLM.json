@@ -1,0 +1,34 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "74de4cdb-5256-48b1-97af-c47eaa500ecc",
+        "arquivo": "juice-shop:routes/userProfile.ts",
+        "linha": 87,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S7790",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-1336",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-18",
+        "justificativa": "A regra typescript:S7790 alerta sobre a formatacao dinamica de templates sem a devida sanitizacao ou compilacao segura. No arquivo userProfile.ts do OWASP Juice Shop, a entrada fornecida pelo usuario atraves do perfil (como o nome de usuario) e interpolada diretamente em um template renderizado pelo mecanismo de templates (ex.: Pug), possibilitando Server-Side Template Injection (SSTI) e execucao remota de comandos ou acesso indevido ao contexto da aplicacao."
+      },
+      "descricao_tecnica": "A vulnerabilidade decorre da concatenacao ou interpolacao direta de dados controlados pelo usuario na definicao do template dinamico antes da renderizacao. Quando a aplicacao compila o template com entrada nao sanitizada, comandos ou expressoes do motor de template sao executados no servidor no contexto do processo Node.js.",
+      "pre_condicoes_para_verificacao": [
+        "Aplicacao OWASP Juice Shop em execucao.",
+        "Conta de usuario autenticada para atualizar os dados de perfil.",
+        "Ferramenta para inspecao e envio de requisicoes HTTP (como OWASP ZAP ou Burp Suite)."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Autenticar na aplicacao e enviar uma requisicao de atualizacao de perfil contendo um payload de SSTI no campo de nome de usuario (ex.: #{7*7} ou #{root.process.mainModule.require('child_process').execSync('id')}).",
+          "resultado_esperado_verdadeiro_positivo": "A aplicacao processa e avalia o template no servidor, exibindo o resultado da operacao matematica (49) ou a saida do comando executado na pagina de perfil renderizada.",
+          "resultado_esperado_falso_positivo": "A aplicacao trata o payload como texto literal, exibindo #{7*7} sem interpretacao dinamica, ou rejeita a entrada por validacao estrita."
+        }
+      ]
+    }
+  ]
+}

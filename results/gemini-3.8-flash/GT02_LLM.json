@@ -1,0 +1,38 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "6d4ecb57-73d4-482f-ae9c-2728da3971bb",
+        "arquivo": "lib/insecurity.ts",
+        "linha": 23,
+        "severidade_sast": "BLOCKER",
+        "regra": "secrets:S6706",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-798: Use of Hard-coded Credentials",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-CRYP-04",
+        "justificativa": "Uma chave privada criptográfica está exposta diretamente no código-fonte no arquivo lib/insecurity.ts na linha 23, permitindo que atacantes com acesso ao código assinem ou decifrem dados sigilosos e comprometam a integridade da aplicação."
+      },
+      "descricao_tecnica": "Identificação de chave privada criptográfica codificada diretamente (hardcoded secret/private key) no arquivo lib/insecurity.ts, linha 23. A presença de segredos criptográficos em texto claro no repositório viola o princípio de gerenciamento seguro de chaves e expõe o sistema a ataques de impersonação ou falsificação de tokens.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao repositório de código da aplicação",
+        "Permissão de leitura no arquivo lib/insecurity.ts"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Analisar o arquivo lib/insecurity.ts na linha 23 e verificar se a declaração contém uma chave privada (ex: formato PEM/RSA).",
+          "resultado_esperado_verdadeiro_positivo": "Existe uma chave privada em texto claro atribuída a uma constante ou variável no código.",
+          "resultado_esperado_falso_positivo": "O conteúdo é apenas um placeholder inerte, um comentário ou uma variável de ambiente obtida dinamicamente."
+        },
+        {
+          "passo": "Passo 02: Rastrear o uso da chave no fluxo da aplicação para verificar se ela é consumida para assinatura ou descriptografia de dados sensíveis.",
+          "resultado_esperado_verdadeiro_positivo": "A chave é utilizada diretamente em rotinas criptográficas ativas da aplicação sem passar por mecanismo seguro de injeção de segredos.",
+          "resultado_esperado_falso_positivo": "A chave não é utilizada pela aplicação ou está presente apenas em mocks/fixtures em diretório de teste isolado."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "fe05cc96-7ed2-4ea0-9c61-48e5a0304238",
+        "arquivo": "juice-shop:lib/insecurity.ts",
+        "linha": 44,
+        "severidade_sast": "BLOCKER",
+        "regra": "typescript:S6437",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-798: Use of Hard-coded Credentials",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-ATHN-02",
+        "justificativa": "O arquivo contem credenciais ou segredos criptograficos definidos em formato de texto simples diretamente no codigo-fonte, expondo credenciais confidenciais sem o uso de variaveis de ambiente ou cofres de segredos."
+      },
+      "descricao_tecnica": "A regra typescript:S6437 identifica a presenca de senhas ou segredos estaticos atribuidos diretamente no codigo TypeScript. A presenca de senhas hard-coded permite que qualquer pessoa com acesso de leitura ao repositorio obtenha as credenciais, quebrando a confidencialidade do sistema e facilitando ataques de personificacao ou bypass de autenticacao.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao repositorio de codigo-fonte do juice-shop.",
+        "Ferramenta de inspecao de codigo ou IDE com suporte a TypeScript."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Localizar a linha 44 no arquivo lib/insecurity.ts e inspecionar o valor atribuido a variavel ou parametro apontado pelo SonarQube.",
+          "resultado_esperado_verdadeiro_positivo": "Constata-se a presenca de uma senha, chave ou segredo sensivel declarado explicitamente como string literal no codigo.",
+          "resultado_esperado_falso_positivo": "O valor identificado e um placeholder inofensivo, chave publica, mock em ambiente de teste isolado ou obtido via variavel de ambiente."
+        },
+        {
+          "passo": "Passo 02: Verificar se a variavel na linha 44 e utilizada em rotinas de autenticacao, conexao de servicos ou validacao de tokens criptograficos.",
+          "resultado_esperado_verdadeiro_positivo": "O segredo hard-coded e consumido ativamente pela logica de autenticacao/seguranca da aplicacao.",
+          "resultado_esperado_falso_positivo": "O valor nao e uma credencial real nem e utilizado para proteger dados ou autenticar entidades."
+        }
+      ]
+    }
+  ]
+}
