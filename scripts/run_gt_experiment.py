@@ -531,11 +531,6 @@ def main() -> None:
             out = out_dir / f"{path.stem}_LLM.json"
             err = out_dir / f"{path.stem}_ERROR.txt"
 
-            if out.exists() and not args.force:
-                print(f"[SKIP] {out.relative_to(ROOT)} already exists")
-                summary["skip"] += 1
-                continue
-
             try:
                 user_content = build_user_content(
                     report.issues,
@@ -566,23 +561,19 @@ def main() -> None:
                     indent=2,
                 ) + "\n"
 
-                if args.force:
-                    out.write_text(payload, encoding="utf-8")
-                else:
-                    # Exclusive creation avoids accidentally replacing
-                    # a result created by another process.
-                    with out.open("x", encoding="utf-8") as file:
-                        file.write(payload)
+                temporary_path = out.with_suffix(out.suffix + ".tmp")
+                try:
+                    temporary_path.write_text(payload, encoding="utf-8")
+                    temporary_path.replace(out)
+                finally:
+                    if temporary_path.exists():
+                        temporary_path.unlink()
 
                 if err.exists():
                     err.unlink()
 
                 print(f"[OK] Saved {out.relative_to(ROOT)}")
                 summary["ok"] += 1
-
-            except FileExistsError:
-                print(f"[SKIP] {out.name} already exists")
-                summary["skip"] += 1
 
             except Exception as exc:
                 print(
