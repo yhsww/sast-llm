@@ -1,123 +1,75 @@
-# SAST Security Test Case Generator — Branch Execution Guide
+# Experimento SAST-LLM — Guia de execução
 
-Este guia apresenta a configuração do projeto e o passo a passo para executar cada branch, selecionar a LLM, gerar casos de teste e alternar entre as abordagens do experimento.
+Este repositório compara três estratégias para gerar casos de teste de segurança a partir de relatórios SAST:
 
-## Project overview
+1. **Direct LLM** — envia os achados diretamente ao modelo.
+2. **RAG CWE/WSTG** — recupera documentação CWE e OWASP WSTG antes da geração.
+3. **RAG + contexto de código** — combina CWE/WSTG com trechos do código-fonte relacionado aos achados.
 
-O projeto recebe relatórios SAST do SonarQube e gera casos de teste de segurança estruturados usando um modelo de linguagem (LLM). As branches representam três estratégias de geração:
+Os comandos abaixo são para **Windows PowerShell**. Execute-os na raiz do repositório.
 
-- **Branch 1 — Direct LLM (`main` / `branch-1-direct-llm`):** envia os achados diretamente à LLM, sem recuperação de documentos.
-- **Branch 2 — RAG with CWE and WSTG (`branch-2-rag-cwe-wstg`):** recupera informações das bases CWE e WSTG para enriquecer o contexto.
-- **Branch 3 — RAG with code context (`branch-3-rag-code-context`):** combina a recuperação CWE/WSTG com trechos do código-fonte associados aos achados.
+## 1. Preparação inicial
 
-Os comandos deste documento usam **PowerShell no Windows**.
+### Clonar ou abrir o projeto
 
-## Requirements
-
-- Python 3.11 ou superior
-- Git
-- Chave de API válida para o provedor escolhido
-- Dependências listadas em `requirements.txt`
-
-## 1. Initial setup
-
-### 1.1 Clone the repository
-
-Se ainda não clonou o projeto:
+Se ainda não tiver o repositório:
 
 ```powershell
 git clone https://github.com/yhsww/sast-llm.git
 cd sast-llm
 ```
 
-Se o repositório já estiver no computador, abra o PowerShell na pasta do projeto.
+Se já estiver clonado, abra o PowerShell na pasta `sast-llm`.
 
-### 1.2 Create and activate a virtual environment
+### Criar o ambiente e instalar dependências
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
-Se o PowerShell bloquear a ativação, execute na mesma janela:
+Se a ativação for bloqueada pelo PowerShell:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\.venv\Scripts\Activate.ps1
 ```
 
-### 1.3 Install dependencies
+### Configurar as chaves
 
-```powershell
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
-Após alternar de branch, execute novamente `python -m pip install -r requirements.txt` caso o arquivo `requirements.txt` tenha mudado.
-
-### 1.4 Configure environment variables
-
-Crie o arquivo `.env` na raiz do projeto a partir do modelo da branch selecionada:
+Confira se a branch possui `.env.example`. Se possuir, crie o arquivo local:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-Se `.env` já existir, não o sobrescreva sem guardar as configurações atuais. Edite o arquivo e preencha as chaves e os modelos que pretende utilizar. Nunca versione ou compartilhe chaves de API.
+Preencha no `.env` somente as chaves e os modelos necessários à branch/provedor escolhidos. **Nunca envie o arquivo `.env` ou chaves de API ao Git.** Confira também `.env.example` e `backend/config.py`, pois os nomes das variáveis podem variar entre branches.
 
-## 2. Choosing the LLM
+### Atualizar e conferir branches
 
-As branches `main`, `branch-1-direct-llm` e `branch-2-rag-cwe-wstg` oferecem configuração de provedor por meio de `LLM_PROVIDER`. A branch 3 usa OpenAI para geração e embeddings.
-
-### 2.1 Providers in `main`, `branch-1-direct-llm` and `branch-2-rag-cwe-wstg`
-
-Configure `LLM_PROVIDER` como `openai`, `gemini`, `kimi` ou `claude` e preencha a chave e o identificador do modelo correspondente no `.env`.
-
-```env
-# Escolha um provedor: openai, gemini, kimi ou claude
-LLM_PROVIDER=openai
-
-# OpenAI
-OPENAI_API_KEY=sua_chave_aqui
-OPENAI_CHAT_MODEL=gpt-4.1
-
-# Gemini
-GOOGLE_API_KEY=sua_chave_aqui
-GEMINI_MODEL=gemini-3.8-flash
-
-# Kimi
-KIMI_API_KEY=sua_chave_aqui
-KIMI_MODEL=moonshot-v1-8k
-
-# Claude
-ANTHROPIC_API_KEY=sua_chave_aqui
-CLAUDE_MODEL=claude-sonnet-4-5
+```powershell
+git fetch origin
+git branch -a
 ```
 
-Os nomes e valores padrão podem variar entre branches. O arquivo `.env.example` e `backend/config.py` da branch selecionada são a referência final. Use modelos disponíveis para sua conta.
+Para trocar de branch, execute um comando por vez:
 
-Na `main`, o provedor é selecionado interativamente ao executar `query.py` ou `run_experiment.py`. Na branch 1, `python query.py` permite selecionar o provedor no terminal; `python run_experiment.py` usa `LLM_PROVIDER` do `.env`. Na branch 2, o provedor é definido por `LLM_PROVIDER` no `.env`.
-
-### 2.2 Provider in `branch-3-rag-code-context`
-
-A branch 3 usa OpenAI. Configure as variáveis abaixo no `.env`:
-
-```env
-OPENAI_API_KEY=sua_chave_aqui
-OPENAI_CHAT_MODEL=gpt-4.1
-OPENAI_EMBEDDING_MODEL=text-embedding-3-small
-CHROMA_PERSIST_PATH=./chroma_data
-TOP_K_CWE=2
-TOP_K_WSTG=2
+```powershell
+git switch main
+git switch branch-1-direct-llm
+git switch branch-2-rag-cwe-wstg
+git switch branch-3-rag-code-context
 ```
 
-Essa branch não oferece a seleção de Gemini, Kimi ou Claude no `backend/config.py` recebido.
+Se a branch existir apenas no remoto, use, por exemplo, `git switch --track origin/branch-2-rag-cwe-wstg`.
 
-## 3. Branch main — Direct LLM experiment
+## 2. Branch `main` — Direct LLM com `query.py`
 
-A main usa query.py como executor principal; run_experiment.py delega para ele. Por padrão, o programa lê data/sast_reports/sample.json, permite escolher a LLM e grava o resultado JSON em results/<provedor>/.
+A `main` usa `query.py` como executor principal. Por padrão, utiliza `data/sast_reports/sample.json`.
 
-### Validar sem chamar uma API
+### Validar sem chamar APIs
 
 ```powershell
 python query.py --simulate
@@ -125,7 +77,7 @@ python query.py --report GT01 --simulate
 python query.py --all-reports --simulate
 ```
 
-A simulação valida a estrutura dos relatórios, não faz chamadas externas e não cria relatórios de saída.
+A simulação verifica os relatórios de entrada sem gerar análises por LLM.
 
 ### Gerar casos de teste
 
@@ -133,7 +85,7 @@ A simulação valida a estrutura dos relatórios, não faz chamadas externas e n
 python query.py
 ```
 
-Escolha o provedor no menu. Para executar sem menu ou selecionar todos os provedores explicitamente:
+Siga o menu para escolher o provedor. Também é possível escolher diretamente:
 
 ```powershell
 python query.py --provider openai
@@ -143,222 +95,137 @@ python query.py --provider claude
 python query.py --provider all
 ```
 
-O comando padrão usa apenas sample.json. Para um relatório específico, use --report GT01 ou --report sample.json; para processar todos os JSON da pasta, use --all-reports. As chamadas reais podem gerar custos conforme o provedor e a conta.
-
-Os arquivos de saída usam nomes como sample_LLM.json, em results/GPT5.5/, results/Gemini/, results/Kimi/ ou results/Claude/. Erros são registrados separadamente em *_ERROR.txt. Não versione chaves de API nem arquivos .env.
-
-## 4. Branch 1 — Direct LLM
-
-**Branch:** `branch-1-direct-llm`
-
-Esta abordagem envia os achados diretamente à LLM, sem recuperação de documentos CWE/WSTG.
-
-### Steps
-
-1. Selecione a branch:
-
-   ```powershell
-   git switch branch-1-direct-llm
-   ```
-
-2. Instale as dependências:
-
-   ```powershell
-   python -m pip install -r requirements.txt
-   ```
-
-3. Configure `.env` com `LLM_PROVIDER`, a chave de API e o modelo desejado, conforme a seção 2.
-
-4. Para validar o relatório sem chamar a API, execute:
-
-   ```powershell
-   python run_experiment.py --only GT01 --simulate
-   ```
-
-5. Para gerar casos de teste para um relatório:
-
-   ```powershell
-   python run_experiment.py --only GT01
-   ```
-
-6. Para processar todos os relatórios `GT*.json`:
-
-   ```powershell
-   python run_experiment.py
-   ```
-
-O argumento `--only` seleciona um relatório específico. Nesta branch, a seleção da LLM é feita pelo `LLM_PROVIDER` do `.env`, e não por um argumento `--provider`.
-
-Os resultados são gravados em `results/<nome-do-modelo>/`. Arquivos existentes podem ser ignorados; preserve ou mova os resultados anteriores antes de repetir uma execução.
-
-## 5. Branch 2 — RAG with CWE and WSTG
-
-**Branch:** `branch-2-rag-cwe-wstg`
-
-Esta abordagem recupera documentos das coleções CWE e WSTG no ChromaDB e usa o contexto recuperado para fundamentar a geração dos casos de teste.
-
-### Steps
-
-1. Selecione a branch:
-
-   ```powershell
-   git switch branch-2-rag-cwe-wstg
-   ```
-
-2. Instale as dependências e configure `.env` conforme as seções 1 e 2.
-
-3. Construa a base CWE:
-
-   ```powershell
-   python -m scripts.build_cwe_kb
-   ```
-
-   O script pode usar o catálogo XML local ou tentar obter a fonte necessária, conforme as opções disponíveis nessa branch.
-
-4. Construa a base WSTG:
-
-   ```powershell
-   python -m scripts.build_wstg_kb
-   ```
-
-5. Indexe os documentos no ChromaDB:
-
-   ```powershell
-   python -m scripts.ingest --reset
-   ```
-
-   `--reset` recria as coleções e remove a indexação anterior. Use-o quando quiser reconstruir a base, não em uma execução normal se deseja preservar a indexação existente.
-
-6. Execute primeiro em modo de simulação, sem chamadas de geração:
-
-   ```powershell
-   python -m scripts.run_gt_experiment
-   ```
-
-7. Execute a geração real dos casos para os relatórios GT01–GT08:
-
-   ```powershell
-   python -m scripts.run_gt_experiment --execute
-   ```
-
-O executor percorre os provedores configurados e grava os resultados nas pastas de `results/` por provedor. Arquivos existentes podem ser ignorados. Verifique os arquivos JSON, os arquivos de erro e o resumo exibido no terminal.
-
-## 6. Branch 3 — RAG with code context
-
-**Branch:** `branch-3-rag-code-context`
-
-Esta abordagem combina o contexto CWE/WSTG recuperado com trechos de código-fonte fornecidos pelo usuário para cada achado.
-
-### Steps
-
-1. Selecione a branch:
-
-   ```powershell
-   git switch branch-3-rag-code-context
-   ```
-
-2. Instale as dependências:
-
-   ```powershell
-   python -m pip install -r requirements.txt
-   ```
-
-3. Configure a chave OpenAI e os parâmetros de embeddings/RAG no `.env`, conforme a seção 2.2.
-
-4. Construa a base CWE:
-
-   ```powershell
-   python -m scripts.build_cwe_kb
-   ```
-
-5. Construa a base WSTG:
-
-   ```powershell
-   python -m scripts.build_wstg_kb
-   ```
-
-6. Indexe os documentos:
-
-   ```powershell
-   python -m scripts.ingest --reset
-   ```
-
-7. Execute uma simulação sem chamar a LLM:
-
-   ```powershell
-   python query.py --report GT01
-   ```
-
-8. Para gerar os casos de teste de fato:
-
-   ```powershell
-   python query.py --execute --provider Gemini --report GT01
-   ```
-
-   Substitua `Gemini` por `GPT`, `Kimi` ou `Claude`, e `GT01` pelo relatório desejado. Sem `--report`, processa todos os arquivos `GT*.json`. Os trechos são carregados de `data/code_snippets/<relatório>.json`; alternativamente, informe `--source-root <pasta-do-código>` para extrair linhas do código-fonte.
-
-Os relatórios são salvos como `<relatório>_LLM.json` em `results/<provedor>/`. Uma nova execução substitui o JSON de mesmo nome. Falhas são registradas em `<relatório>_ERROR.txt`, separadas dos relatórios de sucesso.
-
-## 7. Switching between branches
-
-Antes de trocar de branch, salve ou faça commit das alterações locais que deseja manter.
+Para selecionar os dados de entrada:
 
 ```powershell
-git status
-git fetch origin
-git branch -a
+python query.py --report GT01
+python query.py --report sample.json
+python query.py --all-reports
 ```
 
-Para alternar, execute **um comando por vez**:
+A geração real faz chamadas externas e pode consumir cota ou gerar custos. Consulte os arquivos JSON de saída em `results/` e as mensagens do terminal para identificar o resultado de cada execução.
+
+## 3. Branch `branch-1-direct-llm` — Direct LLM
+
+Esta branch envia os achados diretamente à LLM, sem recuperar documentos CWE/WSTG.
 
 ```powershell
-git switch main
 git switch branch-1-direct-llm
-git switch branch-2-rag-cwe-wstg
-git switch branch-3-rag-code-context
-```
-
-Se uma branch existir apenas no remoto, crie uma branch local de acompanhamento. Exemplo:
-
-```powershell
-git switch --track origin/branch-2-rag-cwe-wstg
-```
-
-Substitua pelo nome da branch desejada. Depois da troca, confira a branch ativa e reinstale as dependências caso necessário:
-
-```powershell
-git branch --show-current
 python -m pip install -r requirements.txt
 ```
 
-Não presuma que todas as branches possuem os mesmos scripts ou argumentos. Use a seção correspondente à branch selecionada.
+Configure o provedor e a chave no `.env`. Para validar em modo de simulação:
 
-## 8. Expected output and reports
+```powershell
+python query.py --simulate
+```
 
-Os relatórios de entrada `GT01.json` a `GT08.json` ficam em `data/sast_reports/`. Para comparar as abordagens, use os mesmos relatórios em todas as branches.
+Para gerar com um provedor específico:
 
-As saídas são estruturadas em JSON com `test_cases`. Nas branches RAG, o resultado também pode conter `retrieved_context`, indicando documentos recuperados das bases CWE/WSTG.
+```powershell
+python query.py --provider gemini
+```
 
-- **`main`:** resultados em subpastas de `results/`, organizadas por provedor.
-- **`branch-1-direct-llm`:** resultados em `results/<nome-do-modelo>/`.
-- **`branch-2-rag-cwe-wstg`:** resultados do executor em lote nas pastas de `results/` por provedor.
-- **`branch-3-rag-code-context`:** JSON impresso no terminal; salve manualmente a saída.
+Troque `gemini` por `openai`, `kimi` ou `claude`, conforme as opções disponíveis na versão da branch e as credenciais configuradas. Se a branch oferecer o executor em lote `run_experiment.py`, também é possível executar `python run_experiment.py` para usar o provedor definido em `.env`.
 
-Antes de cada execução, registre a branch e o commit:
+## 4. Branch `branch-2-rag-cwe-wstg` — RAG com CWE e WSTG
+
+Esta branch recupera documentação CWE e OWASP WSTG para acrescentar contexto aos achados.
+
+```powershell
+git switch branch-2-rag-cwe-wstg
+python -m pip install -r requirements.txt
+```
+
+### Preparar a base de conhecimento
+
+Execute os passos na raiz do repositório:
+
+```powershell
+python -m scripts.build_cwe_kb
+python -m scripts.build_wstg_kb
+python -m scripts.ingest --reset
+```
+
+O argumento `--reset` recria as coleções indexadas; use-o quando realmente quiser reconstruir a base.
+
+### Simular e executar
+
+Simulação, sem geração real por LLM:
+
+```powershell
+python -m scripts.run_gt_experiment
+```
+
+Geração real:
+
+```powershell
+python -m scripts.run_gt_experiment --execute
+```
+
+A execução real depende de credenciais válidas e da cota disponível no provedor. O modo de simulação valida o fluxo de experimento e a recuperação de contexto, mas **não comprova a geração real pela LLM**.
+
+## 5. Branch `branch-3-rag-code-context` — RAG + contexto de código
+
+Esta branch combina recuperação CWE/WSTG com trechos de código associados aos achados. Ela permite selecionar o relatório e o provedor pela linha de comando.
+
+```powershell
+git switch branch-3-rag-code-context
+python -m pip install -r requirements.txt
+```
+
+Configure as credenciais exigidas pela configuração da branch. Confira os argumentos disponíveis:
+
+```powershell
+python query.py --help
+```
+
+### Simulação (sem chamadas de geração)
+
+```powershell
+python query.py --input-file data/sast_reports/sample.json
+```
+
+### Geração real
+
+Exemplo com Gemini:
+
+```powershell
+python query.py --input-file data/sast_reports/sample.json --provider Gemini --execute
+```
+
+Para outro relatório, substitua o caminho de entrada. Para escolher outro provedor, use o nome aceito pelo `--help`, por exemplo `GPT`, `Kimi` ou `Claude`, e garanta que a credencial correspondente esteja configurada. A geração real pode consumir cota ou gerar custos.
+
+Os trechos de código podem ser lidos de `data/code_snippets/` ou extraídos do código-fonte usando `--source-root <pasta>`, conforme os argumentos apresentados por `python query.py --help`.
+
+## 6. Testes e critérios de validação
+
+Em cada branch, execute primeiro os testes automatizados disponíveis:
+
+```powershell
+python -m pytest -q
+```
+
+Depois, execute o comando de simulação indicado na seção da branch. Para uma execução real, confira o resumo final e os arquivos de saída; não considere uma simulação como evidência de que a chamada real à LLM funcionou.
+
+Antes de comparar resultados entre abordagens, use os mesmos relatórios de entrada e registre:
 
 ```powershell
 git branch --show-current
 git rev-parse HEAD
 ```
 
-Registre também o provedor, o identificador exato do modelo, o relatório de entrada e eventuais erros. Não inclua chaves de API no registro.
+Registre também o provedor/modelo, o relatório usado, o modo (simulação ou geração real) e o resumo final. Não registre chaves de API.
 
-## 9. Troubleshooting
+## 7. Problemas comuns
 
-- **`ModuleNotFoundError`:** ative `.venv` e execute `python -m pip install -r requirements.txt`.
-- **Erro de autenticação:** confira a chave, o provedor e o identificador do modelo no `.env`.
-- **Relatório não encontrado:** confira se o arquivo existe em `data/sast_reports/` e se o nome segue o padrão esperado.
-- **Nenhum contexto recuperado nas branches RAG:** reconstrua as bases e execute `python -m scripts.ingest --reset`.
-- **Resultado anterior ignorado:** confira o comportamento do executor da branch; arquive o resultado antigo antes de repetir a execução.
-- **Branch não encontrada:** execute `git fetch origin` e `git branch -a` para verificar os nomes disponíveis.
-- **PowerShell bloqueia a ativação do ambiente:** use o comando temporário da seção 1.2.
+- **`ModuleNotFoundError`:** ative o ambiente virtual e instale `requirements.txt`.
+- **Erro de autenticação:** confira a variável de ambiente e a chave do provedor.
+- **HTTP 429 / `RESOURCE_EXHAUSTED`:** a cota ou o limite de requisições foi atingido. Aguarde a renovação da cota ou use outro provedor configurado; repetir imediatamente pode falhar novamente.
+- **Nenhum documento RAG recuperado:** confira a construção das bases CWE/WSTG e a ingestão no ChromaDB.
+- **Relatório não encontrado:** confirme o caminho em `data/sast_reports/` e o nome passado ao comando.
+- **Branch não encontrada:** execute `git fetch origin` e confira `git branch -a`.
+
+## 8. Saídas do experimento
+
+As entradas de referência incluem `GT01.json` a `GT08.json` e `sample.json`, quando presentes em `data/sast_reports/`. As saídas e a organização por provedor variam entre branches; use o caminho mostrado no terminal e confirme se a execução terminou com sucesso. Arquivos de erro, quando gerados, indicam falha daquela execução e não devem ser confundidos com relatórios de teste gerados com sucesso.
