@@ -4,7 +4,6 @@ import re
 import sys
 import time
 from pathlib import Path
-from datetime import datetime, timezone
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
@@ -60,9 +59,13 @@ def save_result(output_path: Path, result) -> None:
         indent=2,
     )
 
-    # Do not overwrite an existing result.
-    with output_path.open("x", encoding="utf-8") as file:
-        file.write(payload + "\n")
+    temporary_path = output_path.with_suffix(output_path.suffix + ".tmp")
+    try:
+        temporary_path.write_text(payload + "\n", encoding="utf-8")
+        temporary_path.replace(output_path)
+    finally:
+        if temporary_path.exists():
+            temporary_path.unlink()
 
 
 def main() -> int:
@@ -150,13 +153,6 @@ def main() -> int:
         output_path = output_dir / f"{report_name}_LLM.json"
         error_path = output_dir / f"{report_name}_ERROR.txt"
 
-        if output_path.exists():
-            print(
-                f"\n[SKIP] {report_name}: "
-                f"output already exists: {output_path.name}"
-            )
-            continue
-
         if error_path.exists():
             error_path.unlink()
 
@@ -204,8 +200,6 @@ def main() -> int:
 
             error_message = (
                 f"Report: {report_name}\n"
-                f"Timestamp (UTC): "
-                f"{datetime.now(timezone.utc).isoformat()}\n"
                 f"Provider: {provider}\n"
                 f"Model: {model_name}\n"
                 f"Error type: {type(exc).__name__}\n"
