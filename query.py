@@ -15,7 +15,7 @@ REPORT_PATH = ROOT / "data" / "sast_reports" / "sample.json"
 RESULTS_DIR = ROOT / "results"
 
 PROVIDER_FOLDERS = {
-    "openai": "GPT4.1",
+    "openai": "GPT5.5",
     "gemini": "Gemini",
     "kimi": "Kimi",
     "claude": "Claude",
