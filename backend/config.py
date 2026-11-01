@@ -10,16 +10,16 @@ class Settings(BaseSettings):
     llm_provider: str = "openai"
 
     openai_api_key: str | None = None
-    openai_chat_model: str = "gpt-4.1"
+    openai_chat_model: str = "GPT5.5"
 
     google_api_key: str | None = None
-    gemini_model: str = "gemini-3.8"
+    gemini_model: str = "Gemini"
 
     kimi_api_key: str | None = None
-    kimi_model: str = "moonshot-v1-8k"
+    kimi_model: str = "Kimi"
 
     anthropic_api_key: str | None = None
-    claude_model: str = "claude-sonnet-4-5"
+    claude_model: str = "Claude"
 
     model_config = SettingsConfigDict(
         env_file=ROOT / ".env",
