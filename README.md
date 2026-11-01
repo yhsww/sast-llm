@@ -113,32 +113,39 @@ TOP_K_WSTG=2
 
 Essa branch não oferece a seleção de Gemini, Kimi ou Claude no `backend/config.py` recebido.
 
-## 3. Branch `main` — Direct LLM experiment
+## 3. Branch main — Direct LLM experiment
 
-Na branch `main`, tanto `python query.py` quanto `python run_experiment.py` delegam a execução ao mesmo fluxo:
+A main usa query.py como executor principal; run_experiment.py delega para ele. Por padrão, o programa lê data/sast_reports/sample.json, permite escolher a LLM e grava o resultado JSON em results/<provedor>/.
 
-1. Lê automaticamente `data/sast_reports/sample.json`.
-2. Permite selecionar a LLM no terminal: OpenAI, Gemini, Kimi ou Claude.
-3. Envia os achados diretamente à LLM, sem RAG e sem solicitar contexto adicional.
-4. Gera e salva o relatório JSON na pasta correspondente ao provedor.
-
-### Execução
+### Validar sem chamar uma API
 
 ```powershell
-git switch main
-python -m pip install -r requirements.txt
+python query.py --simulate
+python query.py --report GT01 --simulate
+python query.py --all-reports --simulate
+```
+
+A simulação valida a estrutura dos relatórios, não faz chamadas externas e não cria relatórios de saída.
+
+### Gerar casos de teste
+
+```powershell
 python query.py
 ```
 
-Também é possível iniciar pelo ponto de entrada compatível:
+Escolha o provedor no menu. Para executar sem menu ou selecionar todos os provedores explicitamente:
 
 ```powershell
-python run_experiment.py
+python query.py --provider openai
+python query.py --provider gemini
+python query.py --provider kimi
+python query.py --provider claude
+python query.py --provider all
 ```
 
-Os arquivos de saída usam nomes estáveis, como `sample_LLM.json`, em `results/GPT5.5/`, `results/Gemini/`, `results/Kimi/` ou `results/Claude/`. Uma nova execução para o mesmo relatório e provedor substitui o arquivo anterior. O conteúdo JSON não inclui data ou hora de execução. Erros são registrados em um arquivo `*_ERROR.txt`, separado do relatório de sucesso.
+O comando padrão usa apenas sample.json. Para um relatório específico, use --report GT01 ou --report sample.json; para processar todos os JSON da pasta, use --all-reports. As chamadas reais podem gerar custos conforme o provedor e a conta.
 
-Configure as chaves e os identificadores de modelo no arquivo `.env` antes de executar. A seleção feita no terminal determina o provedor usado naquela execução.
+Os arquivos de saída usam nomes como sample_LLM.json, em results/GPT5.5/, results/Gemini/, results/Kimi/ ou results/Claude/. Erros são registrados separadamente em *_ERROR.txt. Não versione chaves de API nem arquivos .env.
 
 ## 4. Branch 1 — Direct LLM
 

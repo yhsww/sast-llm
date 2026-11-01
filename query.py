@@ -4,6 +4,7 @@ Loads each JSON report from data/sast_reports, sends findings directly to
 the selected provider (without RAG or pasted source-code context), and writes
 one result per report/provider under results/<provider-folder>/.
 """
+import argparse
 import json
 import re
 import sys
@@ -44,12 +45,27 @@ def model_for(provider: str) -> str:
     return str(models[provider])
 
 
-def discover_reports() -> list[Path]:
-    """Return report JSON files in a stable order."""
+def discover_reports(
+    requested: str | None = None,
+    all_reports: bool = False,
+) -> list[Path]:
+    """Resolve one report (sample.json by default) or all JSON reports."""
     if not REPORTS_DIR.is_dir():
         raise SystemExit(f"Reports directory not found: {REPORTS_DIR}")
 
-    reports = list(REPORTS_DIR.glob("*.json"))
+    if all_reports:
+        reports = list(REPORTS_DIR.glob("*.json"))
+    else:
+        requested = requested or "sample.json"
+        candidate = Path(requested)
+        if not candidate.is_absolute():
+            candidate = REPORTS_DIR / candidate if len(candidate.parts) == 1 else ROOT / candidate
+        if candidate.suffix.lower() != ".json":
+            candidate = candidate.with_suffix(".json")
+        candidate = candidate.resolve()
+        if not candidate.is_file():
+            raise SystemExit(f"Report not found: {candidate}")
+        reports = [candidate]
 
     def sort_key(path: Path):
         match = re.fullmatch(r"GT(\d+)", path.stem, re.IGNORECASE)
@@ -63,8 +79,11 @@ def discover_reports() -> list[Path]:
     return reports
 
 
-def choose_providers() -> list[str]:
+def choose_providers(selected_provider: str | None = None) -> list[str]:
     providers = list(PROVIDER_FOLDERS)
+    if selected_provider:
+        return providers if selected_provider == "all" else [selected_provider]
+
     print("\nSelect LLM provider:")
     for index, provider in enumerate(providers, start=1):
         print(
@@ -80,8 +99,7 @@ def choose_providers() -> list[str]:
         if choice.isdigit() and 1 <= int(choice) <= len(providers):
             return [providers[int(choice) - 1]]
         provider_match = next(
-            (provider for provider in providers
-             if provider.casefold() == choice.casefold()),
+            (provider for provider in providers if provider.casefold() == choice.casefold()),
             None,
         )
         if provider_match:
@@ -146,11 +164,44 @@ def process_report(report_path: Path, provider: str) -> bool:
         return False
 
 
-def main() -> None:
-    reports = discover_reports()
-    providers = choose_providers()
+def run_simulation(reports: list[Path]) -> int:
+    """Validate input JSON files without calling an LLM or writing results."""
+    valid = 0
+    invalid = 0
+    print("\nSIMULATION MODE: no provider APIs will be called.")
+    for report_path in reports:
+        try:
+            report = SonarReport.model_validate_json(report_path.read_text(encoding="utf-8"))
+            print(f"[VALIDATED] {report_path.name}: {len(report.issues)} finding(s)")
+            valid += 1
+        except Exception as exc:
+            print(f"[INVALID] {report_path.name}: {type(exc).__name__}: {exc}")
+            invalid += 1
+    print("\nSIMULATION SUMMARY")
+    print(f"Reports checked: {len(reports)}")
+    print(f"Valid: {valid}")
+    print(f"Invalid: {invalid}")
+    return 1 if invalid else 0
 
-    print(f"\nReports found: {len(reports)}")
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Generate SAST security test cases with a selected LLM.")
+    parser.add_argument("--report", help="Report filename or path (default: data/sast_reports/sample.json).")
+    parser.add_argument("--all-reports", action="store_true", help="Process every JSON report in data/sast_reports.")
+    parser.add_argument("--provider", choices=[*PROVIDER_FOLDERS, "all"], help="Select one provider without prompting, or 'all'.")
+    parser.add_argument("--simulate", action="store_true", help="Validate reports without calling APIs or writing result files.")
+    args = parser.parse_args(argv)
+
+    if args.all_reports and args.report:
+        parser.error("--report and --all-reports cannot be used together.")
+
+    reports = discover_reports(args.report, args.all_reports)
+    print(f"Reports found: {len(reports)}")
+    print("Inputs: " + ", ".join(path.name for path in reports))
+    if args.simulate:
+        return run_simulation(reports)
+
+    providers = choose_providers(args.provider)
     print(f"Selected providers: {', '.join(providers)}")
     print("Mode: direct LLM (no RAG and no additional context prompt)")
 
@@ -173,7 +224,8 @@ def main() -> None:
     print(f"Failed: {failed}")
     print(f"Results directory: {RESULTS_DIR}")
     print("=" * 64)
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
