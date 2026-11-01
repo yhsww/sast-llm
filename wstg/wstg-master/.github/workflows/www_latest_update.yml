@@ -62,6 +62,7 @@ jobs:
         find . -type d -not -name "images" -execdir cp -v "$WSTG_BASE/.github/www/latest/info.md" {} \;
     - name: Setup Navigation
       run: |
+<<<<<<< HEAD
         # Copy the current ToC for manipulation
         cp "$WSTG_BASE/document/README.md" "$WSTG_BASE/.github/www/latest/."
         cd "$WSTG_BASE/.github/www/latest/"
@@ -80,6 +81,20 @@ jobs:
         cat prepend.nav > latest.yaml && cat README.md >> latest.yaml
         # Copy the navigation yaml to _data
         cp latest.yaml "$WWW_BASE/_data/."
+=======
+        TITLE="$(sed -n 's/^docs_list_title: //p' "$WSTG_BASE/.github/www/latest/prepend.nav")"
+        python3 "$WSTG_BASE/.github/www/scripts/generate_nav.py" \
+          "$WSTG_BASE/document/README.md" \
+          --title "$TITLE" \
+          --collection latest \
+          --yaml-out "$WWW_BASE/_data/latest.yaml" \
+          --html-out "$WWW_BASE/_includes/nav-tree-latest.html" \
+          --chapter-toc-out /tmp/wstg-chapter-toc.md
+        # Landing page: chapter-level ToC only (full tree lives in the right menu)
+        cat "$WSTG_BASE/.github/www/latest/prepend.txt" /tmp/wstg-chapter-toc.md \
+          | sponge "$WWW_BASE/latest/README.md"
+        cp "$WWW_BASE/latest/README.md" "$WWW_BASE/latest/index.md"
+>>>>>>> branch-2-rag-cwe-wstg
     - name: Push Feature Branch and Raise PR
       env:
         GH_TOKEN: ${{ secrets.wstg_deploy_token }}

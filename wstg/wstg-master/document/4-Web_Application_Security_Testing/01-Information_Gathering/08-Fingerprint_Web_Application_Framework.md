@@ -75,6 +75,7 @@ X-Generator: Swiftlet
 
 Another similar and somewhat more reliable way to determine the current web framework are framework-specific cookies.
 
+<<<<<<< HEAD
 Consider the following HTTP request:
 
 ![Cakephp HTTP Request](images/Cakephp_cookie.png)\
@@ -92,6 +93,39 @@ The cookie `CAKEPHP` has automatically been set, which gives information about t
 * @link https://php.net/session_name
 */
 Configure::write('Session.cookie', 'CAKEPHP');
+=======
+Consider the following HTTP response headers from a Laravel application:
+
+```http
+HTTP/1.1 200 OK
+Server: nginx
+Content-Type: text/html; charset=utf-8
+Cache-Control: no-cache, private
+Date: Sun, 13 Sep 2026 12:10:25 GMT
+Set-Cookie: XSRF-TOKEN=eyJpdiI6IkpyQWZUUUFjVXBPWWpkSjF3cHlJZnc9PSIsInZhbHVlIjoiZzZlVm1QWlMxRDlqVGpDVHlwdVVPa3BpWDhYd0F2NXlodm1jTmRSU2pFaUh1VUxvL3cyLzhNU2o1blBJSUpQS2srNnBQQUVpUlJJeW9wMkRvZXhqejBySnpGUVVzclllendrQzZDWDBUa0ZiVmVnNlRidDFwVExrdGRZekJyd1ciLCJtYWMiOiJjMjcyN2FjOThlNjEyMGY0YjZkYjEwNWJjZGI2YWE4MzJiNDZjZDg1NDQxN2U0YzcxMDg5NTJhOTVjODE5YzY2IiwidGFnIjoiIn0%3D; expires=Sun, 13 Sep 2026 14:10:26 GMT; Max-Age=7200; path=/; samesite=lax
+Set-Cookie: laravel_session=eyJpdiI6IlV4QkdjeWE2dGpzU2EyWEd4cDRHbXc9PSIsInZhbHVlIjoiMnlFWS9CcW9ncEFKODQzMFFxK0F6ekN4dStJbnF2b2NhaUlmRWVuRU81WFo2OHZwQTlYZ2owdGZlUVVLY29ScWRsZDllTTVVTXBuaE1SanBSak5JeU5NZFJnNFdZUmtOZnUwVTBUYndRbmpJdVRKdW9mZUtrMnRwRXg3TUxiM2MiLCJtYWMiOiI5NDU1ODY2Y2Q5NjhjMGI4NWZkNmZjNjI1NTI1ZDNiNTJjMDU3MTc3ZjAyZDc2YjlmZGE4OTM5NjFhNTY3ZTE3IiwidGFnIjoiIn0%3D; expires=Sun, 13 Sep 2026 14:10:26 GMT; Max-Age=7200; path=/; httponly; samesite=lax
+content-length: 88805
+```
+
+The cookie `laravel_session`, along with the accompanying `XSRF-TOKEN` cookie used for CSRF protection, has automatically been set, which gives information about the framework being used. A list of common cookie names is presented in [Cookies](#cookies-1) section. Limitations still exist in relying on this identification mechanism - it is possible to change the name of cookies. For example, for Laravel this could be done via the `cookie` value in `config/session.php`:
+
+```php
+/*
+|--------------------------------------------------------------------------
+| Session Cookie Name
+|--------------------------------------------------------------------------
+|
+| Here you may change the name of the cookie used to identify a session
+| instance by ID. The name specified here will get used every time a
+| new session cookie is created by the framework for every driver.
+|
+*/
+
+'cookie' => env(
+    'SESSION_COOKIE',
+    Str::slug(env('APP_NAME', 'laravel'), '_').'_session'
+),
+>>>>>>> branch-2-rag-cwe-wstg
 ```
 
 However, these changes are less likely to be made than changes to the `X-Powered-By` header, making this approach to identification more reliable.
@@ -100,6 +134,7 @@ However, these changes are less likely to be made than changes to the `X-Powered
 
 This technique is based on finding certain patterns in the HTML page source code. Often one can find a lot of information which helps a tester to recognize a specific component. One of the common markers is HTML comments that directly lead to framework disclosure. More often, certain framework-specific paths can be found, i.e. links to framework-specific CSS or JS folders. Finally, specific script variables might also point to a certain framework.
 
+<<<<<<< HEAD
 From the screenshot below, one can easily determine the framework in use and its version by the mentioned markers. The comment, specific paths and script variables can all help an attacker to quickly determine an instance of ZK framework.
 
 ![ZK Framework Sample](images/Zk_html_source.png)\
@@ -109,6 +144,17 @@ Frequently such information is positioned in the `<head>` section of HTTP respon
 
 ![Banshee Bottom Page](images/Banshee_bottom_page.png)\
 *Figure 4.1.8-3: Banshee Bottom Page*
+=======
+From the screenshot below, one can easily determine the framework in use and its version by the mentioned markers. Angular applications, for example, add an `ng-version` attribute directly to the root element of the page, explicitly disclosing the exact framework version in use.
+
+![Angular Framework Sample](images/08-angular_html_source.png)\
+*Figure 4.1.8-1: Angular Framework HTML Source Sample*
+
+Frequently such information is positioned in the `<head>` section of HTTP responses, in `<meta>` tags, or at the end of the page. Nevertheless, entire responses should be analyzed since it can be useful for other purposes such as inspection of other useful comments and hidden fields. Sometimes, web developers may not sufficiently obscure the information about the frameworks or components used. It is still possible to stumble upon something like this at the bottom of the page, such as a "Proudly published with Ghost" footer disclosing that the site runs on the [Ghost](https://ghost.org/) publishing platform:
+
+![Ghost Bottom Page](images/08-ghost_bottom_page.png)\
+*Figure 4.1.8-2: Ghost Bottom Page*
+>>>>>>> branch-2-rag-cwe-wstg
 
 ### Specific Files and Folders
 
@@ -116,6 +162,7 @@ There is another approach which greatly helps an attacker or tester to identify 
 
 In order to uncover them, a technique known as forced browsing or "dirbusting" is used. Dirbusting is brute forcing a target with known folder and filenames and monitoring HTTP-responses to enumerate server content. This information can be used both for finding default files and attacking them, and for fingerprinting the web application. Dirbusting can be done in several ways, the example below shows a successful dirbusting attack against a WordPress-powered target with the help of defined list and intruder functionality of Burp Suite.
 
+<<<<<<< HEAD
 ![Dirbusting with Burp](images/Wordpress_dirbusting.png)\
 *Figure 4.1.8-4: Dirbusting with Burp*
 
@@ -128,6 +175,23 @@ Tip: before starting with dirbusting, check the `robots.txt` file first. Sometim
 
 ![Robots Info Disclosure](images/Robots-info-disclosure.png)\
 *Figure 4.1.8-6: Robots Info Disclosure*
+=======
+![Dirbusting with Burp](images/08-wordpress_dirbusting.png)\
+*Figure 4.1.8-3: Dirbusting with Burp*
+
+We can see that for some WordPress-specific folders (for instance, `/wp-includes/`, `/wp-admin/` and `/wp-content/`) HTTP responses are 403 (Forbidden), 302 (Found, redirection to `wp-login.php`), and 200 (OK) respectively. This is a good indicator that the target is WordPress powered. The same way it is possible to dirbust different application plugin folders and their versions. In the screenshot below one can see a typical `readme.txt` file of a WordPress plugin, accessible at `/wp-content/plugins/<plugin-name>/readme.txt`, which provides information on the plugin being used and discloses its exact, potentially vulnerable, version via the `Stable tag` field.
+
+![WordPress Plugin Readme Disclosure](images/08-wordpress_plugin_readme_disclosure.png)\
+*Figure 4.1.8-4: WordPress Plugin Readme Disclosure*
+
+Tip: before starting with dirbusting, check the `robots.txt` file first. Sometimes application specific folders and other sensitive information can be found there as well. An example of such a `robots.txt` file is presented on a screenshot below.
+
+```text
+User-agent: *
+Disallow: /wp-admin/
+Allow: /wp-admin/admin-ajax.php
+```
+>>>>>>> branch-2-rag-cwe-wstg
 
 Specific files and folders are different for each specific application. If the identified application or component is Open Source there may be value in setting up a temporary installation during penetration tests in order to gain a better understanding of what infrastructure or functionality is presented, and what files might be left on the server. However, several useful file lists already exist; one notable example is the [FuzzDB wordlists of predictable files/folders](https://github.com/fuzzdb-project/fuzzdb).
 
@@ -135,10 +199,17 @@ Specific files and folders are different for each specific application. If the i
 
 URLs may include file extensions that can also help identify the web platform or technology.
 
+<<<<<<< HEAD
 For example, the OWASP wiki used PHP:
 
 ```text
 https://wiki.owasp.org/index.php?title=Fingerprint_Web_Application_Framework&action=edit&section=4
+=======
+For example, the old OWASP wiki used PHP:
+
+```text
+https://example.owasp.org/index.php?title=Fingerprint_Web_Application_Framework&action=edit&section=4
+>>>>>>> branch-2-rag-cwe-wstg
 ```
 
 Here are some common web file extensions and associated technologies:
@@ -151,13 +222,19 @@ Here are some common web file extensions and associated technologies:
 
 As can be seen in the following screenshot the listed file system path points to use of WordPress (`wp-content`). Also, testers should be aware that WordPress is PHP-based (`functions.php`).
 
+<<<<<<< HEAD
 ![WordPress Parse error](images/wp-syntaxerror.png)\
 *Figure 4.1.8-7: WordPress Parse Error*
+=======
+![WordPress Parse error](images/08-wp_syntaxerror.png)\
+*Figure 4.1.8-5: WordPress Parse Error*
+>>>>>>> branch-2-rag-cwe-wstg
 
 ## Common Identifiers
 
 ### Cookies
 
+<<<<<<< HEAD
 | Framework    | Cookie name                       |
 |--------------|-----------------------------------|
 | Zope         | zope3                             |
@@ -186,17 +263,43 @@ As can be seen in the following screenshot the listed file system path points to
 | VIVVO        | VivvoSessionId                    |
 | Tiny File Manager | filemanager                  |
 | Zenphoto     | zenphoto_auth                     |
+=======
+| Framework          | Cookie name                                   |
+|--------------------|-----------------------------------------------|
+| WordPress          | `wordpress_logged_in_*`, `wp-settings-*`      |
+| Laravel            | `laravel_session`                             |
+| Django             | `sessionid`, `csrftoken`                      |
+| Express.js (Node)  | `connect.sid`                                 |
+| ASP.NET Core       | `.AspNetCore.Session`, `.AspNetCore.Antiforgery.*` |
+| phpBB              | `phpbb3_*`                                    |
+| Drupal             | `SESS*` / `SSESS*` (name is a hash, no fixed prefix beyond `SESS`/`SSESS`) |
+| CakePHP            | `CAKEPHP` (configurable, this is the default) |
+| TYPO3              | `fe_typo_user`                                |
+| DNN Platform (DotNetNuke) | `DotNetNukeAnonymous`                  |
+>>>>>>> branch-2-rag-cwe-wstg
 
 ### HTML Source Code
 
 | Application | Keyword                                                                        |
 |-------------|--------------------------------------------------------------------------------|
+<<<<<<< HEAD
 | WordPress   | `<meta name="generator" content="WordPress 3.9.2" />`                          |
 | phpBB       | `<body id="phpbb"`                                                             |
 | Mediawiki   | `<meta name="generator" content="MediaWiki 1.21.9" />`                         |
 | Joomla      | `<meta name="generator" content="Joomla! - Open Source Content Management" />` |
 | Drupal      | `<meta name="Generator" content="Drupal 7 (https://drupal.org)" />`             |
 | DotNetNuke  | `DNN Platform - [https://www.dnnsoftware.com](https://www.dnnsoftware.com)`      |
+=======
+| WordPress   | `<meta name="generator" content="WordPress X.X" />`                            |
+| phpBB       | `<body id="phpbb"`                                                             |
+| MediaWiki   | `<meta name="generator" content="MediaWiki X.X" />`                            |
+| Joomla      | `<meta name="generator" content="Joomla! - Open Source Content Management" />` |
+| Drupal      | `<meta name="Generator" content="Drupal X (https://drupal.org)" />`            |
+| Ghost       | `<meta name="generator" content="Ghost X.X" />`                                |
+| DotNetNuke  | `DNN Platform - [https://www.dnnsoftware.com](https://www.dnnsoftware.com)`    |
+| Angular     | `ng-version="X.X.X"` attribute on the application root element                 |
+| Next.js     | `<script id="__NEXT_DATA__" type="application/json">`                          |
+>>>>>>> branch-2-rag-cwe-wstg
 
 #### General Markers
 
@@ -207,6 +310,7 @@ As can be seen in the following screenshot the listed file system path points to
 
 #### Specific Markers
 
+<<<<<<< HEAD
 | Framework         | Keyword                        |
 |-------------------|--------------------------------|
 | Adobe ColdFusion  | `<!-- START headerTags.cfm` |
@@ -222,6 +326,17 @@ While efforts can be made to use different cookie names (through changing config
 ## Tools
 
 A list of general and well-known tools is presented below. There are also a lot of other utilities, as well as framework-based fingerprinting tools.
+=======
+| Framework         | Keyword                                   |
+|-------------------|-------------------------------------------|
+| Adobe ColdFusion  | `<!-- START headerTags.cfm`               |
+| Microsoft ASP.NET | `__VIEWSTATE`                             |
+| ZK                | `<!-- ZK [.\d\s]+-->`, scripts under `zkau/` |
+| Indexhibit        | `ndxz-studio` (in `<link>`/`<a href>`, or as `<meta name="generator" content="Indexhibit">`) |
+| Next.js           | `<script id="__NEXT_DATA__" type="application/json">`, `x-powered-by: Next.js` |
+| Nuxt              | `<div id="__nuxt"`, inline `window.__NUXT__`, script paths under `/_nuxt/` |
+| htmx              | Global JS object `htmx`, script src matching `htmx.org@X.X.X`             |
+>>>>>>> branch-2-rag-cwe-wstg
 
 ### WhatWeb
 
@@ -239,6 +354,7 @@ WhatWeb is one of the best open source fingerprinting tools currently available 
 
 Sample output is presented on a screenshot below:
 
+<<<<<<< HEAD
 ![Whatweb Output sample](images/Whatweb-sample.png)\
 *Figure 4.1.8-8: Whatweb Output sample*
 
@@ -252,6 +368,18 @@ Sample output of a plug-in is presented on a screenshot below.
 
 ![Wappalyzer Output for OWASP Website](images/Owasp-wappalyzer.png)\
 *Figure 4.1.8-9: Wappalyzer Output for OWASP site*
+=======
+![Whatweb Output sample](images/08-whatweb_sample.png)\
+*Figure 4.1.8-6: Whatweb Output sample*
+
+## Remediation
+
+While efforts can be made to use different cookie names (through changing configs), hiding or changing file/directory paths (through rewriting or source code changes), removing known headers, etc., such efforts boil down to "security through obscurity". System owners/administrators should recognize that such efforts only slow down the most rudimentary adversaries. The time and effort might be better spent on increasing stakeholder awareness and maintaining solutions.
+
+## Tools
+
+A list of general and well-known tools is presented below. There are also a lot of other utilities, as well as framework-based fingerprinting tools.
+>>>>>>> branch-2-rag-cwe-wstg
 
 ## References
 

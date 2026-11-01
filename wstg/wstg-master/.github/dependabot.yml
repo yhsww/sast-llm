@@ -12,3 +12,8 @@ updates:
         applies-to: version-updates
         patterns:
         - "*"
+<<<<<<< HEAD
+=======
+    cooldown:
+      default-days: 7
+>>>>>>> branch-2-rag-cwe-wstg

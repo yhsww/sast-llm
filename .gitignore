@@ -6,6 +6,32 @@ __pycache__/
 venv/
 chroma_data/
 data/knowledge_base/
+<<<<<<< HEAD
 .env.*
 !.env.example
 *.pyc
+=======
+
+# Backups locais
+*.backup
+*.bak
+*.pre-retry.bak
+backup_relatorios_*/
+backup_scripts_*/
+
+# Arquivos temporários do Python
+__pycache__/
+*.py[cod]
+
+# Segredos locais
+.env
+.env.*
+!.env.example
+
+# Arquivos acidentais na raiz
+tg
+[provider](user_content)
+`[provider](user_content)
+tg
+\[provider](user_content)
+>>>>>>> branch-2-rag-cwe-wstg

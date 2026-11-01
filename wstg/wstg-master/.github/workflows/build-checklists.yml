@@ -20,11 +20,19 @@ jobs:
       contents: read
     steps:
     - name: Setup Action
+<<<<<<< HEAD
       uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       with:
         persist-credentials: false
     - name: Setup Python
       uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+=======
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+    - name: Setup Python
+      uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+>>>>>>> branch-2-rag-cwe-wstg
       with:
         python-version: "3.10"
     - name: Install Dependencies
@@ -40,6 +48,12 @@ jobs:
     - name: Run XLSX Build
       if: env.CHANGED == 'true'
       run: python3 ./.github/xlsx/scripts/build-checklist.py
+<<<<<<< HEAD
+=======
+    - name: Run Markdown Build
+      if: env.CHANGED == 'true'
+      run: python3 ./.github/md/scripts/build-checklist-md.py
+>>>>>>> branch-2-rag-cwe-wstg
     - name: Git Setup Global Config
       if: env.CHANGED == 'true'
       run: |
@@ -85,10 +99,21 @@ jobs:
         GDRIVESETTINGSFILE: ${{ secrets.GDRIVESETTINGSFILE }}
     - name: Publish XLSX file to Google Drive
       if: env.CHANGED == 'true'
+<<<<<<< HEAD
       run: |
         if [ -n "${{ github.event.inputs.version }}" ]; then
           python3 ./.github/xlsx/scripts/upload-to-google-drive.py "${{ secrets.GDRIVEFILEID }}" "${{ github.event.inputs.version }}"
         else
           python3 ./.github/xlsx/scripts/upload-to-google-drive.py "${{ secrets.GDRIVEFILEID }}"
+=======
+      env:
+        GDRIVE_FILE_ID: ${{ secrets.GDRIVEFILEID }}
+        VERSION: ${{ github.event.inputs.version }}
+      run: |
+        if [ -n "$VERSION" ]; then
+          python3 ./.github/xlsx/scripts/upload-to-google-drive.py "$GDRIVE_FILE_ID" "$VERSION"
+        else
+          python3 ./.github/xlsx/scripts/upload-to-google-drive.py "$GDRIVE_FILE_ID"
+>>>>>>> branch-2-rag-cwe-wstg
         fi
 

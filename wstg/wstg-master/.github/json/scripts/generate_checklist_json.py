@@ -563,14 +563,22 @@ def _write_empty_objectives_report(entries: list[tuple[str, str, str, str]]) -> 
     """Build markdown for Test Objectives quality; emit to stdout and job summary."""
     lines: list[str] = []
     if not entries:
+<<<<<<< HEAD
         lines.append("## Checklist JSON: WSTG markdown — Test Objectives\n\n")
+=======
+        lines.append("## Checklist JSON: WSTG markdown - Test Objectives\n\n")
+>>>>>>> branch-2-rag-cwe-wstg
         lines.append(
             "All checklist rows include at least one non-blank objective parsed from "
             "each chapter's `## Test Objectives` section.\n"
         )
     else:
         lines.append(
+<<<<<<< HEAD
             "## Checklist JSON: WSTG markdown — empty or blank Test Objectives\n\n"
+=======
+            "## Checklist JSON: WSTG markdown - empty or blank Test Objectives\n\n"
+>>>>>>> branch-2-rag-cwe-wstg
         )
         lines.append(
             "These rows have empty or whitespace-only objectives in JSON (from each "
@@ -595,7 +603,11 @@ def _cre_guide_status_table_rows(
 ) -> list[tuple[str, str, str, str]]:
     """
     One row per WSTG id in guide order: (test_id, name, status, cre_cell).
+<<<<<<< HEAD
     ``cre_cell`` is ``—`` when there are no ``cre_ids``.
+=======
+    ``cre_cell`` is ``-`` when there are no ``cre_ids``.
+>>>>>>> branch-2-rag-cwe-wstg
     """
     names = collect_test_names_by_id(data)
     rows: list[tuple[str, str, str, str]] = []
@@ -604,7 +616,11 @@ def _cre_guide_status_table_rows(
         new = new_cre.get(tid, [])
         status = _cre_row_status(old, new)
         parts = [str(x) for x in new if isinstance(x, str) and x]
+<<<<<<< HEAD
         cre_cell = _format_cre_ids_cell(parts) if parts else "—"
+=======
+        cre_cell = _format_cre_ids_cell(parts) if parts else "-"
+>>>>>>> branch-2-rag-cwe-wstg
         rows.append((tid, names.get(tid, ""), status, cre_cell))
     return rows
 

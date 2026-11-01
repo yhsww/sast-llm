@@ -77,6 +77,7 @@ jobs:
         find . -type d -not -name "images" -execdir cp -v "$WSTG_BASE/.github/www/stable/info.md" {} \;
     - name: Setup Navigation (Stable)
       run: |
+<<<<<<< HEAD
         # Copy the current ToC for manipulation
         cp "$WSTG_BASE/document/README.md" "$WSTG_BASE/.github/www/stable/."
         cd "$WSTG_BASE/.github/www/stable/"
@@ -95,6 +96,19 @@ jobs:
         cat prepend.nav > stable.yaml && cat README.md >> stable.yaml
         # Copy the navigation yaml to _data
         cp stable.yaml "$WWW_BASE/_data/."
+=======
+        TITLE="$(sed -n 's/^docs_list_title: //p' "$WSTG_BASE/.github/www/stable/prepend.nav")"
+        python3 "$WSTG_BASE/.github/www/scripts/generate_nav.py" \
+          "$WSTG_BASE/document/README.md" \
+          --title "$TITLE" \
+          --collection stable \
+          --yaml-out "$WWW_BASE/_data/stable.yaml" \
+          --html-out "$WWW_BASE/_includes/nav-tree-stable.html" \
+          --chapter-toc-out /tmp/wstg-chapter-toc-stable.md
+        cat "$WSTG_BASE/.github/www/stable/prepend.txt" /tmp/wstg-chapter-toc-stable.md \
+          | sponge "$WWW_BASE/stable/README.md"
+        cp "$WWW_BASE/stable/README.md" "$WWW_BASE/stable/index.md"
+>>>>>>> branch-2-rag-cwe-wstg
     - name: Modify Files for Web Deployment (Versioned)
       run: |
         cd "$WWW_BASE/$VERSION_PATH"
@@ -108,6 +122,7 @@ jobs:
         VERSION_PATH="$VERSION_PATH" yq -I4 -i '.stable_version = strenv(VERSION_PATH)' "$WWW_BASE/_config.yml"
     - name: Setup Navigation (Versioned)
       run: |
+<<<<<<< HEAD
         # Copy the current ToC for manipulation
         cp "$WSTG_BASE/document/README.md" "$WSTG_BASE/.github/www/$VERSION_PATH/."
         cd "$WSTG_BASE/.github/www/$VERSION_PATH/"
@@ -126,6 +141,19 @@ jobs:
         cat prepend.nav > "$VERSION_PATH.yaml" && cat README.md >> "$VERSION_PATH.yaml"
         # Copy the navigation yaml to _data
         cp "$VERSION_PATH.yaml" "$WWW_BASE/_data/."
+=======
+        TITLE="$(sed -n "s/^docs_list_title: //p" "$WSTG_BASE/.github/www/$VERSION_PATH/prepend.nav")"
+        python3 "$WSTG_BASE/.github/www/scripts/generate_nav.py" \
+          "$WSTG_BASE/document/README.md" \
+          --title "$TITLE" \
+          --collection "$VERSION_PATH" \
+          --yaml-out "$WWW_BASE/_data/$VERSION_PATH.yaml" \
+          --html-out "$WWW_BASE/_includes/nav-tree-$VERSION_PATH.html" \
+          --chapter-toc-out /tmp/wstg-chapter-toc-versioned.md
+        cat "$WSTG_BASE/.github/www/$VERSION_PATH/prepend.txt" /tmp/wstg-chapter-toc-versioned.md \
+          | sponge "$WWW_BASE/$VERSION_PATH/README.md"
+        cp "$WWW_BASE/$VERSION_PATH/README.md" "$WWW_BASE/$VERSION_PATH/index.md"
+>>>>>>> branch-2-rag-cwe-wstg
     - name: Push Feature Branch and Raise PR
       env:
         GH_TOKEN: ${{ secrets.wstg_deploy_token }}

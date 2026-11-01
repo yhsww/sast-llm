@@ -60,14 +60,22 @@ Many applications store static content on dedicated storage platforms, rather th
 - `BUCKET.s3.amazonaws.com` or `s3.REGION.amazonaws.com/BUCKET` for Amazon S3 Buckets
 - `ACCOUNT.blob.core.windows.net` for Azure Storage Accounts
 
+<<<<<<< HEAD
 These storage accounts can often expose sensitive files, as discussed in the [Testing Cloud Storage Guide](../02-Configuration_and_Deployment_Management_Testing/11-Test_Cloud_Storage.md) section.
+=======
+These storage accounts can often expose sensitive files, as discussed in the [Testing Cloud Storage Guide](../02-Configuration_and_Deployment_Management/11-Cloud_Storage.md) section.
+>>>>>>> branch-2-rag-cwe-wstg
 
 #### Database
 
 Most non-trivial web applications use some kind of database to store dynamic content. In some cases, it's possible to determine the database. This can often be done by:
 
 - Port scanning the server and looking for any open ports associated with specific databases
+<<<<<<< HEAD
 - Triggering SQL (or NoSQL) related error messages (or finding existing errors from a [search engine](../01-Information_Gathering/01-Conduct_Search_Engine_Discovery_Reconnaissance_for_Information_Leakage.md)
+=======
+- Triggering SQL (or NoSQL) related error messages (or finding existing errors from a [search engine](../01-Information_Gathering/01-Conduct_Search_Engine_Reconnaissance_for_Information_Leakage.md)
+>>>>>>> branch-2-rag-cwe-wstg
 
 When it's not possible to conclusively determine the database, the tester can often make an educated guess based on other aspects of the application:
 
@@ -99,8 +107,13 @@ Applications may provide multiple options for the user to authenticate (such as 
 
 Almost all web applications include third party resources that are loaded or that the client interacts with. These can include:
 
+<<<<<<< HEAD
 - [Active content](https://developer.mozilla.org/en-US/docs/Web/Security/Mixed_content#mixed_active_content) (such as scripts, style sheets, fonts, and iframes)
 - [Passive content](https://developer.mozilla.org/en-US/docs/Web/Security/Mixed_content#mixed_passivedisplay_content) (such as images and videos)
+=======
+- [Active content](https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Mixed_content#mixed_active_content) (such as scripts, style sheets, fonts, and iframes)
+- [Passive content](https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Mixed_content#mixed_passivedisplay_content) (such as images and videos)
+>>>>>>> branch-2-rag-cwe-wstg
 - External APIs
 - Social media buttons
 - Advertising networks
@@ -134,7 +147,11 @@ Load balancers can be difficult to detect, but can sometimes be identified by ma
 
 - Inconsistent system times
 - Different internal IP addresses or hostnames in detailed error messages
+<<<<<<< HEAD
 - Different addresses returned from [Server-Side Request Forgery (SSRF)](../07-Input_Validation_Testing/19-Testing_for_Server-Side_Request_Forgery.md)
+=======
+- Different addresses returned from [Server-Side Request Forgery (SSRF)](../07-Injection/19-Server-Side_Request_Forgery.md)
+>>>>>>> branch-2-rag-cwe-wstg
 
 They may also be indicated by the presence of specific cookies (for example, F5 BIG-IP load balancers will create a cookie called `BIGipServer`.
 
@@ -157,7 +174,11 @@ If the site is behind a CDN, it could be useful to identify the backend servers.
 - Emails sent by the application may come direct from the backend server, which could reveal it's IP address
 - DNS grinding, zone transfers or certificate transparency lists for a domain may reveal it on a subdomain
 - Scanning the IP ranges known to be used by the company may help identify the backend server
+<<<<<<< HEAD
 - Exploiting [Server-Side Request Forgery (SSRF)](../07-Input_Validation_Testing/19-Testing_for_Server-Side_Request_Forgery.md) may reveal the IP address
+=======
+- Exploiting [Server-Side Request Forgery (SSRF)](../07-Injection/19-Server-Side_Request_Forgery.md) may reveal the IP address
+>>>>>>> branch-2-rag-cwe-wstg
 - Detailed error messages from the application may expose IP addresses or hostnames
 
 ### Security Components
@@ -178,7 +199,11 @@ An IPS can usually be detected by running automated scanning tools (such as a po
 
 #### Web Application Firewall (WAF)
 
+<<<<<<< HEAD
 A Web Application Firewall (WAF) inspects the contents of HTTP requests and blocks those that appear to be suspicious or malicious. They can also be used to dynamically apply other controls such as CAPTCHA or rate limiting. They usually utilize a set of known bad signatures and regular expressions, such as the [OWASP Core Rule Set](https://owasp.org/www-project-modsecurity-core-rule-set/), to identify malicious traffic. WAFs can be effective at protecting against certain types of attacks such as SQL injection or cross-site scripting, but are less effective against other types such as access control or business logic related issues.
+=======
+A Web Application Firewall (WAF) inspects the contents of HTTP requests and blocks those that appear to be suspicious or malicious. They can also be used to dynamically apply other controls such as CAPTCHA or rate limiting. They usually utilize a set of known bad signatures and regular expressions, such as the [OWASP Core Rule Set](https://owasp.org/projects/crs), to identify malicious traffic. WAFs can be effective at protecting against certain types of attacks such as SQL injection or cross-site scripting, but are less effective against other types such as access control or business logic related issues.
+>>>>>>> branch-2-rag-cwe-wstg
 
 A WAF can be deployed in multiple locations, including:
 

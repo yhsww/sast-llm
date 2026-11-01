@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import chromadb
-from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
+from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
 from backend.config import settings
 
 CWE_DIR = Path("data/knowledge_base/cwe")
@@ -70,7 +70,7 @@ def _get_or_create(client: chromadb.PersistentClient, name: str, embed_fn, reset
     )
 
 
-def ingest_directory(collection, directory: Path, source: str) -> int:
+def ingest_directory(collection, directory: Path, source: str, batch_size: int = 100) -> int:
     files = list(directory.glob("*.txt"))
     if not files:
         print(f"  No .txt files found in {directory}")
@@ -80,9 +80,9 @@ def ingest_directory(collection, directory: Path, source: str) -> int:
     for f in files:
         doc_id = f.stem
         content = f.read_text(encoding="utf-8")
-        # first line is always "ID: Title" — extract title
         title = content.splitlines()[0].split(":", 1)[-1].strip() if content else doc_id
 
+<<<<<<< HEAD
         chunks = _chunk_text(content)
         if not chunks:
             continue
@@ -105,6 +105,19 @@ def ingest_directory(collection, directory: Path, source: str) -> int:
             ingested += 1
 
     return ingested
+=======
+    total = len(ids)
+    for start in range(0, total, batch_size):
+        end = min(start + batch_size, total)
+        collection.upsert(
+            ids=ids[start:end],
+            documents=documents[start:end],
+            metadatas=metadatas[start:end],
+        )
+        print(f"    batch {start // batch_size + 1}: {end - start} docs upserted")
+
+    return total
+>>>>>>> branch-2-rag-cwe-wstg
 
 
 def main():
@@ -112,10 +125,7 @@ def main():
     parser.add_argument("--reset", action="store_true", help="Drop collections before ingesting")
     args = parser.parse_args()
 
-    embed_fn = OpenAIEmbeddingFunction(
-        api_key=settings.openai_api_key,
-        model_name=settings.openai_embedding_model,
-    )
+    embed_fn = DefaultEmbeddingFunction()
     client = chromadb.PersistentClient(path=settings.chroma_persist_path)
 
     cwe_col = _get_or_create(client, settings.chroma_collection_cwe, embed_fn, args.reset)

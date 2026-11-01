@@ -30,8 +30,13 @@ def analyze(body: AnalyzeRequest):
         for issue in issues
     ]
 
+<<<<<<< HEAD
     # LLM: generate test cases grounded in retrieved context + code snippets (not vectorized)
     llm_report = generate_test_cases(
         issues, body.message, retrieved_per_finding, body.code_snippets
     )
+=======
+    # LLM: generate test cases grounded in retrieved context
+    llm_report = generate_test_cases(issues, body.message, retrieved_per_finding)
+>>>>>>> branch-2-rag-cwe-wstg
     return AnalyzeResponse(test_cases=llm_report.test_cases)

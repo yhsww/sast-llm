@@ -20,15 +20,30 @@ Techniques used for web server fingerprinting include [banner grabbing](https://
 
 ### Banner Grabbing
 
+<<<<<<< HEAD
 A banner grab is performed by sending an HTTP request to the web server and examining its [response header](https://developer.mozilla.org/en-US/docs/Glossary/Response_header). This can be accomplished using a variety of tools, including `telnet` for HTTP requests, or `openssl` for requests over TLS/SSL.
+=======
+A banner grab is performed by sending an HTTP request to the web server and examining its [response header](https://developer.mozilla.org/en-US/docs/Glossary/Response_header). This can be done with  `curl -I` (which sends a `HEAD` request and displays only the response headers), [httpx](https://github.com/projectdiscovery/httpx) for probing large host lists at scale, or `openssl s_client` for requests over TLS/SSL.
+
+As an example, the following command retrieves only the response headers from a server:
+
+```bash
+curl -I https://example.org
+```
+>>>>>>> branch-2-rag-cwe-wstg
 
 For example, here is the response to a request sent to an Apache server.
 
 ```http
 HTTP/1.1 200 OK
 Date: Thu, 05 Sep 2019 17:42:39 GMT
+<<<<<<< HEAD
 Server: Apache/2.4.41 (Unix)
 Last-Modified: Thu, 05 Sep 2019 17:40:42 GMT
+=======
+Server: Apache/2.4.43 (Unix)
+Last-Modified: Thu, 05 Sep 2026 17:40:42 GMT
+>>>>>>> branch-2-rag-cwe-wstg
 ETag: "75-591d1d21b6167"
 Accept-Ranges: bytes
 Content-Length: 117
@@ -41,11 +56,19 @@ Here is another response, this time sent by Nginx.
 
 ```http
 HTTP/1.1 200 OK
+<<<<<<< HEAD
 Server: nginx/1.17.3
 Date: Thu, 05 Sep 2019 17:50:24 GMT
 Content-Type: text/html
 Content-Length: 117
 Last-Modified: Thu, 05 Sep 2019 17:40:42 GMT
+=======
+Server: nginx/1.31.5
+Date: Thu, 05 Sep 2026 17:50:24 GMT
+Content-Type: text/html
+Content-Length: 117
+Last-Modified: Thu, 05 Sep 2026 17:40:42 GMT
+>>>>>>> branch-2-rag-cwe-wstg
 Connection: close
 ETag: "5d71489a-75"
 Accept-Ranges: bytes
@@ -54,6 +77,7 @@ Accept-Ranges: bytes
 
 Here's what a response sent by lighttpd looks like.
 
+<<<<<<< HEAD
 ```sh
 HTTP/1.0 200 OK
 Content-Type: text/html
@@ -64,6 +88,19 @@ Content-Length: 117
 Connection: close
 Date: Thu, 05 Sep 2019 17:57:57 GMT
 Server: lighttpd/1.4.54
+=======
+```http
+HTTP/1.1 200 OK
+Content-Type: text/html
+Accept-Ranges: bytes
+ETag: "4192788355"
+Last-Modified: Thu, 05 Sep 2026 17:40:42 GMT
+Content-Length: 117
+Connection: close
+Date: Thu, 05 Sep 2026 17:57:57 GMT
+Server: lighttpd/1.4.85
+...
+>>>>>>> branch-2-rag-cwe-wstg
 ```
 
 In these examples, the server type and version is clearly exposed. However, security-conscious applications may obfuscate their server information by modifying the header. For example, here is an excerpt from the response to a request for a site with a modified header:
@@ -173,9 +210,16 @@ As stated earlier, web server fingerprinting is often included as a functionalit
 
 Here are some commonly-used scan tools that include web server fingerprinting functionality.
 
+<<<<<<< HEAD
 - [Netcraft](https://toolbar.netcraft.com/site_report), an online tool that scans sites for information, including web server details.
 - [Nikto](https://github.com/sullo/nikto), an Open Source command-line scanning tool.
 - [Nmap](https://nmap.org/), an Open Source command-line tool that also has a GUI, [Zenmap](https://nmap.org/zenmap/).
+=======
+- [Netcraft Site Report](https://sitereport.netcraft.com/), an online tool that scans sites for information, including web server details.
+- [Nikto](https://github.com/sullo/nikto), an Open Source command-line scanning tool.
+- [Nmap](https://nmap.org/), an Open Source command-line tool that also has a GUI, [Zenmap](https://nmap.org/zenmap/).
+- [WhatWeb](https://github.com/urbanadventurer/WhatWeb) and [httpx](https://github.com/projectdiscovery/httpx) (`-tech-detect`), which identify web server software alongside other technologies (see [Fingerprint Web Application Framework](08-Fingerprint_Web_Application_Framework.md) and [Fingerprint Web Application](09-Fingerprint_Web_Application.md) for their broader tech-stack detection use).
+>>>>>>> branch-2-rag-cwe-wstg
 
 ## Remediation
 

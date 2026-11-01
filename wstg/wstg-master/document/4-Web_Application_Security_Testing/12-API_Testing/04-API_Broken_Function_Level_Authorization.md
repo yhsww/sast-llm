@@ -45,11 +45,19 @@ Authorization: Bearer <regular_user_token>
 
 ### Test Function-Level Access with Different HTTP Methods
 
+<<<<<<< HEAD
 Test various **HTTP methods** for BFLA vulnerabilities:
 
 - **GET**: Attempt to access information available only to high-privilege users (e.g., administrators).
     - Example: `GET /api/admin/getAllUsers`
 - **POST/PUT/PATCH**: Attempt to modify or create sensitive resources (e.g., changing user roles, creating or deleting system-critical data).
+=======
+Test various **HTTP methods** for BFLA vulnerabilities. Test each identified resource with alternative HTTP methods. Issue requests using methods other than those documented (such as `PUT`, `DELETE`, or `PATCH`) against endpoints that normally accept only `GET` or `POST`. Record any difference in response behavior or authorization outcome.
+
+- **GET**: Attempt to access information available only to high-privilege users, such as administrators.
+    - Example: `GET /api/admin/getAllUsers`
+- **POST/PUT/PATCH**: Attempt to modify or create sensitive resources, such as changing user roles or system-critical data.
+>>>>>>> branch-2-rag-cwe-wstg
     - Example: `POST /api/admin/promoteUser { "userId": "12345", "newRole": "admin" }`
 - **DELETE**: Attempt to delete sensitive resources, such as removing user accounts or data.
     - Example: `DELETE /api/admin/deleteUser/12345`
@@ -84,5 +92,10 @@ To prevent BFLA vulnerabilities, implement the following mitigations:
 ## References
 
 - [OWASP API Security Top 10: BFLA](https://owasp.org/API-Security/editions/2023/en/0xa5-broken-function-level-authorization/)
+<<<<<<< HEAD
 - [OWASP Testing Guide: Testing for Privilege Escalation](../05-Authorization_Testing/03-Testing_for_Privilege_Escalation.md)
 - [OWASP Testing Guide: Testing for GraphQL](99-Testing_GraphQL.md)
+=======
+- [Privilege Escalation](../05-Authorization/03-Privilege_Escalation.md)
+- [GraphQL](99-GraphQL.md)
+>>>>>>> branch-2-rag-cwe-wstg

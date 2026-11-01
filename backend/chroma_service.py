@@ -1,12 +1,10 @@
-from dataclasses import dataclass
 import chromadb
-from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
-from .config import settings
+from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
 
-_embedding_fn = OpenAIEmbeddingFunction(
-    api_key=settings.openai_api_key,
-    model_name=settings.openai_embedding_model,
-)
+from .config import settings
+from .retrieved_doc import RetrievedDoc
+
+_embedding_fn = DefaultEmbeddingFunction()
 
 _client = chromadb.PersistentClient(path=settings.chroma_persist_path)
 
@@ -23,27 +21,25 @@ _wstg_collection = _client.get_or_create_collection(
 )
 
 
-@dataclass
-class RetrievedDoc:
-    id: str
-    source: str   # "CWE" or "WSTG"
-    title: str
-    content: str
-
-
 def query_knowledge(query_text: str) -> list[RetrievedDoc]:
-    """Query both collections and return merged results."""
+    """Consulta as coleções CWE e WSTG e combina os resultados."""
     results: list[RetrievedDoc] = []
 
-    for collection, source in ((_cwe_collection, "CWE"), (_wstg_collection, "WSTG")):
+    for collection, source in (
+        (_cwe_collection, "CWE"),
+        (_wstg_collection, "WSTG"),
+    ):
         count = collection.count()
         if count == 0:
             continue
+
         k = min(
             settings.top_k_cwe if source == "CWE" else settings.top_k_wstg,
             count,
         )
+
         hits = collection.query(query_texts=[query_text], n_results=k)
+
         for i, doc_id in enumerate(hits["ids"][0]):
             results.append(
                 RetrievedDoc(

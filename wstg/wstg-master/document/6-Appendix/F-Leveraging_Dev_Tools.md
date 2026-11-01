@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # Leveraging Dev Tools
+=======
+# F. Leveraging Dev Tools {#leveraging-dev-tools}
+>>>>>>> branch-2-rag-cwe-wstg
 
 This appendix outlines various details for use of in browser Developer Tool functionality to aid in security testing activities.
 
@@ -40,7 +44,11 @@ Opening Dev Tools can be accomplished in a number of ways.
 
 ### Related Testing
 
+<<<<<<< HEAD
 - [Testing for Browser Cache Weaknesses](../4-Web_Application_Security_Testing/04-Authentication_Testing/06-Testing_for_Browser_Cache_Weaknesses.md)
+=======
+- [Browser Cache Weaknesses](../4-Web_Application_Security_Testing/04-Authentication/06-Browser_Cache_Weaknesses.md)
+>>>>>>> branch-2-rag-cwe-wstg
 
 ### Google Chrome
 
@@ -48,7 +56,11 @@ Opening Dev Tools can be accomplished in a number of ways.
 2. Un-check the "Select automatically" checkbox.
 3. Select the user agent from dropdown menu or enter a custom user agent
 
+<<<<<<< HEAD
 ![User-Agent selection dropdown menu in Google Chrome](images/f_chrome_devtools_ua_switch.png)\
+=======
+![User-Agent selection dropdown menu in Google Chrome](images/f-chrome_devtools_ua_switch.png)\
+>>>>>>> branch-2-rag-cwe-wstg
 *Figure 6.F-1: Google Chrome Dev Tools User-Agent Switching Functionality*
 
 ### Mozilla Firefox
@@ -58,7 +70,11 @@ Opening Dev Tools can be accomplished in a number of ways.
 3. Look for `general.useragent.override`, if you can't see this preference, look for one that show a set of radio buttons `Boolean, Number, String` select `String` then click the plus sign `Add` button on the `about:config` page.
 4. Set the value of `general.useragent.override` to whatever [User-Agent](https://developers.whatismybrowser.com/useragents/explore/) you might need.
 
+<<<<<<< HEAD
 ![User-Agent configuration preference in Mozilla Firefox](images/f_firefox_ua_switch.png)\
+=======
+![User-Agent configuration preference in Mozilla Firefox](images/f-firefox_ua_switch.png)\
+>>>>>>> branch-2-rag-cwe-wstg
 *Figure 6.F-2: Mozilla Firefox User-Agent Switching Functionality*
 
 Later click on the garbage can `Delete` button to the right of the `general.useragent.override` preference to remove the override and switch back to the default user agent.
@@ -67,11 +83,19 @@ Later click on the garbage can `Delete` button to the right of the `general.user
 
 ### Related Testing
 
+<<<<<<< HEAD
 - [Authentication Testing](../4-Web_Application_Security_Testing/04-Authentication_Testing/README.md)
 - [Authorization Testing](../4-Web_Application_Security_Testing/05-Authorization_Testing/README.md)
 - [Session Management Testing](../4-Web_Application_Security_Testing/06-Session_Management_Testing/README.md)
 - [Input Validation Testing](../4-Web_Application_Security_Testing/07-Input_Validation_Testing/README.md)
 - [Business Logic Testing](../4-Web_Application_Security_Testing/10-Business_Logic_Testing/README.md)
+=======
+- [Authentication Testing](../4-Web_Application_Security_Testing/04-Authentication/README.md)
+- [Authorization Testing](../4-Web_Application_Security_Testing/05-Authorization/README.md)
+- [Session Management Testing](../4-Web_Application_Security_Testing/06-Session_Management/README.md)
+- [Injection Testing](../4-Web_Application_Security_Testing/07-Injection/README.md)
+- [Business Logic Testing](../4-Web_Application_Security_Testing/10-Business_Logic/README.md)
+>>>>>>> branch-2-rag-cwe-wstg
 
 ### Mozilla Firefox
 
@@ -93,10 +117,17 @@ Later click on the garbage can `Delete` button to the right of the `general.user
 
 ### Related Testing
 
+<<<<<<< HEAD
 - [Authentication Testing](../4-Web_Application_Security_Testing/04-Authentication_Testing/README.md)
 - [Authorization Testing](../4-Web_Application_Security_Testing/05-Authorization_Testing/README.md)
 - [Session Management Testing](../4-Web_Application_Security_Testing/06-Session_Management_Testing/README.md)
 - [Testing for Cookie Attributes](../4-Web_Application_Security_Testing/06-Session_Management_Testing/02-Testing_for_Cookies_Attributes.md)
+=======
+- [Authentication Testing](../4-Web_Application_Security_Testing/04-Authentication/README.md)
+- [Authorization Testing](../4-Web_Application_Security_Testing/05-Authorization/README.md)
+- [Session Management Testing](../4-Web_Application_Security_Testing/06-Session_Management/README.md)
+- [Cookie Attributes](../4-Web_Application_Security_Testing/06-Session_Management/02-Cookies_Attributes.md)
+>>>>>>> branch-2-rag-cwe-wstg
 
 ### Google Chrome
 
@@ -116,14 +147,22 @@ Later click on the garbage can `Delete` button to the right of the `general.user
 
 > Note: Cookies can be deleted once selected by pressing the `delete` key, or with various options from the right-click context menu.
 
+<<<<<<< HEAD
 ![Cookie Editing functionality in Mozilla Firefox](images/f_firefox_cookie_edit.png)\
+=======
+![Cookie Editing functionality in Mozilla Firefox](images/f-firefox_cookie_edit.png)\
+>>>>>>> branch-2-rag-cwe-wstg
 *Figure 6.F-3: Mozilla Firefox Cookie Editing Functionality*
 
 ## Local Storage Editing
 
 ### Related Testing
 
+<<<<<<< HEAD
 - [Testing Browser Storage](../4-Web_Application_Security_Testing/11-Client-side_Testing/12-Testing_Browser_Storage.md)
+=======
+- [Testing Browser Storage](../4-Web_Application_Security_Testing/11-Client-side/12-Browser_Storage.md)
+>>>>>>> branch-2-rag-cwe-wstg
 
 ### Google Chrome
 
@@ -152,14 +191,23 @@ Later click on the garbage can `Delete` button to the right of the `general.user
 
 ### Related Testing
 
+<<<<<<< HEAD
 - [Testing for Client-side Resource Manipulation](../4-Web_Application_Security_Testing/11-Client-side_Testing/06-Testing_for_Client-side_Resource_Manipulation.md)
+=======
+- [Client-side Resource Manipulation](../4-Web_Application_Security_Testing/11-Client-side/06-Client-side_Resource_Manipulation.md)
+>>>>>>> branch-2-rag-cwe-wstg
 
 ### General
 
 All major browsers support manipulating CSS leveraging the Dev Tools Console and JavaScript functionality:
 
+<<<<<<< HEAD
 - To remove all external style-sheets: `$('style,link[rel="stylesheet"]').remove();`
 - To remove all internal style-sheets: `$('style').remove();`
+=======
+- To remove all external style sheets: `$('style,link[rel="stylesheet"]').remove();`
+- To remove all internal style sheets: `$('style').remove();`
+>>>>>>> branch-2-rag-cwe-wstg
 - To remove all in-line styles: `Array.prototype.forEach.call(document.querySelectorAll('*'),function(el){el.removeAttribute('style');});`
 - To remove everything from head tag: `$('head').remove();`
 
@@ -186,7 +234,11 @@ All major browsers support manipulating CSS leveraging the Dev Tools Console and
 1. On the `Networking` tab in Dev Tools select any URL or request.
 2. In the lower right hand pane select the `Headers` tab.
 
+<<<<<<< HEAD
 ![Headers View in Google Chrome](images/f_chrome_devtools_headers.png)\
+=======
+![Headers View in Google Chrome](images/f-chrome_devtools_headers.png)\
+>>>>>>> branch-2-rag-cwe-wstg
 *Figure 6.F-4: Google Chrome Headers View*
 
 ### Mozilla Firefox
@@ -194,7 +246,11 @@ All major browsers support manipulating CSS leveraging the Dev Tools Console and
 1. On the `Networking` tab in Dev Tools select any URL or request.
 2. In the lower right hand pane select the `Headers` tab.
 
+<<<<<<< HEAD
 ![Headers View in Mozilla Firefox](images/f_firefox_devtools_headers.png)\
+=======
+![Headers View in Mozilla Firefox](images/f-firefox_devtools_headers.png)\
+>>>>>>> branch-2-rag-cwe-wstg
 *Figure 6.F-5: Mozilla Firefox Headers View*
 
 ## Screenshots
@@ -222,14 +278,22 @@ All major browsers support manipulating CSS leveraging the Dev Tools Console and
 1. Navigate to `Network` tab.
 2. In the `Throttle` dropdown select `Offline`.
 
+<<<<<<< HEAD
 ![Offline Option in Google Chrome](images/f_chrome_devtools_offline.png)\
+=======
+![Offline Option in Google Chrome](images/f-chrome_devtools_offline.png)\
+>>>>>>> branch-2-rag-cwe-wstg
 *Figure 6.F-6: Google Chrome Offline Option*
 
 ### Mozilla Firefox
 
 1. From the triple line 'hamburger' (or 'pancake') menu select `Web Developer` and then `Work Offline`.
 
+<<<<<<< HEAD
 ![Offline Option in Mozilla Firefox](images/f_firefox_devtools_offline.png)\
+=======
+![Offline Option in Mozilla Firefox](images/f-firefox_devtools_offline.png)\
+>>>>>>> branch-2-rag-cwe-wstg
 *Figure 6.F-7: Mozilla Firefox Offline Option*
 
 ## Encoding and Decoding
@@ -250,22 +314,36 @@ All major browsers support encoding and decoding strings in various ways leverag
 
 ### Related Testing
 
+<<<<<<< HEAD
 - [Testing for Browser Cache Weaknesses](../4-Web_Application_Security_Testing/04-Authentication_Testing/06-Testing_for_Browser_Cache_Weaknesses.md)
 - [Testing for Weaker Authentication in Alternative Channel](../4-Web_Application_Security_Testing/04-Authentication_Testing/10-Testing_for_Weaker_Authentication_in_Alternative_Channel.md)
 - [Testing for Clickjacking](../4-Web_Application_Security_Testing/11-Client-side_Testing/09-Testing_for_Clickjacking.md)
+=======
+- [Browser Cache Weaknesses](../4-Web_Application_Security_Testing/04-Authentication/06-Browser_Cache_Weaknesses.md)
+- [Weaker Authentication in Alternative Channel](../4-Web_Application_Security_Testing/04-Authentication/10-Weaker_Authentication_in_Alternative_Channel.md)
+- [Clickjacking](../4-Web_Application_Security_Testing/11-Client-side/09-Clickjacking.md)
+>>>>>>> branch-2-rag-cwe-wstg
 
 ### Google Chrome
 
 1. Click the `Toggle device toolbar` button or press `ctrl` + `shift` + `m`.
 
+<<<<<<< HEAD
 ![Responsive Design Mode in Google Chrome](images/f_chrome_responsive_design_mode.png)\
+=======
+![Responsive Design Mode in Google Chrome](images/f-chrome_responsive_design_mode.png)\
+>>>>>>> branch-2-rag-cwe-wstg
 *Figure 6.F-8: Google Chrome Responsive Design Mode*
 
 ### Mozilla Firefox
 
 1. Click the `Responsive Design Mode` button or press `ctrl` + `shift` + `m`.
 
+<<<<<<< HEAD
 ![Responsive Design Mode in Mozilla Firefox](images/f_firefox_responsive_design_mode.png)\
+=======
+![Responsive Design Mode in Mozilla Firefox](images/f-firefox_responsive_design_mode.png)\
+>>>>>>> branch-2-rag-cwe-wstg
 *Figure 6.F-9: Mozilla Firefox Responsive Design Mode*
 
 ## References

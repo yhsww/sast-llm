@@ -47,7 +47,11 @@ This project is only possible thanks to the work of many dedicated volunteers. E
 
 To learn how to contribute successfully, read the [contribution guide](CONTRIBUTING.md).
 
+<<<<<<< HEAD
 Successful contributors appear on [the project's list of authors, reviewers, or editors](document/1-Frontispiece/README.md).
+=======
+Successful contributors appear on [the project's list of authors, reviewers, or editors](document/1-About/README.md).
+>>>>>>> branch-2-rag-cwe-wstg
 
 ## Chat With Us
 

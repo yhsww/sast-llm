@@ -5,3 +5,9 @@ title: WSTG - v4.1
 tags: WSTG
 
 ---
+<<<<<<< HEAD
+=======
+
+<link rel="stylesheet" href="{{ site.baseurl }}/assets/css/wstg-nav.css">
+<script src="{{ site.baseurl }}/assets/js/wstg-nav.js" defer></script>
+>>>>>>> branch-2-rag-cwe-wstg

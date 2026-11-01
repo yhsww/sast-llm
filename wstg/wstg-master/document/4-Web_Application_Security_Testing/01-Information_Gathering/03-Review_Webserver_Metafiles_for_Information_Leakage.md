@@ -19,6 +19,7 @@ This section describes how to test various metadata files for information leakag
 
 ### Robots
 
+<<<<<<< HEAD
 Web Spiders, Robots, or Crawlers retrieve a web page and then recursively traverse hyperlinks to retrieve further web content. Their accepted behavior is specified by the [Robots Exclusion Protocol](https://www.robotstxt.org) of the [robots.txt](https://www.robotstxt.org/) file in the web root directory.
 
 As an example, the beginning of the `robots.txt` file from [Google](https://www.google.com/robots.txt) sampled on 2020 May 5 is quoted below:
@@ -34,6 +35,36 @@ Disallow: /sdch
 ```
 
 The [User-Agent](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent) directive refers to the specific web spider/robot/crawler. For example, the `User-Agent: Googlebot` refers to the spider from Google while `User-Agent: bingbot` refers to a crawler from Microsoft. `User-Agent: *` in the example above applies to all [web spiders/robots/crawlers](https://support.google.com/webmasters/answer/6062608?visit_id=637173940975499736-3548411022&rd=1).
+=======
+Web Spiders, Robots, or Crawlers retrieve a web page and then recursively traverse hyperlinks to retrieve further web content. Their accepted behavior is specified by the [Robots Exclusion Protocol](https://datatracker.ietf.org/doc/html/rfc9309) ([RFC 9309](https://datatracker.ietf.org/doc/html/rfc9309)) via a `robots.txt` file in the web root directory.
+
+As an example, a sample of the `robots.txt` file from [Google](https://www.google.com/robots.txt) sampled on 2026 Sept 13 is quoted below:
+
+```text
+User-agent: *
+User-agent: Yandex
+Disallow: /search
+Allow: /search/about
+Allow: /search/howsearchworks
+Disallow: /sdch
+Disallow: /groups
+...
+# Crawlers of certain social media sites are allowed to access page markup when
+# google.com/imgres* links are shared. To learn more, please contact
+# images-robots-allowlist@google.com.
+User-agent: facebookexternalhit
+User-agent: Twitterbot
+Allow: /imgres
+Allow: /search
+Disallow: /groups
+Disallow: /hosted/images/
+Disallow: /m/
+
+Sitemap: https://www.google.com/sitemap.xml
+```
+
+The [User-Agent](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/User-Agent) directive refers to the specific web spider/robot/crawler. For example, the `User-Agent: Googlebot` refers to the spider from Google while `User-Agent: bingbot` refers to a crawler from Microsoft. `User-Agent: *` in the example above applies to all [web spiders/robots/crawlers](https://developers.google.com/search/docs/crawling-indexing/robots/intro).
+>>>>>>> branch-2-rag-cwe-wstg
 
 The `Disallow` directive specifies which resources are prohibited by spiders/robots/crawlers. In the example above, the following are prohibited:
 
@@ -45,7 +76,11 @@ Disallow: /sdch
 ...
 ```
 
+<<<<<<< HEAD
 Web spiders/robots/crawlers can [intentionally ignore](https://blog.isc2.org/isc2_blog/2008/07/the-attack-of-t.html) the `Disallow` directives specified in a `robots.txt` file. Hence, `robots.txt` should not be considered as a mechanism to enforce restrictions on how web content is accessed, stored, or republished by third parties.
+=======
+Web spiders/robots/crawlers can [intentionally ignore](https://blog.cloudflare.com/perplexity-is-using-stealth-undeclared-crawlers-to-evade-website-no-crawl-directives/) the `Disallow` directives specified in a `robots.txt` file. Hence, `robots.txt` should not be considered as a mechanism to enforce restrictions on how web content is accessed, stored, or republished by third parties.
+>>>>>>> branch-2-rag-cwe-wstg
 
 The `robots.txt` file is retrieved from the web root directory of the web server. For example, to retrieve the `robots.txt` from `www.google.com` using `wget` or `curl`:
 
@@ -59,9 +94,21 @@ Allow: /search/howsearchworks
 ...
 ```
 
+<<<<<<< HEAD
 #### Analyze robots.txt Using Google Webmaster Tools
 
 Site owners can use the Google "Analyze robots.txt" function to analyze the site as part of its [Google Webmaster Tools](https://www.google.com/webmasters/tools). This tool can assist with testing and the procedure is as follows:
+=======
+#### AI Crawlers
+
+Many AI crawlers, used by AI companies to collect training data, have been observed ignoring `robots.txt` directives. Developers and site owners have explored countermeasures to protect their content; as described in [a 2025 TechCrunch article](https://techcrunch.com/2025/03/27/open-source-devs-are-fighting-ai-crawlers-with-cleverness-and-vengeance/), the open-source community has responded with tactics such as generating endless fake content to consume crawler resources, or serving misleading data to degrade the quality of AI training sets. The [Free Software Foundation](https://www.fsf.org/blogs/sysadmin/our-small-team-vs-millions-of-bots) has also documented the operational burden that large volumes of AI crawlers impose on small teams, highlighting how even well-intentioned `robots.txt` rules are routinely disregarded.
+
+From a testing perspective, `robots.txt` entries intended to block AI crawlers (e.g., `User-Agent: GPTBot`, `User-Agent: ClaudeBot`) may be ineffective and sensitive paths listed in `robots.txt` remain discoverable by any crawler that ignores the protocol.
+
+#### Analyze robots.txt Using Google Webmaster Tools
+
+Site owners can use the Google "Analyze robots.txt" function to analyze the site as part of its [Google Webmaster Tools](https://search.google.com/search-console/about). This tool can assist with testing and the procedure is as follows:
+>>>>>>> branch-2-rag-cwe-wstg
 
 1. Sign into Google Webmaster Tools with a Google account.
 2. On the dashboard, enter the URL for the site to be analyzed.
@@ -69,7 +116,11 @@ Site owners can use the Google "Analyze robots.txt" function to analyze the site
 
 ### META Tags
 
+<<<<<<< HEAD
 `<META>` tags are located within the `HEAD` section of each HTML document and should be consistent across a site in the event that the robot/spider/crawler start point does not begin from a document link other than webroot i.e. a [deep link](https://en.wikipedia.org/wiki/Deep_linking). The Robots directive can also be specified using a specific [META tag](https://www.robotstxt.org/meta.html).
+=======
+`<META>` tags are located within the `HEAD` section of each HTML document and should be consistent across a site in the event that the robot/spider/crawler start point does not begin from a document link other than webroot i.e. a [deep link](https://en.wikipedia.org/wiki/Deep_linking). The Robots directive can also be specified using a specific [META tag](https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag).
+>>>>>>> branch-2-rag-cwe-wstg
 
 #### Robots META Tag
 
@@ -79,6 +130,7 @@ Based on the Disallow directive(s) listed within the `robots.txt` file in webroo
 
 #### Miscellaneous META Information Tags
 
+<<<<<<< HEAD
 Organizations often embed informational META tags in web content to support various technologies such as screen readers, social networking previews, search engine indexing, etc. Such meta-information can be of value to testers in identifying technologies used, and additional paths/functionality to explore and test. The following meta information was retrieved from `www.whitehouse.gov` via View Page Source on 2020 May 05:
 
 ```html
@@ -103,6 +155,30 @@ Organizations often embed informational META tags in web content to support vari
 <meta name="application-name" content="The White House">
 <meta name="msapplication-TileColor" content="#0c2644">
 <meta name="theme-color" content="#f5f5f5">
+=======
+Organizations often embed informational META tags in web content to support various technologies such as screen readers, social networking previews, search engine indexing, etc. Such meta-information can be of value to testers in identifying technologies used, and additional paths/functionality to explore and test. The following meta information was retrieved from `www.whitehouse.gov` via View Page Source on 2026 Sept 13:
+
+```html
+...
+<meta name="description" content="President Donald J. Trump and Vice President JD Vance are committed to lowering costs for all Americans, securing our borders, unleashing American energy dominance, restoring peace through strength, and making all Americans safe and secure once again." />
+<link rel="canonical" href="https://www.whitehouse.gov/" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="The White House" />
+<meta property="og:description" content="President Donald J. Trump and Vice President JD Vance are committed to lowering costs for all Americans, securing our borders, unleashing American energy dominance, restoring peace through strength, and making all Americans safe and secure once again." />
+<meta property="og:url" content="https://www.whitehouse.gov/" />
+<meta property="og:site_name" content="The White House" />
+<meta property="article:publisher" content="https://www.facebook.com/WhiteHouse/" />
+<meta property="article:modified_time" content="2026-07-22T13:21:31+00:00" />
+<meta property="og:image" content="https://www.whitehouse.gov/wp-content/uploads/2025/03/WH47-Social-Share-Card.jpg" />
+...
+<meta property="og:image:type" content="image/jpeg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="The White House" />
+...
+<meta name="twitter:image" content="https://www.whitehouse.gov/wp-content/uploads/2025/03/WH47-Social-Share-Card.jpg" />
+<meta name="twitter:site" content="@whitehouse" />
+>>>>>>> branch-2-rag-cwe-wstg
 ...
 ```
 

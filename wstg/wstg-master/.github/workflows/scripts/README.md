@@ -2,6 +2,12 @@
 
 This directory contains helper scripts used by GitHub Actions workflows.
 
+<<<<<<< HEAD
+=======
+For website publish / sidebar nav generation, see
+[`../../www/scripts/README.md`](../../www/scripts/README.md) (`generate_nav.py`).
+
+>>>>>>> branch-2-rag-cwe-wstg
 ## Scripts
 
 ### format_lint_output.py

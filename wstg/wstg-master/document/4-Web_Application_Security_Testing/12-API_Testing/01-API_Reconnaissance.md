@@ -18,7 +18,11 @@ APIs can be public or private.
 
 Public APIs typically have their details published in a Swagger/OpenAPI document. Gaining access to this document is important to understand the attack surface. Equally important is finding older versions of this document that might show deprecated but still functional code that may have security vulnerabilities.
 
+<<<<<<< HEAD
 Keep in mind that this document, however well intentioned, may not be accurate, and also may not dislose the complete API.
+=======
+Keep in mind that this document, however well intentioned, may not be accurate, and also may not disclose the complete API.
+>>>>>>> branch-2-rag-cwe-wstg
 
 Public APIs may also be documented on shared libraries or directories of APIs.
 
@@ -36,6 +40,7 @@ The visibility of private APIs depends on who the intended consumer is. An API c
 
 ### Find the Documentation
 
+<<<<<<< HEAD
 In both public and private cases, the API documentation will be useful based on its level of the quality and accurracy. Public API documentaton is typically shared with everyone whereas private API documentation is only shared with the intended client. However, in both cases finding documentation, accidentally leaked or otherwise will be helpfull in your investigation.
 
 Regardless of the visibility of the API, searching for API documentation can find older, not-yet-published, or accidentally leaked API documentation. This documentation will be very helpfull in understanding what the attack surface the API exposes.
@@ -43,6 +48,17 @@ Regardless of the visibility of the API, searching for API documentation can fin
 ### API Directories
 
 Alternatives sources of API documentation can incluide API Directories, such as:
+=======
+In both public and private cases, the API documentation will be useful based on its level of quality and accuracy. Public API documentation is typically shared with everyone whereas private API documentation is only shared with the intended client. However, in both cases finding documentation, accidentally leaked or otherwise will be helpful in your investigation.
+
+Regardless of the visibility of the API, searching for API documentation can find older, not-yet-published, or accidentally leaked API documentation. This documentation will be very helpful in understanding what attack surface the API exposes.
+
+For time-boxed engagements, request machine-readable API artifacts from the customer as early as possible so testing tools can import or process them directly. Ask for OpenAPI definitions, legacy Swagger 2.0 specifications, and up-to-date request collections (for example [Postman](https://www.postman.com/) or [Bruno](https://www.usebruno.com/)). For non-REST APIs in scope (for example GraphQL), request schemas or exported schemas when introspection is disabled. Request replay definitions (for example [Hurl](https://hurl.dev/)) are also useful. If the API is older, WSDL or WADL files can appear as legacy artifacts in some environments. This is especially useful for private, internal, or newly deployed APIs where public documentation may not exist.
+
+### API Directories
+
+Alternative sources of API documentation can include API Directories, such as:
+>>>>>>> branch-2-rag-cwe-wstg
 
 - GitHub in general
 - [GitHub Public APIs Repository](https://github.com/public-apis/public-apis)
@@ -80,20 +96,48 @@ Even if you have the API documentation browsing the application is a good idea. 
 
 Browsing the application with an intercepting proxy such as ZAP or Burp Suite records endpoints for later inspection. In addition, using their built-in spidering functionality, intercepting proxies can help generate a comprehensive list of endpoints. From the spidered URLs look for links with obvious API URL naming schemes. These include:
 
+<<<<<<< HEAD
 - `https://example.com/api/v1` (or v2 etc)
 - `https://example.com/graphql`
 
 Or subdomains the the applications may consume or depend upon:
+=======
+- `https://example.com/api/v1` (or v2 etc)  
+- `https://example.com/graphql`
+
+Or subdomains the applications may consume or depend upon:
+>>>>>>> branch-2-rag-cwe-wstg
 
 - `https://api.example.com/api/v1`
 
 It is important that the pentester attempts to exercise as much functionality in the application as possible. This is not only to generate a comprehensive list of endpoints but also to avoid issues with lazy loading and code splitting. In addition, your pentest engagement should include sample accounts at different privilege levels so that your browser and spidering can access and expose endpoints for as much functionality as possible.
 
+<<<<<<< HEAD
 Once completed, the endpoint information obtained from browsing and spidering of the application can help the pentester compose API documentation of the target using other tools such as Postman.
 
 ### Google Dorking
 
 Using passive reconnaissance techniques such as Google Dorking with directives such as `site` and `inurl` allows us to tailor a search for common API keywords that the Google indexer may have found. Review [Conduct Search Engine Discovery Reconnaissance for Information Leakage](../01-Information_Gathering/01-Conduct_Search_Engine_Discovery_Reconnaissance_for_Information_Leakage.md) for additional information.
+=======
+Once completed, the endpoint information obtained from browsing and spidering of the application can help the pentester compose API documentation and collections using tools such as [Postman](https://www.postman.com/) and [Bruno](https://www.usebruno.com/). Request replay tools such as [Hurl](https://hurl.dev/) can then use that information to automate repeatable test flows. Some clients, such as Postman and Bruno, can also use pre-request and post-request scripts, which can help replay realistic flows when testing stateful APIs.
+
+### Analyze Intercepted Requests
+
+When auditing REST APIs, use an interception proxy to collect full HTTP requests. REST services utilize more than just URL parameters, so capturing the complete request body and headers is critical.
+
+Analyze the collected requests to identify non-standard or hidden parameters:
+
+- Identify HTTP headers that influence application behavior or resource selection.
+- Determine if a URL segment has a repeating pattern across multiple URLs. Patterns containing dates, numbers, or identifier values may indicate a URL-embedded parameter. For example, in the URL `https://api.example.com/user/2026-10-03/profile`, the date segment may represent a parameter value.
+- Identify structured parameter values formatted in JSON, XML, or other custom structures.
+- Examine the final element of a URL. If it lacks a file extension, it may be a parameter.
+- Look for highly varying URL segments. If a single segment changes frequently across hundreds of requests, it is more likely to represent a parameter value than a static path component.
+- Verify suspected variable URL segments by setting them to an obviously invalid value. This applies to intermediate segments that look dynamic as well as terminal segments without file extensions. A routing-level `404` before application processing can indicate a static path segment. Application-generated `404` responses are not enough on their own to make that distinction. If the request reaches application logic and returns a resource-not-found or validation error, the segment may be application-routed and parameterized. Treat this as a heuristic and correlate the response source with observed routing behavior.
+
+### Google Dorking
+
+Using passive reconnaissance techniques such as Google Dorking with directives such as `site` and `inurl` allows us to tailor a search for common API keywords that the Google indexer may have found. Review [Conduct Search Engine Reconnaissance for Information Leakage](../01-Information_Gathering/01-Conduct_Search_Engine_Reconnaissance_for_Information_Leakage.md) for additional information.
+>>>>>>> branch-2-rag-cwe-wstg
 
 Here are a few API specific examples:
 
@@ -123,7 +167,11 @@ An excellent source of API and other information is the HTML and JavaScript that
 
 There are a variety of tools that we can use to help us extract sensitive information from JavaScript transmitted to the browser. These tools are typically based on one of two approaches: Regular Expressions or Abstract Syntax Trees (AST). Then there are generalized tools that help us organize or manage JS files for investigation by AST and Regular Expression tools.
 
+<<<<<<< HEAD
 Regex is more straightforward by searching JS or HTML content for known patterns. However, this approach can miss content not explicitly identified in the Regular Expression. Given the structure of some JS this approach can miss a lot. ASTs on the other hand are tree-like structures that represent the syntax of source code. Each node in the tree corresponds to a part of the code. For JavaScript, an AST breaks the code into basic components, allowing tools and compilers to understand and modify the code easily.
+=======
+Regular expression is more straightforward by searching JS or HTML content for known patterns. However, this approach can miss content not explicitly identified in the Regular Expression. Given the structure of some JS this approach can miss a lot. ASTs on the other hand are tree-like structures that represent the syntax of source code. Each node in the tree corresponds to a part of the code. For JavaScript, an AST breaks the code into basic components, allowing tools and compilers to understand and modify the code easily.
+>>>>>>> branch-2-rag-cwe-wstg
 
 #### General Tools
 
@@ -149,10 +197,92 @@ Regex is more straightforward by searching JS or HTML content for known patterns
 3. [xnLinkFinder](https://github.com/xnl-h4ck3r/xnLinkFinder). A python tool used to discover endpoints, potential parameters, and a target specific wordlist for a given target.
 4. [GAP](https://github.com/xnl-h4ck3r/GAP-Burp-Extension). Burp Extension to find potential endpoints, parameters, and generate a custom target wordlist.
 
+<<<<<<< HEAD
+=======
+### Server-Side Source Code
+
+If you have access to the server-side source code, extract the endpoints from it. [OWASP Noir](https://owasp.org/projects/noir) parses the routing code of many web frameworks and lists every endpoint with its methods and parameters, including internal or deprecated APIs that no current client calls. See [Identify Application Entry Points](../01-Information_Gathering/06-Identify_Application_Entry_Points.md#owasp-noir) for a walkthrough of the tool.
+
+For API testing, export the results as OpenAPI. This command writes an OpenAPI 3.0 document for every endpoint in the [OWASP RailsGoat](https://github.com/OWASP/railsgoat) source code:
+
+```bash
+noir scan railsgoat -f oas3 -o railsgoat-openapi.json
+```
+
+The generated file begins as follows:
+
+```json
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Generated by Noir",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost"
+    }
+  ],
+  "paths": {
+    "/api/v1/mobile/1": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "class",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "x-noir-unmapped-path-params": [
+          "id"
+        ]
+      }
+    },
+```
+
+Import the document with the ZAP [OpenAPI Support](https://www.zaproxy.org/docs/desktop/addons/openapi-support/) add-on or the Burp Suite OpenAPI Parser extension (see [General Tools](#general-tools)). The proxy adds every endpoint to its site tree, so you can run the tests in this section against them. Noir replaces each path parameter with a sample value, so a route with an `:id` placeholder appears as `/api/v1/mobile/1`, and keeps the original names under `x-noir-unmapped-path-params`. Use these when testing for [API Broken Object Level Authorization](02-API_Broken_Object_Level_Authorization.md).
+
+### Port Scanning
+
+API servers are often deployed on non-standard ports, or alongside other exposed services (internal admin panels, gRPC or WebSocket listeners, debug/metrics endpoints) that a documentation-only review would miss. [naabu](https://github.com/projectdiscovery/naabu) is a fast port scanner that can quickly enumerate open ports across the identified hosts, and can pipe its results directly into Nmap for service detection on just the ports found open:
+
+```bash
+naabu -p - -rate 2000 -c 50 -retries 2 -warm-up-time 1 -silent -host api.example.com -nmap-cli 'nmap -sV -oX scan.xml'
+```
+
+Running this scan first, and Nmap's slower full service-detection scan only against the ports naabu reports as open, considerably reduces total scan time compared to a direct full-range Nmap scan. See [Improving Port Scans Against API Servers](https://danaepp.com/improving-port-scans-against-api-servers) for further tuning guidance specific to API targets, including why CONNECT scans can outperform SYN scans under high concurrency, and how to avoid missing services due to rate-limiting or firewalling.
+
+Also see [Attack Surface Identification](../01-Information_Gathering/04-Attack_Surface_Identification.md) for further discussion of non-standard port discovery.
+
+>>>>>>> branch-2-rag-cwe-wstg
 ### Active Fuzzing
 
 Active Fuzzing involves using tools with wordlists and filtering requests results to bruteforce endpoint discovery.
 
+<<<<<<< HEAD
+=======
+After endpoint and parameter discovery, use collected request values to optimize value-level fuzzing:
+
+- Compare observed values to identify likely valid versus invalid ranges and formats.
+- Start with marginal invalid values (for example `0` for fields that are always positive integers).
+- Look for sequences so you can test values outside the range currently allocated to the authenticated user.
+
+>>>>>>> branch-2-rag-cwe-wstg
 #### Kiterunner
 
 [KiteRunner](https://github.com/assetnote/kiterunner) is a tool that performs traditional content discovery and bruteforcing routes/endpoints in modern applications and APIs.
@@ -171,12 +301,23 @@ kr scan https://example.com/api -w /usr/share/wordlists/apis/routes-large.kite -
 
 All three of FFUF, DirBuster, and GoBuster are designed to discover hidden paths and files on web servers through brute-forcing techniques. All three use customizable wordlists to generate requests to the target web server, attempting to identify valid directories and files. All three support multi-threaded or highly efficient processing to speed up the brute-forcing process.
 
+<<<<<<< HEAD
 Some common wordlist files for APIs include: [SecLists](https://github.com/danielmiessler/SecLists) in the Discovery/Web-Content/api section, [GraphQL Wordlist](https://github.com/Escape-Technologies/graphql-wordlist), and [Assetnote](https://wordlists.assetnote.io/).
+=======
+Some common wordlist files for APIs include: [SecLists](https://github.com/danielmiessler/SecLists) in the Discovery/Web-Content/API section, [GraphQL Wordlist](https://github.com/Escape-Technologies/graphql-wordlist), and [Assetnote](https://wordlists.assetnote.io/).
+>>>>>>> branch-2-rag-cwe-wstg
 
 GoBuster Example:
 
 `gobuster dir -u <target url> -w <wordlist file>`
 
+<<<<<<< HEAD
+=======
+#### Authenticated Fuzzing
+
+When fuzzing authenticated APIs, replay the same authentication and session handling that the target expects. Include custom tokens, non-standard authorization headers, signed request metadata, or cookies as required, otherwise tools may produce false negatives by never reaching the application logic. If the mechanism uses dynamic fields (for example timestamps, nonces, or body-bound signatures), recompute those values for each mutated request, typically through pre-request scripting or proxy/request interceptors.
+
+>>>>>>> branch-2-rag-cwe-wstg
 ## References
 
 ### OWASP Resources

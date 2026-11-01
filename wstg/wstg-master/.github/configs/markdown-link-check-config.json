@@ -1,5 +1,9 @@
 {
     "useHead": false,
+<<<<<<< HEAD
+=======
+    "timeout": "30s",
+>>>>>>> branch-2-rag-cwe-wstg
     "ignorePatterns": [
         { "pattern": "^/" },
         { "pattern": "^\\./" },
@@ -7,8 +11,15 @@
         { "pattern": "^https://www.kali.org" },
         { "pattern": "^https://.*\\.linkedin\\.com" },
         { "pattern": "^https://www\\.shodan\\.io" },
+<<<<<<< HEAD
         { "pattern": "^https://developer\\.android\\.com" },
         { "pattern": "^https://github\\.com" }
+=======
+        { "pattern": "^https://www\\.baidu\\.com" },
+        { "pattern": "^https://developer\\.android\\.com" },
+        { "pattern": "^https://github\\.com" },
+        { "pattern": "^https://.*\\.gnu\\.org" }
+>>>>>>> branch-2-rag-cwe-wstg
     ],
     "httpHeaders": [
         {
@@ -18,5 +29,9 @@
             }
         }
     ],
+<<<<<<< HEAD
     "aliveStatusCodes": [200, 202]
+=======
+    "aliveStatusCodes": [200, 202, 403, 429]
+>>>>>>> branch-2-rag-cwe-wstg
 }

@@ -16,7 +16,11 @@ Contained in this folder is an Excel file which provides the following worksheet
 
 ## Excel File Hash
 
+<<<<<<< HEAD
 SHA-256: 88e7b896401f4fd94265de1ece1d06816bb1901e8505dd62905a682eeef83471
+=======
+SHA-256: d63d21ef21fa86e20957b1c6f6b90dc94a52fc21f64efe292e9d5ca525f7985a
+>>>>>>> branch-2-rag-cwe-wstg
 
 ## Google Sheets Template
 

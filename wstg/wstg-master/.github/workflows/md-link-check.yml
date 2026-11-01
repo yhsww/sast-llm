@@ -15,16 +15,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout PR
+<<<<<<< HEAD
       uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       with:
         ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: 0
     - name: Checkout Base
       uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+=======
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: 0
+        persist-credentials: false
+    - name: Checkout Base
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+>>>>>>> branch-2-rag-cwe-wstg
       with:
         repository: OWASP/wstg
         ref: master
         path: base
+<<<<<<< HEAD
     - name: Save PR Number
       env:
         PR_NUMBER: ${{ github.event.number }}
@@ -35,11 +46,24 @@ jobs:
         node-version: 24
     - name: Cache npm Global
       uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
+=======
+        persist-credentials: false
+    - name: Setup Node
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: 24
+    - name: Cache npm Global
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+>>>>>>> branch-2-rag-cwe-wstg
       with:
         path: ~/.npm
         key: ${{ runner.os }}-npm-global-markdown-link-check
     - name: Install Dependencies
+<<<<<<< HEAD
       run: npm install -g markdown-link-check@3.11.0
+=======
+      run: npm install -g markdown-link-check@3.15.0
+>>>>>>> branch-2-rag-cwe-wstg
     - name: Get Changed Files
       # Use base/head SHAs from the PR event for fork-safe, PR-accurate changed-file detection.
       # github.base_ref resolves differently for forks, while base.sha/head.sha are always correct.
@@ -50,6 +74,20 @@ jobs:
         head_sha: ${{ github.event.pull_request.head.sha }}
         base_repo: ${{ github.event.pull_request.base.repo.full_name }}
         repo_path: .
+<<<<<<< HEAD
+=======
+    - name: Verify Config
+      run: |
+        echo "Checking config file at base/.github/configs/markdown-link-check-config.json"
+        if [ -f "base/.github/configs/markdown-link-check-config.json" ]; then
+          echo "✓ Config file exists"
+          echo "Config content:"
+          cat base/.github/configs/markdown-link-check-config.json | jq '.aliveStatusCodes'
+        else
+          echo "✗ Config file NOT found"
+          ls -la base/.github/configs/ || echo "configs directory doesn't exist"
+        fi
+>>>>>>> branch-2-rag-cwe-wstg
     - name: PR Link Check
       env:
         FILES: '${{ steps.files.outputs.files_updated }}'
@@ -57,6 +95,7 @@ jobs:
       shell: bash
       run: |
         set -euo pipefail
+<<<<<<< HEAD
         
         readarray -t files_arr <<< "$FILES"
         readarray -t all_arr   <<< "$ALL_CHANGED"
@@ -65,26 +104,51 @@ jobs:
         printf '%s\n' "${files_arr[@]}"
         touch log err
         
+=======
+
+        readarray -t files_arr <<< "$FILES"
+        readarray -t all_arr   <<< "$ALL_CHANGED"
+
+        echo "The Following files were changed or created:"
+        printf '%s\n' "${files_arr[@]}"
+        touch log err
+
+>>>>>>> branch-2-rag-cwe-wstg
         # Copy all changed files (md + images etc.) to base/ so link targets exist when we check .md files
         for FILE in "${all_arr[@]}"; do
           [ -z "$FILE" ] && continue
           mkdir -p "base/$(dirname "$FILE")"
           cp "$FILE" "base/$FILE"
         done
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> branch-2-rag-cwe-wstg
         # Check only .md files in base/ where relative links can be resolved
         for FILE in "${files_arr[@]}"; do
           [ -z "$FILE" ] && continue
           if printf '%s\n' "$FILE" | grep -q '.*\.md$'; then
+<<<<<<< HEAD
             markdown-link-check -q -v -c base/.github/configs/markdown-link-check-config.json "base/$FILE" 1>> log 2>> err
           fi
         done
         
         if grep -q  "ERROR:" err ; then exit 1 ; else echo -e "No broken links found."; fi
+=======
+            markdown-link-check -v -c base/.github/configs/markdown-link-check-config.json "base/$FILE" 1>> log 2>> err || true
+          fi
+        done
+
+>>>>>>> branch-2-rag-cwe-wstg
         echo "--- markdown-link-check stdout (log) ---"
         cat log
         echo "--- markdown-link-check stderr (err) ---"
         cat err
+<<<<<<< HEAD
+=======
+        if grep -q  "ERROR:" err ; then exit 1 ; else echo -e "No broken links found."; fi
+>>>>>>> branch-2-rag-cwe-wstg
     - name: Show Broken Links
       if: failure()
       run: |
@@ -101,6 +165,7 @@ jobs:
         cat artifact.txt >> "$GITHUB_STEP_SUMMARY"
     - name: Upload List of Broken Links
       if: failure()
+<<<<<<< HEAD
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: artifact
@@ -113,3 +178,9 @@ jobs:
       with:
         name: artifact
         path: pr_number
+=======
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      with:
+        name: artifact
+        path: artifact.txt
+>>>>>>> branch-2-rag-cwe-wstg
