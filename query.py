@@ -1,8 +1,13 @@
+<<<<<<< HEAD
 """CLI: runs the branch-1-direct-llm for experiment."""
 
+=======
+"""CLI: load a SonarQube JSON report, generate test cases, and save them under results."""
+>>>>>>> 59e16a21a05780e982c7de7a1fab607f58f9a7c1
 import json
 import re
 import sys
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -12,7 +17,61 @@ from backend.config import settings
 from backend.schemas import SonarReport
 from backend.openai_service import generate_test_cases
 
+_DEFAULT_REPORT = ROOT / "data" / "sast_reports" / "sample.json"
 
+
+def _model_name() -> str:
+    provider = settings.llm_provider.strip().lower()
+
+    names = {
+        "openai": settings.openai_chat_model,
+        "gemini": settings.gemini_model,
+        "kimi": settings.kimi_model,
+        "claude": settings.claude_model,
+    }
+
+    if provider not in names:
+        raise ValueError(f"Unsupported LLM provider: {provider}")
+
+    return names[provider]
+
+
+def _save_result(report_path: Path, result) -> Path:
+    model_name = _model_name()
+    folder = re.sub(
+        r"[^a-zA-Z0-9._-]+",
+        "-",
+        model_name,
+    ).strip("-") or "LLM"
+
+    output_dir = ROOT / "results" / folder
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    output_path = output_dir / f"{report_path.stem}_LLM.json"
+
+    if output_path.exists():
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_path = (
+            output_dir /
+            f"{report_path.stem}_LLM_{timestamp}.json"
+        )
+
+    payload = json.dumps(
+        result.model_dump(mode="json"),
+        indent=2,
+        ensure_ascii=False,
+    ) + "\n"
+
+    temporary_path = output_path.with_suffix(
+        output_path.suffix + ".tmp"
+    )
+    temporary_path.write_text(payload, encoding="utf-8")
+    temporary_path.replace(output_path)
+
+    return output_path
+
+
+<<<<<<< HEAD
 REPORTS_DIR = ROOT / "data" / "sast_reports"
 RESULTS_DIR = ROOT / "results"
 
@@ -135,9 +194,34 @@ def process_report(report_path: Path, provider: str) -> bool:
         report = SonarReport.model_validate_json(
             report_path.read_text(encoding="utf-8")
         )
+=======
+def main() -> None:
+    report_path = Path(
+        input(
+            f"SonarQube report path [{_DEFAULT_REPORT}]: "
+        ).strip() or str(_DEFAULT_REPORT)
+    )
+
+    if not report_path.is_absolute():
+        report_path = (Path.cwd() / report_path).resolve()
+
+    if not report_path.is_file():
+        print(f"File not found: {report_path}")
+        sys.exit(1)
+
+    report = SonarReport.model_validate_json(
+        report_path.read_text(encoding="utf-8")
+    )
+    print(f"Loaded {len(report.issues)} finding(s) from {report_path}.")
+
+    user_context = input(
+        "Optional focus/context (Enter to skip): "
+    ).strip()
+>>>>>>> 59e16a21a05780e982c7de7a1fab607f58f9a7c1
 
         print(f"SAST findings loaded: {len(report.issues)}")
 
+<<<<<<< HEAD
         result = generate_test_cases(
             report.issues,
             provider=provider,
@@ -195,6 +279,16 @@ def main() -> None:
     print(f"Failed: {failed}")
     print(f"Results: {RESULTS_DIR}")
     print(f"{'=' * 60}")
+=======
+    print(json.dumps(
+        result.model_dump(mode="json"),
+        indent=2,
+        ensure_ascii=False,
+    ))
+
+    saved_path = _save_result(report_path, result)
+    print(f"\n[SAVED] Result written to: {saved_path.resolve()}")
+>>>>>>> 59e16a21a05780e982c7de7a1fab607f58f9a7c1
 
 
 if __name__ == "__main__":

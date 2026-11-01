@@ -3,13 +3,18 @@
     {
       "identificacao": {
         "id_sonarqube": "101f6c6f-b415-47a0-961c-e577bac36edb",
+<<<<<<< HEAD
         "arquivo": "frontend/src/app/about/about.component.ts",
+=======
+        "arquivo": "juice-shop:frontend/src/app/about/about.component.ts",
+>>>>>>> 59e16a21a05780e982c7de7a1fab607f58f9a7c1
         "linha": 119,
         "severidade_sast": "CRITICAL",
         "regra": "typescript:S6268",
         "categoria": "SECURITY_HOTSPOT"
       },
       "classificacao": {
+<<<<<<< HEAD
         "veredicto": "A revisar / Potencial Verdadeiro Positivo",
         "cwe": "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')",
         "owasp_top_10": "A03:2021-Injection",
@@ -32,8 +37,36 @@
           "passo": "Passo 02: Inspecionar o template correspondente (about.component.html) para identificar como a propriedade sanitizada e renderizada na interface.",
           "resultado_esperado_verdadeiro_positivo": "A propriedade e vinculada a atributos perigosos como [innerHTML] sem codificacao adicional, permitindo execucao de scripts se contiver tags maliciosas.",
           "resultado_esperado_falso_positivo": "A propriedade nao e inserida no DOM como HTML executavel ou nao recebe dados variaveis."
+=======
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-CLNT-01: Testing for DOM-Based Cross Site Scripting",
+        "justificativa": "O método de desativação de sanitização nativa do Angular (DomSanitizer.bypassSecurityTrustHtml ou equivalente) é utilizado para renderizar conteúdo dinâmico HTML/URL. Se o conteúdo contiver dados controlados pelo usuário ou dados não sanitizados externamente, pode resultar em Cross-Site Scripting (XSS) baseado em DOM."
+      },
+      "descricao_tecnica": "A regra typescript:S6268 alerta para o uso de métodos do Angular DomSanitizer que contornam os mecanismos de segurança e sanitização embutidos do framework (como bypassSecurityTrustHtml, bypassSecurityTrustScript, bypassSecurityTrustUrl, etc.). Ao contornar essa proteção no arquivo about.component.ts na linha 119, o template pode interpretar e executar elementos maliciosos injetados caso a entrada não passe por sanitização estrita prévia.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte do componente frontend/src/app/about/about.component.ts.",
+        "Ambiente local de execução ou instância ativa do OWASP Juice Shop.",
+        "Navegador com Developer Tools habilitado para inspecionar o DOM e console de erros/alertas."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Análise estática do fluxo de dados no código-fonte",
+          "resultado_esperado_verdadeiro_positivo": "O dado repassado ao método de bypassSecurityTrust provém de fontes externas dinâmicas (como resposta de API, parâmetros de rota ou armazenamento local) sem qualquer validação/sanitização secundária prévia.",
+          "resultado_esperado_falso_positivo": "O dado repassado é uma constante estática imutável hardcoded no próprio código sem qualquer concatenação ou influência de fontes dinâmicas."
+        },
+        {
+          "passo": "Passo 02: Teste dinâmico de injeção de payload XSS na página About",
+          "resultado_esperado_verdadeiro_positivo": "Ao manipular o dado injetando elementos HTML/JS (ex: <img src=x onerror=alert(1)>), a carga é renderizada no DOM e o script é executado no contexto do cliente.",
+          "resultado_esperado_falso_positivo": "O navegador ou o código intercepta e bloqueia a execução, codificando os caracteres especiais em entidades HTML ou rejeitando a carga maliciosa."
+>>>>>>> 59e16a21a05780e982c7de7a1fab607f58f9a7c1
         }
       ]
     }
   ]
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 59e16a21a05780e982c7de7a1fab607f58f9a7c1

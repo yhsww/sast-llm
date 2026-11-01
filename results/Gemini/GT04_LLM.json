@@ -3,7 +3,11 @@
     {
       "identificacao": {
         "id_sonarqube": "74de4cdb-5256-48b1-97af-c47eaa500ecc",
+<<<<<<< HEAD
         "arquivo": "routes/userProfile.ts",
+=======
+        "arquivo": "juice-shop:routes/userProfile.ts",
+>>>>>>> 59e16a21a05780e982c7de7a1fab607f58f9a7c1
         "linha": 87,
         "severidade_sast": "MAJOR",
         "regra": "typescript:S7790",
@@ -14,6 +18,7 @@
         "cwe": "CWE-1336",
         "owasp_top_10": "A03:2021 - Injection",
         "wstg": "WSTG-INPV-18",
+<<<<<<< HEAD
         "justificativa": "A regra typescript:S7790 sinaliza a compilacao ou avaliacao dinamica de templates a partir de strings concatenadas ou interpoladas com entrada de usuario sem sanitizacao adequada. No Juice Shop, o endpoint de perfil de usuario compila templates Pug diretamente com dados controlados pelo usuario, viabilizando Server-Side Template Injection (SSTI) e potencialmente Execucao Remota de Codigo (RCE)."
       },
       "descricao_tecnica": "Identificado uso de template engine de renderizacao dinamica em routes/userProfile.ts onde dados de entrada nao confiaveis sao interpolados diretamente na definicao do template antes da compilacao/renderizacao. Isso permite a injecao de sintaxe especifica do mecanismo de templates (como Pug/Jade), permitindo avaliar expressoes arbitrarias de JavaScript no contexto do servidor Node.js.",
@@ -27,8 +32,27 @@
           "passo": "Passo 01: Autenticar na aplicacao e enviar uma requisicao de atualizacao de perfil (username) contendo uma expressao de template como payload (ex.: #{7*7} ou #{root.process.mainModule.require('child_process').execSync('id')}).",
           "resultado_esperado_verdadeiro_positivo": "A resposta renderizada do perfil exibe o resultado da expressao avaliada (ex.: 49 ou a saida do comando executado), confirmando a execucao dinamica da carga util no servidor.",
           "resultado_esperado_falso_positivo": "A carga util e tratada como texto literal (#{7*7}), sanitizada/escapada antes da renderizacao, ou o template e compilado de forma estatica sem permitir interpolacao de codigo arbitrario."
+=======
+        "justificativa": "A regra typescript:S7790 alerta sobre a formatacao dinamica de templates sem a devida sanitizacao ou compilacao segura. No arquivo userProfile.ts do OWASP Juice Shop, a entrada fornecida pelo usuario atraves do perfil (como o nome de usuario) e interpolada diretamente em um template renderizado pelo mecanismo de templates (ex.: Pug), possibilitando Server-Side Template Injection (SSTI) e execucao remota de comandos ou acesso indevido ao contexto da aplicacao."
+      },
+      "descricao_tecnica": "A vulnerabilidade decorre da concatenacao ou interpolacao direta de dados controlados pelo usuario na definicao do template dinamico antes da renderizacao. Quando a aplicacao compila o template com entrada nao sanitizada, comandos ou expressoes do motor de template sao executados no servidor no contexto do processo Node.js.",
+      "pre_condicoes_para_verificacao": [
+        "Aplicacao OWASP Juice Shop em execucao.",
+        "Conta de usuario autenticada para atualizar os dados de perfil.",
+        "Ferramenta para inspecao e envio de requisicoes HTTP (como OWASP ZAP ou Burp Suite)."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Autenticar na aplicacao e enviar uma requisicao de atualizacao de perfil contendo um payload de SSTI no campo de nome de usuario (ex.: #{7*7} ou #{root.process.mainModule.require('child_process').execSync('id')}).",
+          "resultado_esperado_verdadeiro_positivo": "A aplicacao processa e avalia o template no servidor, exibindo o resultado da operacao matematica (49) ou a saida do comando executado na pagina de perfil renderizada.",
+          "resultado_esperado_falso_positivo": "A aplicacao trata o payload como texto literal, exibindo #{7*7} sem interpretacao dinamica, ou rejeita a entrada por validacao estrita."
+>>>>>>> 59e16a21a05780e982c7de7a1fab607f58f9a7c1
         }
       ]
     }
   ]
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 59e16a21a05780e982c7de7a1fab607f58f9a7c1

@@ -1,3 +1,12 @@
+<<<<<<< HEAD
 Relatório: GT05.json
 Provedor: claude
 Erro: BadRequestError: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'}, 'request_id': 'req_011CgcCWHAQXSzLc6cNPFShD'}
+=======
+Report: GT05
+Timestamp (UTC): 2026-10-31T20:44:21.458580+00:00
+Provider: claude
+Model: claude-sonnet-4-5
+Error type: BadRequestError
+Error message: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'}, 'request_id': 'req_011Cgay3EfaHhPWuB6XejVhi'}
+>>>>>>> 59e16a21a05780e982c7de7a1fab607f58f9a7c1

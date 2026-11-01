@@ -3,6 +3,7 @@
     {
       "identificacao": {
         "id_sonarqube": "208dea17-f27a-4e83-b216-484334328793",
+<<<<<<< HEAD
         "arquivo": "juice-shop:routes/b2bOrder.ts",
         "linha": 23,
         "severidade_sast": "MAJOR",
@@ -27,6 +28,32 @@
           "passo": "Passo 01: Enviar uma requisicao POST contendo uma carga util com expressao JavaScript controlada no payload do pedido B2B, visando avaliar a execucao arbitraria de codigo no servidor.",
           "resultado_esperado_verdadeiro_positivo": "A carga util e avaliada dinamicamente e executada no servidor, comprovando a possibilidade de execucao de codigo arbitrario.",
           "resultado_esperado_falso_positivo": "A requisicao e rejeitada por validacao de esquema, o input e estritamente tratado como dado literal sem execucao dinamica, ou ocorre erro seguro de parsing."
+=======
+        "arquivo": "routes/b2bOrder.ts",
+        "linha": 23,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S1523",
+        "categoria": "SECURITY_HOTSPOT"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-94",
+        "owasp_top_10": "A03:2021-Injection",
+        "wstg": "WSTG-INPV-11",
+        "justificativa": "O alerta typescript:S1523 aponta para a execucao dinamica de codigo atraves de funcoes como eval, new Function ou modulos de sandbox inseguros (como vm ou safe-eval). No contexto da rota b2bOrder do Juice Shop, dados fornecidos pelo usuario no corpo da requisicao sao processados dinamicamente sem validacao rigida, possibilitando execucao arbitraria de codigo (Code Injection)."
+      },
+      "descricao_tecnica": "A regra typescript:S1523 identifica construcoes onde strings sao avaliadas diretamente como codigo JavaScript/TypeScript em tempo de execucao. Se os parametros recebidos no endpoint B2B contiverem dados controlados por usuarios e forem passados para metodos de execucao dinamica sem sanitizacao adequada ou sem isolamento seguro, o sistema fica vulneravel a execucao de codigo no lado do servidor.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao codigo-fonte do repositorio para inspecionar a rota b2bOrder.ts e suas dependencias.",
+        "Ambiente de testes configurado com a aplicacao em execucao.",
+        "Permissao para inspecionar chamadas HTTP direcionadas ao endpoint correspondente."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Inspecao de Fluxo de Dados e Codigo",
+          "resultado_esperado_verdadeiro_positivo": "Constatar que a linha 23 (ou chamada correlata na funcao) manipula diretamente a entrada do usuario (por exemplo, payload de pedido B2B) dentro de um interpretador de codigo dinamico (eval, safe-eval, vm) sem validacao baseada em esquema estrito ou desserializacao segura.",
+          "resultado_esperado_falso_positivo": "Constatar que a execucao dinamica utiliza apenas constantes internas codificadas estaticamente, sem qualquer influencia de parametros da requisicao HTTP, ou que a funcionalidade foi substituida por um parser declarativo seguro como JSON.parse."
+>>>>>>> 59e16a21a05780e982c7de7a1fab607f58f9a7c1
         }
       ]
     }

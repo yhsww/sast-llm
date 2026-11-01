@@ -10,6 +10,7 @@
         "categoria": "VULNERABILITY"
       },
       "classificacao": {
+<<<<<<< HEAD
         "veredicto": "A DEFINIR (REQUER ANALISE DE CODIGO FONTE / PROVAVEL FALSO POSITIVO)",
         "cwe": "CWE-798: Use of Hard-coded Credentials",
         "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
@@ -31,8 +32,30 @@
           "passo": "Passo 02: Validar presenca no artefato compilado de producao",
           "resultado_esperado_verdadeiro_positivo": "O segredo em texto claro e empacotado no build final acessivel publicamente no navegador.",
           "resultado_esperado_falso_positivo": "O identificador refere-se apenas a modelos de binding da interface do usuario sem conter segredo hard-coded."
+=======
+        "veredicto": "A Confirmar",
+        "cwe": "CWE-798",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-ATHN-02",
+        "justificativa": "A regra S2068 identifica variaveis ou propriedades associadas a credenciais que contenham strings estaticas que possam representar senhas embutidas no codigo-fonte. Em componentes frontend (como login.component.ts), muitas vezes trata-se de definicao de controles de formulario (ex.: FormControl inicializado com string vazia ou placeholder) gerando falsos positivos, porem e necessario confirmar se uma credencial valida/padrao nao foi inserida de forma definitiva."
+      },
+      "descricao_tecnica": "O analisador SAST detectou um possivel valor de senha fixo no codigo no arquivo login.component.ts na linha 61. Senhas expostas em aplicacoes web cliente podem ser inspecionadas e extraidas diretamente pelos usuarios finais, permitindo acesso indevido se representarem credenciais de producao ou servico.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao repositorio do projeto e branch analisada",
+        "Visualizacao do trecho de codigo da linha 61 de frontend/src/app/login/login.component.ts"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 - Analise estatica do contexto da variavel",
+          "resultado_esperado_verdadeiro_positivo": "A string identificada contem uma senha funcional, segredo real ou credencial estatica para autenticacao automatica ou testes em ambiente de producao.",
+          "resultado_esperado_falso_positivo": "A atribuicao refere-se ao nome do campo de formulario, placeholder de interface, valor vazio/nulo ou identificador de controle de formulario sem credencial valida incorporada."
+>>>>>>> 59e16a21a05780e982c7de7a1fab607f58f9a7c1
         }
       ]
     }
   ]
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 59e16a21a05780e982c7de7a1fab607f58f9a7c1

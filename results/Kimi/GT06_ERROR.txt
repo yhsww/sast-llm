@@ -1,3 +1,12 @@
+<<<<<<< HEAD
 Relatório: GT06.json
 Provedor: kimi
 Erro: RateLimitError: Error code: 429 - {'error': {'message': 'Your account org-89e0b2570c064ba19e377a00f73f4a02 <ak-fdk3815ikgii11eieou1> is suspended due to insufficient balance, please recharge your account or check your plan and billing details', 'type': 'exceeded_current_quota_error'}}
+=======
+Report: GT06
+Timestamp (UTC): 2026-10-31T20:33:57.587632+00:00
+Provider: kimi
+Model: moonshot-v1-8k
+Error type: RateLimitError
+Error message: Error code: 429 - {'error': {'message': 'Your account org-89e0b2570c064ba19e377a00f73f4a02 <ak-fdk3815ikgii11eieou1> is suspended due to insufficient balance, please recharge your account or check your plan and billing details', 'type': 'exceeded_current_quota_error'}}
+>>>>>>> 59e16a21a05780e982c7de7a1fab607f58f9a7c1

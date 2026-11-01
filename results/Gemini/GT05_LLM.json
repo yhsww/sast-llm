@@ -7,6 +7,7 @@
         "linha": 92,
         "severidade_sast": "MAJOR",
         "regra": "typescript:S5852",
+<<<<<<< HEAD
         "categoria": "Denial of Service (ReDoS)"
       },
       "classificacao": {
@@ -42,4 +43,35 @@
     "branch": "branch-1-direct-llm",
     "generated_at": "2026-11-01T08:57:02"
   }
+=======
+        "categoria": "SECURITY_HOTSPOT"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-1333: Inefficient Regular Expression Complexity",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-07",
+        "justificativa": "A expressao regular empregada para validacao de campos de senha na interface pode sofrer de backtracking catastrofico caso processe entradas maliciosamente formatadas, acarretando congelamento da thread principal de execucao do navegador (Client-side Denial of Service)."
+      },
+      "descricao_tecnica": "A regra typescript:S5852 identifica expressoes regulares com complexidade polinomial ou exponencial que processam entradas controladas pelo usuario. No arquivo change-password.component.ts na linha 92, uma regex com quantificadores aninhados ou sobrepostos e avaliada sincronicamente. Caso uma carga util contendo multiplas repeticoes e finalizacao invalida seja inserida, o motor de regex entra em super-linear backtracking, bloqueando a interface do usuario.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao codigo-fonte do frontend Angular em change-password.component.ts.",
+        "Ambiente local ou sandbox executando a aplicacao Juice Shop.",
+        "Navegador com Ferramentas do Desenvolvedor (DevTools) habilitadas para inspecao de desempenho/CPU."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Inspecao estatica da expressao regular",
+          "resultado_esperado_verdadeiro_positivo": "A regex na linha 92 apresenta agrupamentos com quantificadores ambiguos ou repeticoes suscetiveis a backtracking catastrófico sem limites de tamanho de entrada.",
+          "resultado_esperado_falso_positivo": "A regex e linear (O(n)), possui protecoes atomicas ou a entrada e rigidamente limitada a um comprimento curto prevenindo super-linear runtime."
+        },
+        {
+          "passo": "Passo 02: Execucao de teste de carga e latencia com payload de ReDoS",
+          "resultado_esperado_verdadeiro_positivo": "Ao submeter uma string de teste longa desenhada para desencadear backtracking no campo correspondente, a aba do navegador trava com 100% de uso de CPU temporario ou permanente.",
+          "resultado_esperado_falso_positivo": "O tempo de execucao da validacao permanece constante em milissegundos, sem degradacao perceptivel na UI ou congelamento da thread principal."
+        }
+      ]
+    }
+  ]
+>>>>>>> 59e16a21a05780e982c7de7a1fab607f58f9a7c1
 }

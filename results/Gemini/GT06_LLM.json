@@ -11,6 +11,7 @@
       },
       "classificacao": {
         "veredicto": "Verdadeiro Positivo",
+<<<<<<< HEAD
         "cwe": "CWE-942: Permissive Cross-domain Policy with Untrusted Domains",
         "owasp_top_10": "A05:2021 - Security Misconfiguration",
         "wstg": "WSTG-CONF-07: Testing Cross Origin Resource Sharing",
@@ -32,8 +33,35 @@
           "passo": "Passo 02: Realizar uma requisicao HTTP OPTIONS ou GET para a aplicacao enviando o cabecalho 'Origin: https://malicious-site.example.com'.",
           "resultado_esperado_verdadeiro_positivo": "A resposta contem 'Access-Control-Allow-Origin: *' ou reflete 'Access-Control-Allow-Origin: https://malicious-site.example.com' permitindo o consumo de respostas sensiveis por origens arbitrarias.",
           "resultado_esperado_falso_positivo": "A resposta nao contem o cabecalho Access-Control-Allow-Origin para dominios nao autorizados, ou rejeita explicitamente a conexao cross-origin com codigo HTTP de erro."
+=======
+        "cwe": "CWE-942",
+        "owasp_top_10": "A01:2021-Broken Access Control",
+        "wstg": "WSTG-CONF-07",
+        "justificativa": "A regra aponta a habilitacao de CORS (Cross-Origin Resource Sharing). Caso configurado de maneira excessivamente permissiva (como uso de curinga '*' permitindo acesso com credenciais ou permitindo qualquer origem arbitraria), recursos e APIs sensiveis podem ser acessados via navegadores por sites de terceiros maliciosos."
+      },
+      "descricao_tecnica": "A regra typescript:S5122 identifica o uso de politicas de Cross-Origin Resource Sharing. A definicao de CORS permissivo atraves de Access-Control-Allow-Origin: * ou reflexao dinamica e irrestrita da solicitacao de Origem pode expor dados autenticados e informacoes confidenciais a requisicoes cross-origin nao autorizadas.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao repositorio de codigo para inspecionar server.ts na linha 182.",
+        "Instancia local ou ambiente de teste do OWASP Juice Shop em execucao.",
+        "Cliente HTTP ou ferramenta de proxy (ex.: cURL, Burp Suite, Postman) configurada para enviar cabecalhos 'Origin'."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Inspecionar o codigo-fonte no arquivo server.ts linha 182 para identificar a configuracao de middleware CORS (ex.: cors()).",
+          "resultado_esperado_verdadeiro_positivo": "O middleware cors esta configurado com valores padrao ou permissivos como origin: '*', expondo rotas sensiveis sem restricao de dominio.",
+          "resultado_esperado_falso_positivo": "O middleware cors restringe explicitamente as origens permitidas a dominios confiaveis ou a rota em questao atende estritamente a recursos estaticos/publicos sem impacto de seguranca."
+        },
+        {
+          "passo": "Passo 02: Enviar requisicao HTTP com cabecalho Origin arbitrario (ex.: Origin: https://evil.com) para os endpoints cobertos por essa regra.",
+          "resultado_esperado_verdadeiro_positivo": "A resposta contem o cabecalho 'Access-Control-Allow-Origin: *' ou reflete o cabecalho 'Access-Control-Allow-Origin: https://evil.com' em endpoints que lidam com dados sensiveis.",
+          "resultado_esperado_falso_positivo": "A resposta nao inclui cabecalhos de CORS permissivos para origens nao autorizadas, retornando erro ou restringindo a resposta apenas aos dominios confiaveis pre-configurados."
+>>>>>>> 59e16a21a05780e982c7de7a1fab607f58f9a7c1
         }
       ]
     }
   ]
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 59e16a21a05780e982c7de7a1fab607f58f9a7c1
