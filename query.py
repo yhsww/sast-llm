@@ -1,7 +1,7 @@
-"""CLI: load a SonarQube JSON report, generate test cases, and save them under results."""
+"""Run the main-branch direct-LLM experiment using sample.json by default."""
+
 import json
 import sys
-from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -11,32 +11,59 @@ from backend.config import settings
 from backend.schemas import SonarReport
 from backend.openai_service import generate_test_cases
 
-_REPORT_PATH = ROOT / "data" / "sast_reports" / "sample.json"
+REPORT_PATH = ROOT / "data" / "sast_reports" / "sample.json"
+RESULTS_DIR = ROOT / "results"
 
-_PROVIDER_FOLDERS = {
-    "openai": "GPT5.5",
+PROVIDER_FOLDERS = {
+    "openai": "GPT4.1",
     "gemini": "Gemini",
     "kimi": "Kimi",
     "claude": "Claude",
 }
 
+PROVIDER_LABELS = {
+    "openai": "OpenAI",
+    "gemini": "Google Gemini",
+    "kimi": "Kimi (Moonshot)",
+    "claude": "Anthropic Claude",
+}
 
-def _save_result(report_path: Path, result) -> Path:
-    """Save generated test cases without overwriting previous results."""
-    provider = settings.llm_provider.strip().lower()
-    folder = _PROVIDER_FOLDERS.get(provider, provider)
 
-    output_dir = ROOT / "results" / folder
-    output_dir.mkdir(parents=True, exist_ok=True)
+def model_for(provider: str) -> str:
+    models = {
+        "openai": settings.openai_chat_model,
+        "gemini": settings.gemini_model,
+        "kimi": settings.kimi_model,
+        "claude": settings.claude_model,
+    }
+    return str(models[provider])
 
-    output_path = output_dir / f"{report_path.stem}_LLM.json"
 
-    if output_path.exists():
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_path = (
-            output_dir /
-            f"{report_path.stem}_LLM_{timestamp}.json"
+def choose_provider() -> str:
+    """Ask which configured LLM provider should generate the report."""
+    providers = list(PROVIDER_FOLDERS)
+    print("\nSelecione a LLM:")
+    for index, provider in enumerate(providers, start=1):
+        print(f"  {index}. {PROVIDER_LABELS[provider]} ({model_for(provider)})")
+
+    while True:
+        choice = input("Opção [1-4]: ").strip()
+        if choice.isdigit() and 1 <= int(choice) <= len(providers):
+            return providers[int(choice) - 1]
+        provider_match = next(
+            (provider for provider in providers if provider.casefold() == choice.casefold()),
+            None,
         )
+        if provider_match:
+            return provider_match
+        print("Opção inválida. Escolha 1-4 ou informe o nome do provedor.")
+
+
+def save_result(report_path: Path, provider: str, result) -> Path:
+    """Save the result under a stable filename, replacing a previous run."""
+    output_dir = RESULTS_DIR / PROVIDER_FOLDERS[provider]
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / f"{report_path.stem}_LLM.json"
 
     payload = json.dumps(
         result.model_dump(mode="json"),
@@ -44,49 +71,64 @@ def _save_result(report_path: Path, result) -> Path:
         ensure_ascii=False,
     ) + "\n"
 
-    temporary_path = output_path.with_suffix(
-        output_path.suffix + ".tmp"
-    )
-    temporary_path.write_text(payload, encoding="utf-8")
-    temporary_path.replace(output_path)
+    temporary_path = output_path.with_suffix(output_path.suffix + ".tmp")
+    try:
+        temporary_path.write_text(payload, encoding="utf-8")
+        temporary_path.replace(output_path)
+    finally:
+        if temporary_path.exists():
+            temporary_path.unlink()
 
     return output_path
 
 
-def main() -> None:
-    report_path = Path(
-        input(f"SonarQube report path [{_REPORT_PATH}]: ").strip()
-        or str(_REPORT_PATH)
-    )
+def main() -> int:
+    provider = choose_provider()
 
-    if not report_path.is_absolute():
-        report_path = (Path.cwd() / report_path).resolve()
+    if not REPORT_PATH.is_file():
+        print(f"[ERROR] Relatório não encontrado: {REPORT_PATH}", file=sys.stderr)
+        return 1
 
-    if not report_path.is_file():
-        print(f"File not found: {report_path}")
-        sys.exit(1)
+    try:
+        report = SonarReport.model_validate_json(
+            REPORT_PATH.read_text(encoding="utf-8")
+        )
+        if not report.issues:
+            print(f"[ERROR] O relatório não contém achados: {REPORT_PATH}", file=sys.stderr)
+            return 1
 
-    report = SonarReport.model_validate_json(
-        report_path.read_text(encoding="utf-8")
-    )
-    print(f"Loaded {len(report.issues)} finding(s) from {report_path}.")
+        print(f"Relatório de entrada: {REPORT_PATH.name}")
+        print(f"Achados carregados: {len(report.issues)}")
+        print(f"LLM selecionada: {PROVIDER_LABELS[provider]} ({model_for(provider)})")
+        print("Modo: Direct LLM, sem RAG e sem contexto adicional.")
+        print("\nGerando casos de teste...")
 
-    user_context = input(
-        "Optional focus/context (Enter to skip): "
-    ).strip()
+        result = generate_test_cases(report.issues, provider=provider)
+        if len(result.test_cases) != len(report.issues):
+            raise ValueError(
+                f"Esperados {len(report.issues)} casos de teste, "
+                f"mas a LLM retornou {len(result.test_cases)}."
+            )
 
-    print("\nGenerating test cases...\n")
-    result = generate_test_cases(report.issues, user_context)
+        output_path = save_result(REPORT_PATH, provider, result)
+        print(f"[SAVED] {output_path.relative_to(ROOT)}")
+        return 0
 
-    print(json.dumps(
-        result.model_dump(mode="json"),
-        indent=2,
-        ensure_ascii=False,
-    ))
-
-    saved_path = _save_result(report_path, result)
-    print(f"\n[SAVED] Result written to: {saved_path.resolve()}")
+    except Exception as exc:
+        error_dir = RESULTS_DIR / PROVIDER_FOLDERS[provider]
+        error_dir.mkdir(parents=True, exist_ok=True)
+        error_path = error_dir / f"{REPORT_PATH.stem}_ERROR.txt"
+        error_path.write_text(
+            f"Report: {REPORT_PATH.name}\n"
+            f"Provider: {provider}\n"
+            f"Model: {model_for(provider)}\n"
+            f"Error: {type(exc).__name__}: {exc}\n",
+            encoding="utf-8",
+        )
+        print(f"[ERROR] {type(exc).__name__}: {exc}", file=sys.stderr)
+        print(f"[ERROR FILE] {error_path.relative_to(ROOT)}", file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
