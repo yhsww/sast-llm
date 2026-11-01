@@ -136,7 +136,7 @@ Também é possível iniciar pelo ponto de entrada compatível:
 python run_experiment.py
 ```
 
-Os arquivos de saída usam nomes estáveis, como `sample_LLM.json`, em `results/GPT4.1/`, `results/Gemini/`, `results/Kimi/` ou `results/Claude/`. Uma nova execução para o mesmo relatório e provedor substitui o arquivo anterior. O conteúdo JSON não inclui data ou hora de execução. Erros são registrados em um arquivo `*_ERROR.txt`, separado do relatório de sucesso.
+Os arquivos de saída usam nomes estáveis, como `sample_LLM.json`, em `results/GPT5.5/`, `results/Gemini/`, `results/Kimi/` ou `results/Claude/`. Uma nova execução para o mesmo relatório e provedor substitui o arquivo anterior. O conteúdo JSON não inclui data ou hora de execução. Erros são registrados em um arquivo `*_ERROR.txt`, separado do relatório de sucesso.
 
 Configure as chaves e os identificadores de modelo no arquivo `.env` antes de executar. A seleção feita no terminal determina o provedor usado naquela execução.
 
