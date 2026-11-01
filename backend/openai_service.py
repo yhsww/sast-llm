@@ -1,4 +1,5 @@
 import json
+import re
 from openai import OpenAI
 from google import genai
 from google.genai import types
@@ -167,6 +168,9 @@ def _normalize_source_identification(
 def _generate_openai(
     user_content: str,
 ) -> SecurityTestReport:
+    if not settings.openai_api_key:
+        raise ValueError("OPENAI_API_KEY is not configured.")
+
     client = OpenAI(api_key=settings.openai_api_key)
 
     response = client.chat.completions.create(
