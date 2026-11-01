@@ -1,13 +1,11 @@
-﻿
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-  
     llm_provider: str = "gemini"
 
-    # OpenAI: embeddings RAG e geraÃ§Ã£o opcional
-    openai_api_key: str
+    # OpenAI: provider de geração opcional. Os embeddings do Chroma são locais.
+    openai_api_key: str = ""
     openai_chat_model: str = "gpt-4.1"
     openai_embedding_model: str = "text-embedding-3-small"
 
@@ -23,7 +21,7 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     claude_model: str = "claude-sonnet-4-5"
 
-    # ChromaDB e recuperaÃ§Ã£o RAG
+    # ChromaDB e recuperação RAG
     chroma_persist_path: str = "./chroma_data"
     chroma_collection_cwe: str = "cwe_docs"
     chroma_collection_wstg: str = "wstg_docs"
@@ -37,4 +35,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-
