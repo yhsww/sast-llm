@@ -1,293 +1,246 @@
-# SAST Security Test Case Generator
+# SAST Security Test Case Generator — Branch Execution Guide
 
-Experimental pipeline that receives a SAST report and generates structured security test cases using an LLM. Three branches test different context-enrichment strategies.
+This guide explains how to set up the project and run each branch from scratch.
 
-## Stack
+## Project overview
 
-| Component        | Technology                  | Version  |
-|------------------|-----------------------------|----------|
-| Runtime          | Python                      | 3.11+    |
-| API Framework    | FastAPI                     | 0.115.14 |
-| Validation       | Pydantic v2                 | 2.13.4   |
-| Config           | pydantic-settings           | 2.14.1   |
-| LLM + Embeddings | OpenAI SDK                  | 2.42.0   |
-| Vector Store     | ChromaDB (PersistentClient) | 1.5.9    |
-| Embedding Model  | text-embedding-3-small      | --       |
-| LLM              | gpt-4.1                     | --       |
+The project generates SAST security test cases using a Large Language Model (LLM). The branches represent different approaches:
 
----
+- **Branch 1 — Direct LLM (`main` / `branch-1-direct-llm`):** sends the finding directly to the LLM, without retrieval.
+- **Branch 2 — RAG with CWE and WSTG (`branch-2-rag-cwe-wstg`):** retrieves supporting information from the CWE and WSTG knowledge bases.
+- **Branch 3 — RAG with code context (`branch-3-rag-code-context`):** uses the knowledge bases and additional source-code snippets related to the finding.
 
-## Branches
+## Requirements
 
-### `main` / `branch-1-direct-llm` -- Direct LLM
+- Python 3.11 or newer
+- Git
+- An OpenAI API key with access to the configured model
 
-**Flow:** SonarQube report -> LLM -> `SecurityTestCase[]`
+Commands below use **PowerShell** on Windows.
 
-No retrieval. The LLM receives SAST findings and optional user context, generating test cases from its own training knowledge. Serves as the baseline for comparison.
+## 1. Initial setup
 
-**What it tests:** Can the LLM produce useful test cases from SAST metadata alone?
+### 1.1 Clone the repository
 
----
-
-### `branch-2-rag-cwe-wstg` -- RAG with CWE + WSTG
-
-**Flow:** SonarQube report -> ChromaDB query (CWE + WSTG) -> LLM -> `SecurityTestCase[]`
-
-Each finding is used as a query against two separate vector collections (`cwe_docs`, `wstg_docs`). The top-2 most semantically similar documents from each collection are injected into the LLM prompt as grounding context. The `retrieved_context` field in the output shows which documents were used.
-
-**What it tests:** Does grounding on authoritative CWE/WSTG documentation improve test case specificity and accuracy?
-
----
-
-### `branch-3-rag-code-context` -- RAG + Code Snippet
-
-**Flow:** SonarQube report + code snippet per finding -> ChromaDB query (CWE + WSTG) -> LLM -> `SecurityTestCase[]`
-
-Extends Branch 2. The user provides the actual vulnerable source code for each finding. The snippet is passed directly to the LLM as additional context -- it is **not vectorized** and does not influence ChromaDB retrieval. Queries are still driven exclusively by SAST finding metadata (rule, message, tags).
-
-**What it tests:** Does providing the real vulnerable code (method names, parameters, endpoints) produce more implementation-specific test steps?
-
----
-
-## One-time Setup (all branches)
+If you have not cloned the repository yet:
 
 ```powershell
-# 1. Install dependencies
+git clone https://github.com/yhsww/sast-llm.git
+cd sast-llm
+```
+
+If the repository is already on your computer, open PowerShell in the project folder instead.
+
+### 1.2 Create and activate a virtual environment
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+If PowerShell blocks activation, you may run this command for the current terminal session:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\.venv\Scripts\Activate.ps1
+```
+
+### 1.3 Install dependencies
+
+```powershell
+python -m pip install --upgrade pip
 pip install -r requirements.txt
-
-# 2. Create .env
-copy .env.example .env
-# Edit .env and fill in OPENAI_API_KEY
 ```
 
----
+### 1.4 Configure environment variables
 
-## Run Order per Branch
+Create a `.env` file in the project root, following the variable names used in the project's configuration. Add your OpenAI API key, for example:
 
-### Branch 1 -- Direct LLM
+```env
+OPENAI_API_KEY=your_api_key_here
+```
 
-No ChromaDB. No knowledge base scripts needed.
+Keep the real key private. Do not commit `.env` to Git or paste the key into source files.
+
+## 2. Branch 1 — Direct LLM
+
+**Branch:** `main` or `branch-1-direct-llm`
+
+This version sends the finding to the LLM directly. It does not retrieve documents from the CWE/WSTG knowledge bases.
+
+### Steps
+
+1. Switch to the branch:
+
+   ```powershell
+   git switch branch-1-direct-llm
+   ```
+
+   If the project uses `main` as the direct-LLM branch, use:
+
+   ```powershell
+   git switch main
+   ```
+
+2. Run the query script:
+
+   ```powershell
+   python query.py
+   ```
+
+3. Follow the prompts and review the generated output.
+
+## 3. Branch 2 — RAG with CWE and WSTG
+
+**Branch:** `branch-2-rag-cwe-wstg`
+
+This version retrieves context from two ChromaDB collections:
+
+- `cwe_docs`
+- `wstg_docs`
+
+### Steps
+
+1. Switch to the branch:
+
+   ```powershell
+   git switch branch-2-rag-cwe-wstg
+   ```
+
+2. Build the CWE knowledge base:
+
+   ```powershell
+   python -m scripts.build_cwe_kb
+   ```
+
+3. Build the WSTG knowledge base:
+
+   ```powershell
+   python -m scripts.build_wstg_kb
+   ```
+
+4. Ingest the documents into the vector database:
+
+   ```powershell
+   python -m scripts.ingest --reset
+   ```
+
+5. Run the query script:
+
+   ```powershell
+   python query.py
+   ```
+
+6. Follow the prompts and inspect the generated test cases.
+
+> Run the knowledge-base build and ingestion steps when preparing the environment or whenever the source knowledge documents change.
+
+## 4. Branch 3 — RAG with code context
+
+**Branch:** `branch-3-rag-code-context`
+
+This version combines the CWE/WSTG retrieval flow with source-code snippets associated with the finding.
+
+### Steps
+
+1. Switch to the branch:
+
+   ```powershell
+   git switch branch-3-rag-code-context
+   ```
+
+2. Build the CWE knowledge base:
+
+   ```powershell
+   python -m scripts.build_cwe_kb
+   ```
+
+3. Build the WSTG knowledge base:
+
+   ```powershell
+   python -m scripts.build_wstg_kb
+   ```
+
+4. Ingest the documents:
+
+   ```powershell
+   python -m scripts.ingest --reset
+   ```
+
+5. Run the query script:
+
+   ```powershell
+   python query.py
+   ```
+
+6. When prompted, paste the source-code snippet that corresponds to the finding. Finish the snippet input by entering:
+
+   ```text
+   ###
+   ```
+
+   If you do not want to provide a snippet, press Enter and then enter `###` when prompted.
+
+### Snippet order for `sample.json`
+
+When testing the findings in `sample.json`, use the corresponding snippets in this order:
+
+1. `data/code_snippets/UserRepository.java`
+2. `data/code_snippets/CommentController.java`
+3. `data/code_snippets/DatabaseConfig.java`
+
+Make sure each snippet matches the finding being analyzed.
+
+## 5. Switching between branches
+
+Before switching branches, save or commit any local changes you want to keep. Then run the command for the desired branch:
 
 ```powershell
-git checkout branch-1-direct-llm
-
-python query.py
-# Press Enter to skip the optional focus/context prompt
+git switch main
+git switch branch-1-direct-llm
+git switch branch-2-rag-cwe-wstg
+git switch branch-3-rag-code-context
 ```
 
----
-
-### Branch 2 -- RAG with CWE + WSTG
-
-ChromaDB must be populated before the first run.
+Run **one** of these commands at a time. The branch must exist locally. To list local branches:
 
 ```powershell
-git checkout branch-2-rag-cwe-wstg
-
-# Step 1 (optional): regenerate knowledge base .txt files from raw source data
-#   Requires: CWE XML at cwe/cwec_v4.20.xml AND cloned WSTG repo at wstg/wstg
-python -m scripts.build_cwe_kb
-python -m scripts.build_wstg_kb
-
-# Step 2: populate ChromaDB (run once; --reset drops and re-ingests)
-python -m scripts.ingest --reset
-
-# Step 3: run the CLI
-python query.py
+git branch
 ```
 
-Expected output: JSON with `test_cases[]`, each containing `retrieved_context` showing
-which CWE and WSTG documents were used as grounding.
-
----
-
-### Branch 3 -- RAG + Code Snippet
-
-Same as Branch 2, plus per-finding code snippets provided interactively.
+To update remote branch references:
 
 ```powershell
-git checkout branch-3-rag-code-context
-
-# Step 1 (optional): regenerate knowledge base .txt files
-python -m scripts.build_cwe_kb
-python -m scripts.build_wstg_kb
-
-# Step 2: populate ChromaDB (skip if chroma_data/ already exists from branch-2)
-python -m scripts.ingest --reset
-
-# Step 3: run the CLI
-python query.py
+git fetch origin
+git branch -a
 ```
 
-When prompted for each finding, paste the corresponding file from `data/code_snippets/`
-and end the input with `###` on its own line. Press Enter then `###` to skip a finding.
+If a branch exists only on the remote, create a local tracking branch with:
 
-**Snippet order for `sample.json`:**
-
-| Finding | Rule       | File to paste                               |
-|---------|------------|---------------------------------------------|
-| 1       | java:S3649 | `data/code_snippets/UserRepository.java`    |
-| 2       | java:S5131 | `data/code_snippets/CommentController.java` |
-| 3       | java:S2068 | `data/code_snippets/DatabaseConfig.java`    |
-
----
-
-## Expected Output
-
-All branches produce a JSON object with `test_cases: SecurityTestCase[]`:
-
-```json
-{
-  "test_cases": [
-    {
-      "test_id": "TC-001",
-      "finding_rule": "java:S3649",
-      "finding_message": "...",
-      "title": "...",
-      "objective": "...",
-      "preconditions": ["..."],
-      "steps": ["..."],
-      "expected_result": "...",
-      "severity": "Critical",
-      "retrieved_context": [
-        { "id": "CWE-89",       "source": "CWE",  "title": "SQL Injection" },
-        { "id": "WSTG-INPV-05", "source": "WSTG", "title": "Testing for SQL Injection" }
-      ]
-    }
-  ]
-}
+```powershell
+git switch --track origin/branch-2-rag-cwe-wstg
 ```
 
-> `retrieved_context` is present only in Branch 2 and Branch 3.
+Replace the branch name as needed.
 
-**Qualitative differences:**
+## 6. Expected result
 
-- **Branch 1** -- test steps are generic, derived from LLM training knowledge only.
-- **Branch 2** -- steps follow WSTG methodology; `retrieved_context` shows exact grounding sources.
-- **Branch 3** -- steps reference real method names, parameter names, and endpoints visible in the provided source code, in addition to WSTG methodology.
+After running `python query.py`, the application should prompt for the SAST finding or related input and then generate a response using the approach implemented in the selected branch.
 
----
+The exact output depends on the input finding, model response, API configuration, and—on the RAG branches—the contents of the knowledge base and supplied code snippet.
 
-## REST API
+## 7. Troubleshooting
 
-```
-GET  /health       -> { "status": "ok" }
-POST /api/analyze  -> AnalyzeResponse
-```
+- **`ModuleNotFoundError`:** activate `.venv` and run `pip install -r requirements.txt` again.
+- **API authentication error:** check that `OPENAI_API_KEY` is present in `.env` and valid.
+- **No retrieved context in Branch 2 or 3:** rerun the CWE/WSTG build commands and `python -m scripts.ingest --reset`.
+- **Branch not found:** run `git fetch origin`, then `git branch -a` to inspect available branches.
+- **PowerShell cannot activate the environment:** use the temporary execution-policy command shown in section 1.2.
 
-**Branch 1 / 2 request body:**
-```json
-{ "report": { "issues": [ ... ] }, "message": "" }
-```
+## Important notes
 
-**Branch 3 request body:**
-```json
-{
-  "report": { "issues": [ ... ] },
-  "message": "",
-  "code_snippets": ["<snippet for issue 0>", null, "<snippet for issue 2>"]
-}
-```
-
-`code_snippets` index aligns with `report.issues` index. `null` = no snippet for that finding.
-
----
-
-## Data Sources
-
-### `data/sast_reports/sample.json`
-
-Modeled after the SonarQube Web API `/api/issues/search` response format. The real endpoint
-returns a JSON object with an `issues` array; each issue contains `rule`, `severity`,
-`component`, `line`, `message`, `type`, `status`, and `tags`.
-
-The sample contains 3 findings representative of common Java vulnerabilities:
-
-| Rule       | Vulnerability            | File                   |
-|------------|--------------------------|------------------------|
-| java:S3649 | SQL Injection            | UserRepository.java    |
-| java:S5131 | XSS (unsanitized output) | CommentController.java |
-| java:S2068 | Hard-coded password      | DatabaseConfig.java    |
-
----
-
-### `data/knowledge_base/cwe/` -- 10 documents
-
-**Source:** Official MITRE CWE catalog in XML format.
-Download: https://cwe.mitre.org/data/xml/cwec_latest.xml.gz
-Place the extracted file at `cwe/cwec_v4.20.xml` (or adjust the path with `--cwe-xml`).
-
-**Extraction script:** `scripts/build_cwe_kb.py`
-
-Parses the XML via Python stdlib `xml.etree.ElementTree`. For each CWE ID in the `CWE_IDS`
-list, extracts: Description, Extended_Description, Common_Consequences (up to 5 entries),
-Potential_Mitigations (capped at 1500 chars), Detection_Methods (up to 4 entries),
-Likelihood_Of_Exploit, and Applicable_Platforms.
-
-To add more CWEs: append IDs to `CWE_IDS` in `build_cwe_kb.py` and re-run.
-The catalog contains 969 weaknesses -- any CWE ID is available.
-
-**Covered weaknesses:**
-
-| ID      | Name                                      |
-|---------|-------------------------------------------|
-| CWE-22  | Path Traversal                            |
-| CWE-79  | Cross-site Scripting (XSS)                |
-| CWE-89  | SQL Injection                             |
-| CWE-287 | Improper Authentication                   |
-| CWE-307 | Improper Restriction of Auth Attempts     |
-| CWE-434 | Unrestricted Upload of Dangerous File     |
-| CWE-502 | Deserialization of Untrusted Data         |
-| CWE-611 | XML External Entity (XXE)                 |
-| CWE-798 | Use of Hard-coded Credentials             |
-| CWE-918 | Server-Side Request Forgery (SSRF)        |
-
----
-
-### `data/knowledge_base/wstg/` -- 20 documents
-
-**Source:** Official OWASP Web Security Testing Guide GitHub repository.
-Clone: `git clone https://github.com/OWASP/wstg`
-Place the cloned repo so the inner directory is at `wstg/wstg` (default path).
-
-**Extraction script:** `scripts/build_wstg_kb.py`
-
-Reads Markdown files directly from the cloned repo. For each mapped test case, extracts
-three sections: `## Summary`, `## Test Objectives`, and the first 2500 characters of
-`## How to Test`. Strips image references and converts Markdown hyperlinks to plain text.
-
-Note: `WSTG-ATHN-01` (Credentials Transported over Encrypted Channel) was consolidated
-into `WSTG-CRYP-03` in the official repo and no longer exists as a standalone file.
-
-**Covered test cases:**
-
-| ID           | Test                                           |
-|--------------|------------------------------------------------|
-| WSTG-ATHN-02 | Testing for Default Credentials                |
-| WSTG-ATHN-03 | Testing for Weak Lock Out Mechanism            |
-| WSTG-ATHZ-01 | Testing Directory Traversal / File Include     |
-| WSTG-ATHZ-02 | Testing for Bypassing Authorization Schema     |
-| WSTG-ATHZ-04 | Testing for Insecure Direct Object References  |
-| WSTG-BUSL-09 | Test Upload of Malicious Files                 |
-| WSTG-CLNT-01 | Testing for DOM-Based XSS                      |
-| WSTG-CRYP-03 | Testing for Sensitive Info over Unencrypted Channels |
-| WSTG-CRYP-04 | Testing for Weak Cryptographic Primitives      |
-| WSTG-INPV-01 | Testing for Reflected XSS                      |
-| WSTG-INPV-02 | Testing for Stored XSS                         |
-| WSTG-INPV-04 | Testing for HTTP Parameter Pollution           |
-| WSTG-INPV-05 | Testing for SQL Injection                      |
-| WSTG-INPV-07 | Testing for XML Injection / XXE                |
-| WSTG-INPV-11 | Testing for Code Injection                     |
-| WSTG-INPV-12 | Testing for Command Injection                  |
-| WSTG-INPV-19 | Testing for SSRF                               |
-| WSTG-SESS-01 | Testing for Session Management Schema          |
-| WSTG-SESS-03 | Testing for Session Fixation                   |
-| WSTG-SESS-10 | Testing JSON Web Tokens                        |
-
----
-
-### `data/code_snippets/` -- Branch 3 only
-
-Three Java Spring Boot files written to match the exact findings in `sample.json`:
-same class names, line numbers, and vulnerable patterns as referenced by the SonarQube rules.
-Passed directly to the LLM as per-finding code context -- not vectorized, not used for retrieval.
+- Run the commands from the repository root (the folder containing `requirements.txt` and `query.py`).
+- Activate the virtual environment before installing dependencies or running the project.
+- Branch 1 does not use RAG; Branches 2 and 3 use retrieval from the knowledge bases.
+- Branch 3 additionally accepts source-code context.
+- Never commit API keys or other secrets to the repository.
