@@ -7,3 +7,4 @@ venv/
 chroma_data/
 cwe/
 wstg/
+*_ERROR.txt
