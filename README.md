@@ -96,7 +96,7 @@ CLAUDE_MODEL=claude-sonnet-4-5
 
 Os nomes e valores padrão podem variar entre branches. O arquivo `.env.example` e `backend/config.py` da branch selecionada são a referência final. Use modelos disponíveis para sua conta.
 
-Na `main`, o provedor é selecionado interativamente ao executar `query.py` ou `run_experiment.py`. Na branch 1, selecione o provedor alterando `LLM_PROVIDER` no `.env`. Na branch 2, o executor experimental percorre os provedores configurados.
+Na `main`, o provedor é selecionado interativamente ao executar `query.py` ou `run_experiment.py`. Na branch 1, `python query.py` permite selecionar o provedor no terminal; `python run_experiment.py` usa `LLM_PROVIDER` do `.env`. Na branch 2, o provedor é definido por `LLM_PROVIDER` no `.env`.
 
 ### 2.2 Provider in `branch-3-rag-code-context`
 
