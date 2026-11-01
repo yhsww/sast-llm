@@ -72,13 +72,7 @@ def model_for(name: str) -> str:
 
 
 def output_folder_for(name: str) -> str:
-    """Return a result folder that identifies the actual model."""
-    if name == "GPT":
-        model = model_for(name).strip()
-        if model.lower().startswith("gpt-"):
-            return "GPT" + model[4:]
-        safe_model = re.sub(r"[^A-Za-z0-9.]+", "", model)
-        return f"GPT-{safe_model}" if safe_model else "GPT"
+    """Return the stable output folder assigned to a provider."""
     return PROVIDERS[name]["folder"]
 
 
