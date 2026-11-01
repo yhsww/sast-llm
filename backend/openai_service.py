@@ -161,8 +161,8 @@ def _generate_gemini(
 
             wait_seconds = 2 ** (attempt + 1)
             print(
-                f"Gemini indisponível; tentativa {attempt + 1}/4. "
-                f"Nova tentativa em {wait_seconds}s."
+                f"Gemini unvailabe; try {attempt + 1}/4. "
+                f"Try again in {wait_seconds}s."
             )
             time.sleep(wait_seconds)
 

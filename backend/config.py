@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    # Provedor usado para gerar os casos de teste
+  
     llm_provider: str = "gemini"
 
     # OpenAI: embeddings RAG e geraÃ§Ã£o opcional
@@ -17,7 +17,7 @@ class Settings(BaseSettings):
 
     # Kimi
     kimi_api_key: str = ""
-    kimi_model: str = "kimi-k2"
+    kimi_model: str = "moonshot-v1-8k"
 
     # Anthropic Claude
     anthropic_api_key: str = ""
