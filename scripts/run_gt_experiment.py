@@ -104,8 +104,8 @@ def _source_excerpt(path: Path, line_number: int | None, radius: int = 15) -> st
         start = 1
         end = min(len(lines), 120)
 
-    excerpt = "\\n".join(f"{n:>5}: {lines[n - 1]}" for n in range(start, end + 1))
-    return f"Source: {path.name} (lines {start}-{end})\\n{excerpt}"
+    excerpt = "\n".join(f"{n:>5}: {lines[n - 1]}" for n in range(start, end + 1))
+    return f"Source: {path.name} (lines {start}-{end})\n{excerpt}"
 
 
 def load_snippets(
@@ -154,7 +154,7 @@ def load_snippets(
 
     snippets: list[str | None] = []
     for issue in report.issues:
-        component = (issue.component or "").split(":", 1)[-1].replace("\\\\", "/")
+        component = (issue.component or "").split(":", 1)[-1].replace("\\", "/")
         source_path = files_by_name.get(Path(component).name.casefold())
         line_number = issue.line or (
             issue.textRange.startLine if issue.textRange else None
