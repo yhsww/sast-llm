@@ -276,27 +276,21 @@ Esta abordagem combina o contexto CWE/WSTG recuperado com trechos de código-fon
    python -m scripts.ingest --reset
    ```
 
-7. Inicie a consulta interativa:
+7. Execute uma simulação sem chamar a LLM:
 
    ```powershell
-   python query.py
+   python query.py --report GT01
    ```
 
-8. Quando solicitado, informe o caminho do relatório SonarQube. Pressione Enter para usar o relatório padrão `data/sast_reports/sample.json`.
+8. Para gerar os casos de teste de fato:
 
-9. Informe um foco/contexto adicional ou pressione Enter para pular essa etapa.
+   ```powershell
+   python query.py --execute --provider Gemini --report GT01
+   ```
 
-10. Para cada achado, cole o trecho de código correspondente. Termine cada entrada com `###` em uma linha isolada. Para pular um trecho, pressione Enter e depois digite `###`.
+   Substitua `Gemini` por `GPT`, `Kimi` ou `Claude`, e `GT01` pelo relatório desejado. Sem `--report`, processa todos os arquivos `GT*.json`. Os trechos são carregados de `data/code_snippets/<relatório>.json`; alternativamente, informe `--source-root <pasta-do-código>` para extrair linhas do código-fonte.
 
-**Snippet order for `sample.json`:**
-
-| Finding | Rule | File |
-|---------|------|------|
-| 1 | `java:S3649` — SQL Injection | `data/code_snippets/UserRepository.java` |
-| 2 | `java:S5131` — XSS | `data/code_snippets/CommentController.java` |
-| 3 | `java:S2068` — Hard-coded password | `data/code_snippets/DatabaseConfig.java` |
-
-A resposta JSON é impressa no terminal. Salve a saída manualmente para preservar o resultado; o `query.py` desta branch não grava automaticamente o JSON em `results/`.
+Os relatórios são salvos como `<relatório>_LLM.json` em `results/<provedor>/`. Uma nova execução substitui o JSON de mesmo nome. Falhas são registradas em `<relatório>_ERROR.txt`, separadas dos relatórios de sucesso.
 
 ## 7. Switching between branches
 
