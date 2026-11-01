@@ -78,10 +78,7 @@ def output_folder_for(name: str) -> str:
 
 def api_key_for(name: str) -> str:
     if name == "GPT":
-        return os.getenv(
-            "OPENAI_API_KEY",
-            getattr(settings, "openai_api_key", "")
-        ).strip()
+        return os.getenv("OPENAI_API_KEY", "").strip()
 
     return os.getenv(PROVIDERS[name]["api_env"], "").strip()
 
