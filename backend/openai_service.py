@@ -1,4 +1,3 @@
-
 import json
 
 from openai import OpenAI
@@ -52,7 +51,7 @@ Do not invent findings. Generate one test case per finding, in the same order.""
 
 def _build_user_content(
     issues: list[SonarIssue],
-    user_context: str,
+    user_context: str = "",
 ) -> str:
     findings_payload = [
         {
@@ -69,23 +68,43 @@ def _build_user_content(
         for i, issue in enumerate(issues)
     ]
 
-    content = (
-        "SAST Findings:\n"
-        + json.dumps(findings_payload, indent=2, ensure_ascii=False)
+    user_content = (
+        f"SAST Findings:\n"
+        f"{json.dumps(findings_payload, indent=2, ensure_ascii=False)}"
     )
 
     if user_context.strip():
-        content += (
-            "\n\nAdditional context / focus area:\n"
-            + user_context.strip()
+        user_content += (
+            f"\n\nAdditional context / focus area:\n"
+            f"{user_context.strip()}"
         )
 
-    return content
+    return user_content
 
 
-def _generate_openai(user_content: str) -> SecurityTestReport:
+def _extract_json(text: str) -> SecurityTestReport:
+    text = text.strip()
+
+    if text.startswith("```"):
+        lines = text.splitlines()
+
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+
+        text = "\n".join(lines).strip()
+
+    data = json.loads(text)
+    return SecurityTestReport.model_validate(data)
+
+
+def _generate_openai(
+    user_content: str,
+) -> SecurityTestReport:
     if not settings.openai_api_key:
-        raise ValueError("OPENAI_API_KEY não configurada.")
+        raise ValueError("OPENAI_API_KEY is not configured.")
 
     client = OpenAI(api_key=settings.openai_api_key)
 
@@ -100,20 +119,47 @@ def _generate_openai(user_content: str) -> SecurityTestReport:
 
     choice = response.choices[0]
 
-    if choice.finish_reason == "refusal":
-        raise ValueError(f"LLM refused: {choice.message.refusal}")
+    if choice.message.refusal:
+        raise ValueError(
+            f"OpenAI refused the request: {choice.message.refusal}"
+        )
 
     if choice.message.parsed is None:
-        raise ValueError("OpenAI não retornou uma resposta estruturada.")
+        raise ValueError("OpenAI returned no parsed response.")
 
     return choice.message.parsed
 
 
-def _generate_kimi(user_content: str) -> SecurityTestReport:
+def _generate_gemini(
+    user_content: str,
+) -> SecurityTestReport:
+    if not settings.google_api_key:
+        raise ValueError("GOOGLE_API_KEY is not configured.")
+
+    client = genai.Client(api_key=settings.google_api_key)
+
+    response = client.models.generate_content(
+        model=settings.gemini_model,
+        contents=user_content,
+        config={
+            "system_instruction": _SYSTEM_PROMPT,
+            "response_mime_type": "application/json",
+            "response_schema": SecurityTestReport,
+            "temperature": 0,
+        },
+    )
+
+    if not response.text:
+        raise ValueError("Gemini returned an empty response.")
+
+    return _extract_json(response.text)
+
+
+def _generate_kimi(
+    user_content: str,
+) -> SecurityTestReport:
     if not settings.kimi_api_key:
-        raise ValueError("KIMI_API_KEY não configurada.")
-    if not settings.kimi_model:
-        raise ValueError("KIMI_MODEL não configurado.")
+        raise ValueError("KIMI_API_KEY is not configured.")
 
     client = OpenAI(
         api_key=settings.kimi_api_key,
@@ -126,83 +172,68 @@ def _generate_kimi(user_content: str) -> SecurityTestReport:
             {"role": "system", "content": _SYSTEM_PROMPT},
             {"role": "user", "content": user_content},
         ],
-        temperature=0,
         response_format={"type": "json_object"},
+        temperature=0,
     )
 
     content = response.choices[0].message.content
+
     if not content:
-        raise ValueError("Kimi retornou uma resposta vazia.")
+        raise ValueError("Kimi returned an empty response.")
 
-    return SecurityTestReport.model_validate_json(content)
-
-
-def _generate_gemini(user_content: str) -> SecurityTestReport:
-    if not settings.google_api_key:
-        raise ValueError("GOOGLE_API_KEY não configurada.")
-    if not settings.gemini_model:
-        raise ValueError("GEMINI_MODEL não configurado.")
-
-    client = genai.Client(api_key=settings.google_api_key)
-
-    response = client.models.generate_content(
-        model=settings.gemini_model,
-        contents=(
-            _SYSTEM_PROMPT
-            + "\n\n"
-            + user_content
-        ),
-        config={
-            "response_mime_type": "application/json",
-            "response_schema": SecurityTestReport,
-            "temperature": 0,
-        },
-    )
-
-    if not response.text:
-        raise ValueError("Gemini retornou uma resposta vazia.")
-
-    return SecurityTestReport.model_validate_json(response.text)
+    return _extract_json(content)
 
 
-def _generate_claude(user_content: str) -> SecurityTestReport:
+
+def _generate_claude(
+    user_content: str,
+) -> SecurityTestReport:
     if not settings.anthropic_api_key:
-        raise ValueError("ANTHROPIC_API_KEY não configurada.")
+        raise ValueError("ANTHROPIC_API_KEY is not configured.")
+
     if not settings.claude_model:
-        raise ValueError("CLAUDE_MODEL não configurado.")
+        raise ValueError("CLAUDE_MODEL is not configured.")
 
     client = Anthropic(api_key=settings.anthropic_api_key)
 
     response = client.messages.create(
         model=settings.claude_model,
         max_tokens=8192,
-        temperature=0,
         system=_SYSTEM_PROMPT,
         messages=[
-            {"role": "user", "content": user_content}
+            {
+                "role": "user",
+                "content": user_content,
+            }
         ],
     )
 
     text_blocks = [
         block.text
         for block in response.content
-        if block.type == "text"
+        if getattr(block, "type", None) == "text"
     ]
 
-    if not text_blocks:
-        raise ValueError("Claude não retornou uma resposta textual.")
+    content = "\n".join(text_blocks).strip()
 
-    return SecurityTestReport.model_validate_json(
-        "\n".join(text_blocks)
-    )
+    if not content:
+        raise ValueError("Claude returned an empty response.")
+
+    return SecurityTestReport.model_validate_json(content)
 
 
 def generate_test_cases(
     issues: list[SonarIssue],
     user_context: str = "",
+    provider: str | None = None,
 ) -> SecurityTestReport:
     user_content = _build_user_content(issues, user_context)
-    provider = settings.llm_provider.strip().lower()
+
+    selected_provider = (
+        provider.strip().lower()
+        if provider
+        else settings.llm_provider.strip().lower()
+    )
 
     generators = {
         "openai": _generate_openai,
@@ -211,9 +242,17 @@ def generate_test_cases(
         "claude": _generate_claude,
     }
 
-    if provider not in generators:
+    if selected_provider not in generators:
         raise ValueError(
-            "Provedor inválido. Use: openai, gemini, kimi ou claude."
+            "Invalid provider. Choose: openai, gemini, kimi, or claude."
         )
 
-    return generators[provider](user_content)
+    report = generators[selected_provider](user_content)
+
+    if len(report.test_cases) != len(issues):
+        raise ValueError(
+            f"{selected_provider} returned {len(report.test_cases)} test cases "
+            f"for {len(issues)} findings."
+        )
+
+    return report
