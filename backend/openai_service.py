@@ -1,3 +1,5 @@
+import json
+
 from openai import OpenAI
 from google import genai
 from google.genai import types
@@ -5,26 +7,16 @@ from anthropic import Anthropic
 
 from .config import settings
 from .schemas import SonarIssue, SecurityTestReport
-<<<<<<< HEAD
-from .chroma_service import RetrievedDoc
-=======
 from .retrieved_doc import RetrievedDoc
->>>>>>> branch-2-rag-cwe-wstg
 
 
 _SYSTEM_PROMPT = """You are a senior AppSec/SAST analyst.
 
-<<<<<<< HEAD
-Your task is to analyze a SonarQube alert and create a test case for verification and triage based on the fields below.
+Your task is to analyze SonarQube findings and create test cases for verification and triage.
+Use supplied source-code snippets as evidence when available. Use retrieved CWE and WSTG
+references as supporting context, not as proof that a finding is confirmed.
 
-Return valid JSON only.
-
-The JSON must match this structure exactly:
-=======
-Analyze SonarQube findings and create test cases for verification and triage.
-
-Return valid JSON only, matching this structure:
->>>>>>> branch-2-rag-cwe-wstg
+Return valid JSON only, matching this structure exactly:
 {
     "test_cases": [
         {
@@ -56,21 +48,18 @@ Return valid JSON only, matching this structure:
     ]
 }
 
-<<<<<<< HEAD
-Do not invent findings. Generate one test case per finding, in the same order."""
-=======
-Generate exactly one test case per finding, in the same order.
-Do not invent findings. Use the supplied CWE and WSTG references
-as supporting context, not as evidence that a finding is confirmed.
+Generate exactly one test case per finding, in the same order. Do not invent findings.
+If source code is missing, state what must be verified instead of asserting that the
+vulnerability is confirmed. Keep verification steps non-destructive and suitable for
+an authorized test environment.
 """
->>>>>>> branch-2-rag-cwe-wstg
 
 
 def _build_finding_block(
     index: int,
     issue: SonarIssue,
     docs: list[RetrievedDoc],
-    code_snippet: str | None,
+    code_snippet: str | None = None,
 ) -> str:
     lines = [
         f"--- Finding {index} ---",
@@ -82,19 +71,20 @@ def _build_finding_block(
         f"Tags: {', '.join(issue.tags)}",
     ]
 
-<<<<<<< HEAD
     if code_snippet and code_snippet.strip():
-        lines.append("\n[Vulnerable Source Code]")
-        lines.append(f"```\n{code_snippet.strip()}\n```")
+        lines.extend([
+            "",
+            "[Vulnerable Source Code]",
+            code_snippet.strip(),
+        ])
 
     for doc in docs:
-        lines.append(f"\n[{doc.source} Reference: {doc.id}]")
-        lines.append(doc.content[:1500])  # cap per-doc to control token usage
-=======
-    for doc in docs:
-        lines.append(f"\n[{doc.source} Reference: {doc.id}]")
-        lines.append(doc.content[:1500])
->>>>>>> branch-2-rag-cwe-wstg
+        lines.extend([
+            "",
+            f"[{doc.source} Reference: {doc.id}]",
+            f"Title: {doc.title}",
+            doc.content[:1500],
+        ])
 
     return "\n".join(lines)
 
@@ -103,45 +93,53 @@ def _build_user_content(
     issues: list[SonarIssue],
     user_context: str,
     retrieved_per_finding: list[list[RetrievedDoc]],
+    code_snippets: list[str | None] | None = None,
 ) -> str:
+    if len(issues) != len(retrieved_per_finding):
+        raise ValueError("Each finding must have its corresponding RAG results.")
+
+    snippets = list(code_snippets or [])
+    snippets.extend([None] * max(0, len(issues) - len(snippets)))
+
     blocks = [
-        _build_finding_block(i + 1, issue, docs)
-        for i, (issue, docs) in enumerate(
-            zip(issues, retrieved_per_finding)
+        _build_finding_block(index, issue, docs, snippets[index - 1])
+        for index, (issue, docs) in enumerate(
+            zip(issues, retrieved_per_finding),
+            start=1,
         )
     ]
-
     content = "\n\n".join(blocks)
 
     if user_context.strip():
-        content += (
-            "\n\nAdditional context / focus area:\n"
-            + user_context.strip()
-        )
+        content += "\n\nAdditional context / focus area:\n" + user_context.strip()
 
     return content
 
 
 def _extract_json(text: str) -> SecurityTestReport:
     text = text.strip()
-
-    if text.startswith("```"):
+    fence = chr(96) * 3
+    if text.startswith(fence):
         lines = text.splitlines()
-        if lines and lines[0].startswith("```"):
+        if lines and lines[0].startswith(fence):
             lines = lines[1:]
-        if lines and lines[-1].strip() == "```":
+        if lines and lines[-1].strip() == fence:
             lines = lines[:-1]
         text = "\n".join(lines).strip()
 
-    data = json.loads(text)
-    return SecurityTestReport.model_validate(data)
+    if not text.startswith("{"):
+        start, end = text.find("{"), text.rfind("}")
+        if start >= 0 and end > start:
+            text = text[start:end + 1]
+
+    return SecurityTestReport.model_validate(json.loads(text))
 
 
-def _generate_openai(
-    user_content: str,
-) -> SecurityTestReport:
+def _generate_openai(user_content: str) -> SecurityTestReport:
+    if not settings.openai_api_key:
+        raise ValueError("OPENAI_API_KEY is not configured.")
+
     client = OpenAI(api_key=settings.openai_api_key)
-
     response = client.chat.completions.create(
         model=settings.openai_chat_model,
         messages=[
@@ -150,57 +148,32 @@ def _generate_openai(
         ],
         response_format={"type": "json_object"},
     )
-
     content = response.choices[0].message.content
     if not content:
         raise ValueError("OpenAI returned an empty response.")
-
     return _extract_json(content)
 
 
-def _generate_gemini(
-    user_content: str,
-) -> SecurityTestReport:
-    import time
-    from google.genai.errors import ServerError
-
+def _generate_gemini(user_content: str) -> SecurityTestReport:
     if not settings.google_api_key:
         raise ValueError("GOOGLE_API_KEY is not configured.")
 
     client = genai.Client(api_key=settings.google_api_key)
-
-    for attempt in range(4):
-        try:
-            response = client.models.generate_content(
-                model=settings.gemini_model,
-                contents=user_content,
-                config=types.GenerateContentConfig(
-                    system_instruction=_SYSTEM_PROMPT,
-                    response_mime_type="application/json",
-                    response_schema=SecurityTestReport,
-                ),
-            )
-            break
-        except ServerError:
-            if attempt == 3:
-                raise
-
-            wait_seconds = 2 ** (attempt + 1)
-            print(
-                f"Gemini unvailabe; try {attempt + 1}/4. "
-                f"Try again in {wait_seconds}s."
-            )
-            time.sleep(wait_seconds)
-
+    response = client.models.generate_content(
+        model=settings.gemini_model,
+        contents=user_content,
+        config=types.GenerateContentConfig(
+            system_instruction=_SYSTEM_PROMPT,
+            response_mime_type="application/json",
+            response_schema=SecurityTestReport,
+        ),
+    )
     if not response.text:
         raise ValueError("Gemini returned an empty response.")
-
     return _extract_json(response.text)
 
 
-def _generate_kimi(
-    user_content: str,
-) -> SecurityTestReport:
+def _generate_kimi(user_content: str) -> SecurityTestReport:
     if not settings.kimi_api_key:
         raise ValueError("KIMI_API_KEY is not configured.")
 
@@ -208,7 +181,6 @@ def _generate_kimi(
         api_key=settings.kimi_api_key,
         base_url="https://api.moonshot.ai/v1",
     )
-
     response = client.chat.completions.create(
         model=settings.kimi_model,
         messages=[
@@ -217,40 +189,30 @@ def _generate_kimi(
         ],
         response_format={"type": "json_object"},
     )
-
     content = response.choices[0].message.content
     if not content:
         raise ValueError("Kimi returned an empty response.")
-
     return _extract_json(content)
 
 
-def _generate_claude(
-    user_content: str,
-) -> SecurityTestReport:
+def _generate_claude(user_content: str) -> SecurityTestReport:
     if not settings.anthropic_api_key:
         raise ValueError("ANTHROPIC_API_KEY is not configured.")
 
     client = Anthropic(api_key=settings.anthropic_api_key)
-
     response = client.messages.create(
         model=settings.claude_model,
         max_tokens=8192,
         system=_SYSTEM_PROMPT,
-        messages=[
-            {"role": "user", "content": user_content},
-        ],
+        messages=[{"role": "user", "content": user_content}],
     )
-
     text_blocks = [
         block.text
         for block in response.content
         if getattr(block, "type", None) == "text"
     ]
-
     if not text_blocks:
         raise ValueError("Claude returned no text content.")
-
     return _extract_json("\n".join(text_blocks))
 
 
@@ -258,43 +220,18 @@ def generate_test_cases(
     issues: list[SonarIssue],
     user_context: str,
     retrieved_per_finding: list[list[RetrievedDoc]],
-<<<<<<< HEAD
-    code_snippets: list[str | None],
+    code_snippets: list[str | None] | None = None,
 ) -> SecurityTestReport:
-    # Pad snippets list to match issues length (missing entries treated as None)
-    snippets = list(code_snippets) + [None] * max(0, len(issues) - len(code_snippets))
-
-    blocks = [
-        _build_finding_block(i + 1, issue, docs, snippets[i])
-        for i, (issue, docs) in enumerate(zip(issues, retrieved_per_finding))
-    ]
-
-    user_content = "\n\n".join(blocks)
-    if user_context.strip():
-        user_content += f"\n\nAdditional context / focus area:\n{user_context.strip()}"
-
-    response = _client.beta.chat.completions.parse(
-        model=settings.openai_chat_model,
-        messages=[
-            {"role": "system", "content": _SYSTEM_PROMPT},
-            {"role": "user", "content": user_content},
-        ],
-        response_format=SecurityTestReport,
-=======
-) -> SecurityTestReport:
-    if len(issues) != len(retrieved_per_finding):
-        raise ValueError(
-            "Each finding must have its corresponding RAG results."
-        )
-
     user_content = _build_user_content(
         issues,
         user_context,
         retrieved_per_finding,
->>>>>>> branch-2-rag-cwe-wstg
+        code_snippets,
     )
 
     provider = settings.llm_provider.strip().lower()
+    if provider == "gpt":
+        provider = "openai"
 
     generators = {
         "openai": _generate_openai,
@@ -302,7 +239,6 @@ def generate_test_cases(
         "kimi": _generate_kimi,
         "claude": _generate_claude,
     }
-
     if provider not in generators:
         raise ValueError(
             f"Unsupported LLM_PROVIDER: {provider}. "
@@ -310,11 +246,9 @@ def generate_test_cases(
         )
 
     report = generators[provider](user_content)
-
     if len(report.test_cases) != len(issues):
         raise ValueError(
             f"{provider} returned {len(report.test_cases)} test cases "
             f"for {len(issues)} findings."
         )
-
     return report
