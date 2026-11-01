@@ -115,62 +115,30 @@ Essa branch não oferece a seleção de Gemini, Kimi ou Claude no `backend/confi
 
 ## 3. Branch `main` — Direct LLM experiment
 
-Esta branch contém `run_experiment.py` para executar os relatórios `GT*.json` em lote.
+Na branch `main`, tanto `python query.py` quanto `python run_experiment.py` delegam a execução ao mesmo fluxo:
 
-### Steps
+1. Lê automaticamente `data/sast_reports/sample.json`.
+2. Permite selecionar a LLM no terminal: OpenAI, Gemini, Kimi ou Claude.
+3. Envia os achados diretamente à LLM, sem RAG e sem solicitar contexto adicional.
+4. Gera e salva o relatório JSON na pasta correspondente ao provedor.
 
-1. Selecione a branch:
-
-   ```powershell
-   git switch main
-   ```
-
-2. Instale as dependências e configure o `.env`, conforme as seções 1 e 2.
-
-3. Execute um único relatório:
-
-   ```powershell
-   python run_experiment.py --report GT01
-   ```
-
-4. Execute todos os relatórios:
-
-   ```powershell
-   python run_experiment.py
-   ```
-
-5. Selecione um provedor específico:
-
-   ```powershell
-   python run_experiment.py --provider openai
-   python run_experiment.py --provider gemini
-   python run_experiment.py --provider kimi
-   python run_experiment.py --provider claude
-   ```
-
-6. Para regenerar resultados existentes:
-
-   ```powershell
-   python run_experiment.py --overwrite
-   ```
-
-7. Consulte as opções do executor:
-
-   ```powershell
-   python run_experiment.py --help
-   ```
-
-Os relatórios de entrada são lidos de `data/sast_reports/GT*.json`. Os resultados são salvos em subpastas de `results/` organizadas por provedor. Por padrão, resultados existentes são ignorados.
-
-### Interactive query
-
-Para executar a consulta interativa usando `data/sast_reports/sample.json`:
+### Execução
 
 ```powershell
+git switch main
+python -m pip install -r requirements.txt
 python query.py
 ```
 
-O programa permite informar um foco/contexto adicional e imprime a resposta no terminal. Esse fluxo não substitui o processamento em lote de `run_experiment.py`.
+Também é possível iniciar pelo ponto de entrada compatível:
+
+```powershell
+python run_experiment.py
+```
+
+Os arquivos de saída usam nomes estáveis, como `sample_LLM.json`, em `results/GPT4.1/`, `results/Gemini/`, `results/Kimi/` ou `results/Claude/`. Uma nova execução para o mesmo relatório e provedor substitui o arquivo anterior. O conteúdo JSON não inclui data ou hora de execução. Erros são registrados em um arquivo `*_ERROR.txt separado do relatório de sucesso.
+
+Configure as chaves e os identificadores de modelo no arquivo `.env` antes de executar. A seleção feita no terminal determina o provedor usado naquela execução.
 
 ## 4. Branch 1 — Direct LLM
 
