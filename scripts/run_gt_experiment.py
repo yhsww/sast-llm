@@ -61,13 +61,13 @@ def _redact_secrets(message: str) -> str:
         "[REDACTED_API_KEY]",
         message,
     )
-    message = re.sub(r"(?i)Bearer\\s+[^\\s,;]+", "Bearer [REDACTED]", message)
+    message = re.sub(r"(?i)Bearer\s+[^\s,;]+", "Bearer [REDACTED]", message)
     message = re.sub(
-        r"(?i)(api[_-]?key|authorization|token)\\s*[:=]\\s*[^&\\s,;]+",
-        r"\\1=[REDACTED]",
+        r"(?i)(api[_-]?key|authorization|token)\s*[:=]\s*[^&\s,;]+",
+        r"\1=[REDACTED]",
         message,
     )
-    return re.sub(r"\\s+", " ", message).strip()
+    return re.sub(r"\s+", " ", message).strip()
 
 
 def concise_error(exc):
@@ -102,7 +102,7 @@ def concise_error(exc):
 def save_error(path, exc):
     detail = _redact_secrets(str(exc))
     path.write_text(
-        f"Error type: {type(exc).__name__}\\nError message: {detail}\\n",
+        f"Error type: {type(exc).__name__}\nError message: {detail}\n",
         encoding="utf-8",
     )
 
