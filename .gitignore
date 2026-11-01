@@ -4,6 +4,9 @@ __pycache__/
 *.egg-info/
 .venv/
 venv/
+.pytest_cache/
 chroma_data/
 cwe/
 wstg/
+results/*/*_ERROR.txt
+results/*/*.tmp
