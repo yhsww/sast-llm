@@ -1,0 +1,11 @@
+CWE-1107: Insufficient Isolation of Symbolic Constant Definitions
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The source code uses symbolic constants, but it does not sufficiently place the definitions of these constants into a more centralized or isolated location.
+
+## Common Consequences
+- Other: Reduce Maintainability — This issue makes it more difficult to maintain the product, which indirectly affects security by making it more difficult or time-consuming to find and/or fix vulnerabilities. It also might make it ea

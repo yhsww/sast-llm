@@ -1,0 +1,24 @@
+CWE-825: Expired Pointer Dereference
+
+Abstraction: Base
+
+Applicable Platforms: Memory-Unsafe, C, C++
+
+## Description
+The product dereferences a pointer that contains a location for memory that was previously valid, but is no longer valid.
+
+## Extended Description
+When a product releases memory, but it maintains a pointer to that memory, then the memory might be re-allocated at a later time. If the original pointer is accessed to read or write data, then this could cause the product to read or modify data that is in use by a different function or process. Depending on how the newly-allocated memory is used, this could lead to a denial of service, information exposure, or code execution.
+
+## Common Consequences
+- Confidentiality: Read Memory — If the expired pointer is used in a read operation, an attacker might be able to control data read in by the application.
+- Availability: DoS: Crash, Exit, or Restart — If the expired pointer references a memory location that is not accessible to the product, or points to a location that is "malformed" (such as NULL) or larger than expected by a read or write operati
+- Integrity, Confidentiality, Availability: Execute Unauthorized Code or Commands — If the expired pointer is used in a function call, or points to unexpected data in a write operation, then code execution may be possible.
+
+## Potential Mitigations
+- [Architecture and Design] Choose a language that provides automatic memory management.
+- [Implementation] When freeing pointers, be sure to set them to NULL once they are freed. However, the utilization of multiple or complex data structures may lower the usefulness of this strategy.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea
+- [Automated Dynamic Analysis] Use tools that are integrated during compilation to insert runtime error-checking mechanisms related to memory safety errors, such as AddressSanitizer (ASan) for C/C++ [REF-1518].

@@ -1,0 +1,14 @@
+CWE-334: Small Space of Random Values
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The number of possible random values is smaller than needed by the product, making it more susceptible to brute force attacks.
+
+## Common Consequences
+- Access Control, Other: Bypass Protection Mechanism, Other — An attacker could easily guess the values used. This could lead to unauthorized access to a system if the seed is used for authentication and authorization.
+
+## Potential Mitigations
+- [Architecture and Design, Requirements] Use products or modules that conform to FIPS 140-2 [REF-267] to avoid obvious entropy problems. Consult FIPS 140-2 Annex C ("Approved Random Number Generators").

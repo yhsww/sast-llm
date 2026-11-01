@@ -1,0 +1,182 @@
+WSTG-INPV-07: XML Injection
+
+## Summary
+XML Injection testing is when a tester tries to inject or manipulate an XML document within an application. If the XML parser fails to contextually validate data or is insecurely configured, the test will yield a positive result.
+
+This section describes practical examples of XML Injection. First, an XML-based communication API will be defined and its working principles explained. Then, the discovery method is demonstrated, in which we try to insert XML metacharacters. Once the first step is accomplished, the tester will have information about the XML structure, making it possible to inject XML data and tags (Tag Injection), or exploit the parser's configuration to access local and remote resources (XML External Entity / XXE Injection).
+
+## Test Objectives
+- Identify XML injection points.
+- Assess the types of exploits that can be attained and their severities.
+
+## How to Test
+Let's suppose there is a modern web application or web service (such as a SOAP or RESTful API) that accepts XML formatting for user registration.
+
+When a user registers by filling out an HTML form or interacting with a client application, the application sends the user's data in a `POST` request containing an XML payload:
+
+```http
+POST /api/addUser HTTP/1.1
+Host: www.example.com
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<user>
+    <username>tony</username>
+    <password>Un6R34kb!e</password>
+    <email>s4tan@hell.com</email>
+</user>
+```
+
+The backend application parses this XML payload and inserts the parsed values into the database or internal state (often augmenting it with server-generated fields such as `userid`). If the application dynamically constructs XML responses or forwards this XML data to another backend system by concatenating strings without proper sanitization, it becomes vulnerable to XML structural injection. Alternatively, if the XML parser itself is insecurely configured, it becomes vulnerable to entity-based attacks (XXE).
+
+### Discovery
+
+The first step in order to test an application for the presence of a XML Injection vulnerability consists of trying to insert XML metacharacters.
+
+XML metacharacters are:
+
+- Single and Double Quotes (`'` and `"`): When not sanitized, these characters can throw an exception during XML parsing or allow an attacker to prematurely close an attribute. This occurs when the injected quote matches the character used to enclose the attribute value.
+
+For example, let's suppose an application uses single quotes for attributes:
+
+`<node attrib='$inputValue'/>`
+
+If the payload `$inputValue = foo'` is provided, the resulting XML becomes:
+
+`<node attrib='foo''/>`
+
+The resulting XML document is malformed and invalid. The exact same logic applies to double quotes (`"`) if the attribute is enclosed in double quotes (e.g., `<node attrib="$inputValue"/>`).
+
+- Angular parentheses: `>` and `<` - By adding an open or closed angular parenthesis in a user input like the following:
+
+`Username = foo<`
+
+the application will build a new node:
+
+```xml
+<user>
+    <username>foo<</username>
+    <password>Un6R34kb!e</password>
+    <userid>500</userid>
+    <email>s4tan@hell.com</email>
+</user>
+```
+
+but, because of the presence of the open '<', the resulting XML document is invalid.
+
+- Comment tag: `<!--` and `-->` - This sequence of characters is interpreted as the beginning or end of a comment. So by injecting one of them in Username parameter:
+
+`Username = foo<!--`
+
+the application will build a node like the following:
+
+```xml
+<user>
+    <username>foo<!--</username>
+    <password>Un6R34kb!e</password>
+    <userid>500</userid>
+    <email>s4tan@hell.com</email>
+</user>
+```
+
+which won't be a valid XML sequence.
+
+- Ampersand: `&`- The ampersand is used in the XML syntax to represent entities. The format of an entity is `&symbol;`. An entity is mapped to a character in the Unicode character set.
+
+For example:
+
+`<tagnode>&lt;</tagnode>`
+
+is well formed and valid, and represents the `<` ASCII character.
+
+If `&` is not encoded itself with `&amp;`, it could be used to test XML injection.
+
+In fact, if an input like the following is provided:
+
+`Username = &foo`
+
+a new node will be created:
+
+```xml
+<user>
+    <username>&foo</username>
+    <password>Un6R34kb!e</password>
+    <userid>500</userid>
+    <email>s4tan@hell.com</email>
+</user>
+```
+
+but, again, the document is not valid: `&foo` is not terminated with `;` and the `&foo;` entity is undefined.
+
+- CDATA section delimiters: `<![CDATA[` and `]]>` - CDATA sections are used to escape blocks of text containing characters which would otherwise be recognized as markup. In other words, characters enclosed in a CDATA section are not parsed by an XML parser.
+
+For example, if there is the need to represent the string `<foo>` inside a text node, a CDATA section may be used:
+
+```xml
+<node>
+    <![CDATA[<foo>]]>
+</node>
+```
+
+so that `<foo>` won't be parsed as markup and will be considered as character data.
+
+If a node is created in the following way:
+
+`<username><![CDATA[<$userName]]></username>`
+
+the tester could try to inject the end CDATA string `]]>` in order to try to invalidate the XML document.
+
+`userName = ]]>`
+
+this will become:
+
+`<username><![CDATA[]]>]]></username>`
+
+which is not a valid XML fragment.
+
+Another test is related to CDATA tag. Suppose that the XML document is processed to generate an HTML page. In this case, the CDATA section delimiters may be simply eliminated, without further inspecting their contents. Then, it is possible to inject HTML tags, which will be included in the generated page, completely bypassing existing sanitization routines.
+
+Let's consider a concrete example. Suppose we have a node containing some text that will be displayed back to the user.
+
+```xml
+<html>
+    $HTMLCode
+</html>
+```
+
+Then, an attacker can provide the following input:
+
+```txt
+<![CDATA[<]]>script<![CDATA[>]]>alert('xss')<![CDATA[<]]>/script<![CDATA[>]]>
+```
+
+and obtain the following node:
+
+```xml
+<html>
+    <![CDATA[<]]>script<![CDATA[>]]>alert('xss')<![CDATA[<]]>/script<![CDATA[>]]>
+</html>
+```
+
+During the processing, the CDATA section delimiters are eliminated, generating the following HTML code:
+
+```html
+<script>
+    alert('XSS')
+</script>
+```
+
+The result is that the application is vulnerable to XSS.
+
+### Tag Injection
+
+Once the first step is accomplished and the tester maps the XML structure, it is possible to try to inject complete XML tags. This can lead to logic bypasses or privilege escalation if the application uses the parsed XML to make authorization decisions.
+
+Let's consider a scenario where the user's input is concatenated directly into a backend XML request. The application dynamically builds the following XML node to communicate with an internal service:
+
+```xml
+<user>
+    <username>$username</username>
+    <password>$password</password>
+    <userid>500</userid>
+[...truncated]

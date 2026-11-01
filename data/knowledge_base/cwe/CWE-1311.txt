@@ -1,0 +1,18 @@
+CWE-1311: Improper Translation of Security Attributes by Fabric Bridge
+
+Abstraction: Base
+
+Applicable Platforms: Verilog, VHDL, Not Technology-Specific
+
+## Description
+The bridge incorrectly translates security attributes from either trusted to untrusted or from untrusted to trusted when converting from one fabric protocol to another.
+
+## Extended Description
+A bridge allows IP blocks supporting different fabric protocols to be integrated into the system. Fabric end-points or interfaces usually have dedicated signals to transport security attributes. For example, HPROT signals in AHB, AxPROT signals in AXI, and MReqInfo and SRespInfo signals in OCP. The values on these signals are used to indicate the security attributes of the transaction. These include the immutable hardware identity of the controller initiating the transaction, privilege level, and type of transaction (e.g., read/write, cacheable/non-cacheable, posted/non-posted). A weakness can arise if the bridge IP block, which translates the signals from the protocol used in the IP block endpoint to the protocol used by the central bus, does not properly translate the security attributes
+
+## Common Consequences
+- Confidentiality, Integrity, Access Control: Modify Memory, Read Memory, Gain Privileges or Assume Identity, Bypass Protection Mechanism, Execute Unauthorized Code or Commands
+
+## Potential Mitigations
+- [Architecture and Design] The translation must map signals in such a way that untrusted agents cannot map to trusted agents or vice-versa.
+- [Implementation] Ensure that the translation maps signals in such a way that untrusted agents cannot map to trusted agents or vice-versa.

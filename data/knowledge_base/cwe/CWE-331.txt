@@ -1,0 +1,17 @@
+CWE-331: Insufficient Entropy
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product uses an algorithm or scheme that produces insufficient entropy, leaving patterns or clusters of values that are more likely to occur than others.
+
+## Common Consequences
+- Access Control, Other: Bypass Protection Mechanism, Other — An attacker could guess the random numbers generated and could gain unauthorized access to a system if the random numbers are used for authentication and authorization.
+
+## Potential Mitigations
+- [Implementation] Determine the necessary entropy to adequately provide for randomness and predictability. This can be achieved by increasing the number of bits of objects such as keys and seeds.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

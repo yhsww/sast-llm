@@ -1,0 +1,20 @@
+CWE-323: Reusing a Nonce, Key Pair in Encryption
+
+Abstraction: Base
+
+Likelihood of Exploit: High
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+Nonces should be used for the present occasion and only once.
+
+## Common Consequences
+- Access Control: Bypass Protection Mechanism, Gain Privileges or Assume Identity — Potentially a replay attack, in which an attacker could send the same data twice, could be crafted if nonces are allowed to be reused. This could allow a user to send a message which masquerades as a 
+
+## Potential Mitigations
+- [Implementation] Refuse to reuse nonce values.
+- [Implementation] Use techniques such as requiring incrementing, time based and/or challenge response to assure uniqueness of nonces.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

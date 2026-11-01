@@ -1,0 +1,18 @@
+CWE-1258: Exposure of Sensitive System Information Due to Uncleared Debug Information
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The hardware does not fully clear security-sensitive values, such as keys and intermediate values in cryptographic operations, when debug mode is entered.
+
+## Extended Description
+Security sensitive values, keys, intermediate steps of cryptographic operations, etc. are stored in temporary registers in the hardware. If these values are not cleared when debug mode is entered they may be accessed by a debugger allowing sensitive information to be accessible by untrusted parties.
+
+## Common Consequences
+- Confidentiality: Read Memory
+- Access Control: Bypass Protection Mechanism
+
+## Potential Mitigations
+- [Architecture and Design] Whenever debug mode is enabled, all registers containing sensitive assets must be cleared.

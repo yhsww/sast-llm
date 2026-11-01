@@ -1,0 +1,14 @@
+CWE-1055: Multiple Inheritance from Concrete Classes
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product contains a class with inheritance from more than one concrete class.
+
+## Common Consequences
+- Other: Reduce Maintainability — This issue makes it more difficult to maintain the product, which indirectly affects security by making it more difficult or time-consuming to find and/or fix vulnerabilities. It also might make it ea
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

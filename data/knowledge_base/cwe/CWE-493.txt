@@ -1,0 +1,23 @@
+CWE-493: Critical Public Variable Without Final Modifier
+
+Abstraction: Variant
+
+Likelihood of Exploit: High
+
+Applicable Platforms: Object-Oriented, Java, C++
+
+## Description
+The product has a critical public variable that is not final, which allows the variable to be modified to contain unexpected values.
+
+## Extended Description
+If a field is non-final and public, it can be changed once the value is set by any function that has access to the class which contains the field. This could lead to a vulnerability if other parts of the program make assumptions about the contents of that field.
+
+## Common Consequences
+- Integrity: Modify Application Data — The object could potentially be tampered with.
+- Confidentiality: Read Application Data — The object could potentially allow the object to be read.
+
+## Potential Mitigations
+- [Implementation] Declare all public fields as final when possible, especially if it is used to maintain internal state of an Applet or of classes used by an Applet. If a field must be public, then perform all appropriate sanity checks before accessing the field from your code.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

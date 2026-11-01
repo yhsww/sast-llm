@@ -1,0 +1,35 @@
+CWE-1421: Exposure of Sensitive Information in Shared Microarchitectural Structures during Transient Execution
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+A processor event may allow transient operations to access architecturally restricted data (for example, in another address space) in a shared microarchitectural structure (for example, a CPU cache), potentially exposing the data over a covert channel.
+
+## Extended Description
+Many commodity processors have Instruction Set Architecture (ISA) features that protect software components from one another. These features can include memory segmentation, virtual memory, privilege rings, trusted execution environments, and virtual machines, among others. For example, virtual memory provides each process with its own address space, which prevents processes from accessing each other's private data. Many of these features can be used to form hardware-enforced security boundaries between software components. Many commodity processors also share microarchitectural resources that cache (temporarily store) data, which may be confidential. These resources may be shared across processor contexts, including across SMT threads, privilege rings, or others. When transient operations
+
+## Common Consequences
+- Confidentiality: Read Memory — <<put the information here>>
+
+## Potential Mitigations
+- [Architecture and Design] Hardware designers may choose to engineer the processor's pipeline to prevent architecturally restricted data from being used by operations that can execute transiently.
+- [Architecture and Design] Hardware designers may choose not to share microarchitectural resources that can contain sensitive data, such as fill buffers and store buffers.
+- [Architecture and Design] Hardware designers may choose to sanitize specific microarchitectural state (for example, store buffers) when the processor transitions to a different context, such as whenever a system call is invoked. Alternatively, the hardware may expose instruction(s) that allow software to sanitize microarchitectural state according to the user or system administrator's threat model. These mitigation approaches are similar to those that address CWE-226; however, sanitizing microarchitectural state may not be the optimal or best way to mitigate this weakness on every processor design.
+- [Architecture and Design] The hardware designer can attempt to prevent transient execution from causing observable discrepancies in specific covert channels.
+- [Architecture and Design] Software architects may design software to enforce strong isolation between different contexts. For example, kernel page table isolation (KPTI) mitigates the Meltdown vulnerability [REF-1401] by separating user-mode page tables from kernel-mode page tables, which prevents user-mode processes from using Meltdown to transiently access kernel memory [REF-1404].
+- [Build and Compilation] If the weakness is exposed by a single instruction (or a small set of instructions), then the compiler (or JIT, etc.) can be configured to prevent the affected instruction(s) from being generated, and instead generate an alternate sequence of instructions that is not affected by the weakness.
+- [Build and Compilation] Use software techniques (including the use of serialization instructions) that are intended to reduce the number of instructions that can be executed transiently after a processor event or misprediction.
+- [Implementation] System software can mitigate this weakness by invoking state-sanitizing operations when switching from one context to another, according to the hardware vendor's recommendations.
+- [System Configuration] Some systems may allow the user to disable (for example, in the BIOS) sharing of the affected resource.
+- [System Configuration] Some systems may allow the user to disable (for example, in the BIOS) microarchitectural features that allow transient access to architecturally restricted data.
+- [Patching and Maintenance] The hardware vendor may provide a patch to sanitize the affected shared microarchitectural state when the processor transitions to a different context.
+- [Patching and Maintenance] This kind of patch may not be feasible or implementable for all processors or all weaknesses.
+[...truncated]
+
+## Detection Methods
+- [Manual Analysis] This weakness can be detected in hardware by manually inspecting processor specifications. Features that exhibit this weakness may include microarchitectural predictors, access control checks that occur out-of-order, or any other features that can allow operations to execute without committing to ar
+- [Automated Analysis] This weakness can be detected (pre-discovery) in hardware by employing static or dynamic taint analysis methods [REF-1401]. These methods can label data in one context (for example, kernel data) and perform information flow analysis (or a simulation, etc.) to determine whether tainted data can appea
+- [Automated Analysis] Software vendors can release tools that detect presence of known weaknesses (post-discovery) on a processor. For example, some of these tools can attempt to transiently execute a vulnerable code sequence and detect whether code successfully leaks data in a manner consistent with the weakness under t
+- [Fuzzing] Academic researchers have demonstrated that this weakness can be detected in hardware using software fuzzing tools that treat the underlying hardware as a black box ([REF-1406], [REF-1430])

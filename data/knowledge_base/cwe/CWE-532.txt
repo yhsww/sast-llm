@@ -1,0 +1,22 @@
+CWE-532: Insertion of Sensitive Information into Log File
+
+Abstraction: Base
+
+Likelihood of Exploit: Medium
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product writes sensitive information to a log file.
+
+## Common Consequences
+- Confidentiality: Read Application Data — Logging sensitive user data, full path names, or system information often provides attackers with an additional, less-protected path to acquiring the information.
+
+## Potential Mitigations
+- [Architecture and Design, Implementation] Consider seriously the sensitivity of the information written into log files. Do not write secrets into the log files.
+- [Distribution] Remove debug log files before deploying the application into production.
+- [Operation] Protect log files against unauthorized read/write.
+- [Implementation] Adjust configurations appropriately when software is transitioned from a debug state to production.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

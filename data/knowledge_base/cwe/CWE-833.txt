@@ -1,0 +1,14 @@
+CWE-833: Deadlock
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The product contains multiple threads or executable segments that are waiting for each other to release a necessary lock, resulting in deadlock.
+
+## Common Consequences
+- Availability: DoS: Resource Consumption (CPU), DoS: Resource Consumption (Other), DoS: Crash, Exit, or Restart — Each thread of execution will "hang" and prevent tasks from completing. In some cases, CPU consumption may occur if a lock check occurs in a tight loop.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

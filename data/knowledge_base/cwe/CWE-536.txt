@@ -1,0 +1,11 @@
+CWE-536: Servlet Runtime Error Message Containing Sensitive Information
+
+Abstraction: Variant
+
+Applicable Platforms: Java, Web Based, Web Server
+
+## Description
+A servlet error message indicates that there exists an unhandled exception in the web application code and may provide useful information to an attacker.
+
+## Common Consequences
+- Confidentiality: Read Application Data — The error message may contain the location of the file in which the offending function is located. This may disclose the web root's absolute path as well as give the attacker the location of applicati

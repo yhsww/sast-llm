@@ -1,0 +1,21 @@
+CWE-354: Improper Validation of Integrity Check Value
+
+Abstraction: Base
+
+Likelihood of Exploit: Medium
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not validate or incorrectly validates the integrity check values or "checksums" of a message. This may prevent it from detecting if the data has been modified or corrupted in transmission.
+
+## Extended Description
+Improper validation of checksums before use results in an unnecessary risk that can easily be mitigated. The protocol specification describes the algorithm used for calculating the checksum. It is then a simple matter of implementing the calculation and verifying that the calculated checksum and the received checksum match. Improper verification of the calculated checksum and the received checksum can lead to far greater consequences.
+
+## Common Consequences
+- Integrity, Other: Modify Application Data, Other — Integrity checks usually use a secret key that helps authenticate the data origin. Skipping integrity checking generally opens up the possibility that new data from an invalid source can be injected.
+- Integrity, Other: Other — Data that is parsed and used may be corrupted.
+- Non-Repudiation, Other: Hide Activities, Other — Without a checksum check, it is impossible to determine if any changes have been made to the data after it was sent.
+
+## Potential Mitigations
+- [Implementation] Ensure that the checksums present in messages are properly checked in accordance with the protocol specification before they are parsed and used.

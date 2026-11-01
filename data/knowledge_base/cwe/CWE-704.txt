@@ -1,0 +1,14 @@
+CWE-704: Incorrect Type Conversion or Cast
+
+Abstraction: Class
+
+Applicable Platforms: C, C++, Not Language-Specific, Memory-Unsafe, Not Technology-Specific
+
+## Description
+The product does not correctly convert an object, resource, or structure from one type to a different type.
+
+## Common Consequences
+- Other: Other
+
+## Detection Methods
+- [Fuzzing] Fuzz testing (fuzzing) is a powerful technique for generating large numbers of diverse inputs - either randomly or algorithmically - and dynamically invoking the code with those inputs. Even with random inputs, it is often capable of generating unexpected results such as crashes, memory corruption,

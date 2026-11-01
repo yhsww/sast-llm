@@ -1,0 +1,20 @@
+CWE-666: Operation on Resource in Wrong Phase of Lifetime
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product performs an operation on a resource at the wrong phase of the resource's lifecycle, which can lead to unexpected behaviors.
+
+## Extended Description
+A resource's lifecycle includes several phases: initialization, use, and release. For each phase, it is important to follow the specifications outlined for how to operate on the resource and to ensure that the resource is in the expected phase. Otherwise, if a resource is in one phase but the operation is not valid for that phase (i.e., an incorrect phase of the resource's lifetime), then this can produce resultant weaknesses. For example, using a resource before it has been fully initialized could cause corruption or incorrect data to be used.
+
+## Common Consequences
+- Other: Other
+
+## Potential Mitigations
+- [Architecture and Design] Follow the resource's lifecycle from creation to release.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

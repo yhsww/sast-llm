@@ -1,0 +1,14 @@
+CWE-531: Inclusion of Sensitive Information in Test Code
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+Accessible test applications can pose a variety of security risks. Since developers or administrators rarely consider that someone besides themselves would even know about the existence of these applications, it is common for them to contain sensitive information or functions.
+
+## Common Consequences
+- Confidentiality: Read Application Data
+
+## Potential Mitigations
+- [Distribution, Installation] Remove test code before deploying the application into production.

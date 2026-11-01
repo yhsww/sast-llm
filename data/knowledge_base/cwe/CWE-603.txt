@@ -1,0 +1,17 @@
+CWE-603: Use of Client-Side Authentication
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, ICS/OT
+
+## Description
+A client/server product performs authentication within client code but not in server code, allowing server-side authentication to be bypassed via a modified client that omits the authentication check.
+
+## Extended Description
+Client-side authentication is extremely weak and may be breached easily. Any attacker may read the source code and reverse-engineer the authentication mechanism to access parts of the application which would otherwise be protected.
+
+## Common Consequences
+- Access Control: Bypass Protection Mechanism, Gain Privileges or Assume Identity
+
+## Potential Mitigations
+- [Architecture and Design] Do not rely on client side data. Always perform server side authentication.

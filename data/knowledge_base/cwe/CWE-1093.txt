@@ -1,0 +1,12 @@
+CWE-1093: Excessively Complex Data Representation
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product uses an unnecessarily complex internal representation for its data structures or interrelationships between those structures.
+
+## Common Consequences
+- Other: Reduce Maintainability, Increase Analytical Complexity — This issue makes it more difficult to understand or maintain the product, which indirectly affects security by making it more difficult or time-consuming to find and/or fix vulnerabilities. It also mi
+- Other: Reduce Performance

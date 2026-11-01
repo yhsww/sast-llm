@@ -1,0 +1,17 @@
+CWE-397: Declaration of Throws for Generic Exception
+
+Abstraction: Base
+
+Applicable Platforms: C++, C#, Java, Python
+
+## Description
+The product throws or raises an overly broad exceptions that can hide important details and produce inappropriate responses to certain conditions.
+
+## Extended Description
+Declaring a method to throw Exception or Throwable promotes generic error handling procedures that make it difficult for callers to perform proper error handling and error recovery. For example, Java's exception mechanism makes it easy for callers to anticipate what can go wrong and write code to handle each specific exceptional circumstance. Declaring that a method throws a generic form of exception defeats this system.
+
+## Common Consequences
+- Non-Repudiation, Other: Hide Activities, Alter Execution Logic — Throwing a generic exception can hide details about unexpected adversary activities by making it difficult to properly troubleshoot error conditions during execution.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

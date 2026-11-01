@@ -1,0 +1,11 @@
+CWE-439: Behavioral Change in New Version or Environment
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+A's behavior or functionality changes with a new version of A, or a new environment, which is not known (or manageable) by B.
+
+## Common Consequences
+- Other: Quality Degradation, Varies by Context

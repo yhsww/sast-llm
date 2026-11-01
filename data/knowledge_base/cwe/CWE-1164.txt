@@ -1,0 +1,18 @@
+CWE-1164: Irrelevant Code
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product contains code that is not essential for execution, i.e. makes no state changes and has no side effects that alter data or control flow, such that removal of the code would have no impact to functionality or correctness.
+
+## Extended Description
+Irrelevant code could include dead code, initialization that is not used, empty blocks, code that could be entirely removed due to optimization, etc.
+
+## Common Consequences
+- Other: Reduce Reliability
+- Other: Reduce Performance
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

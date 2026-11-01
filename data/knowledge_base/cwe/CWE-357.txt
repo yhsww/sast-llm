@@ -1,0 +1,11 @@
+CWE-357: Insufficient UI Warning of Dangerous Operations
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The user interface provides a warning to a user regarding dangerous or sensitive operations, but the warning is not noticeable enough to warrant attention.
+
+## Common Consequences
+- Non-Repudiation: Hide Activities

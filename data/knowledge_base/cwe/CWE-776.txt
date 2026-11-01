@@ -1,0 +1,23 @@
+CWE-776: Improper Restriction of Recursive Entity References in DTDs ('XML Entity Expansion')
+
+Abstraction: Base
+
+Likelihood of Exploit: Medium
+
+Applicable Platforms: Not Language-Specific, XML, Not Technology-Specific
+
+## Description
+The product uses XML documents and allows their structure to be defined with a Document Type Definition (DTD), but it does not properly control the number of recursive definitions of entities.
+
+## Extended Description
+If the DTD contains a large number of nested or recursive entities, this can lead to explosive growth of data when parsed, causing a denial of service.
+
+## Common Consequences
+- Availability: DoS: Resource Consumption (Other) — If parsed, recursive entity references allow the attacker to expand data exponentially, quickly consuming all system resources.
+
+## Potential Mitigations
+- [Operation] If possible, prohibit the use of DTDs or use an XML parser that limits the expansion of recursive DTD entities.
+- [Implementation] Before parsing XML files with associated DTDs, scan for recursive entity declarations and do not continue parsing potentially explosive content.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

@@ -1,0 +1,13 @@
+CWE-407: Inefficient Algorithmic Complexity
+
+Abstraction: Class
+
+Likelihood of Exploit: Low
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+An algorithm in a product has an inefficient worst-case computational complexity that may be detrimental to system performance and can be triggered by an attacker, typically using crafted manipulations that ensure that the worst case is being reached.
+
+## Common Consequences
+- Availability: DoS: Resource Consumption (CPU), DoS: Resource Consumption (Memory), DoS: Resource Consumption (Other) — The typical consequence is CPU consumption, but memory consumption and consumption of other resources can also occur.

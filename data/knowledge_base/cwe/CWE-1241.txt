@@ -1,0 +1,18 @@
+CWE-1241: Use of Predictable Algorithm in Random Number Generator
+
+Abstraction: Base
+
+Applicable Platforms: System on Chip
+
+## Description
+The device uses an algorithm that is predictable and generates a pseudo-random number.
+
+## Extended Description
+Pseudo-random number generator algorithms are predictable because their registers have a finite number of possible states, which eventually lead to repeating patterns. As a result, pseudo-random number generators (PRNGs) can compromise their randomness or expose their internal state to various attacks, such as reverse engineering or tampering.
+
+## Common Consequences
+- Confidentiality: Read Application Data
+
+## Potential Mitigations
+- [Architecture and Design] It is highly recommended to use a true random number generator (TRNG) to ensure the security of encryption schemes. Hardware-based TRNGs generate unpredictable, unbiased, and independent random numbers because they employ physical phenomena, e.g., electrical noise, as sources to generate random numbers.
+- [Implementation] It is highly recommended to use a true random number generator (TRNG) to ensure the security of encryption schemes. Hardware-based TRNGs generate unpredictable, unbiased, and independent random numbers because they employ physical phenomena, e.g., electrical noise, as sources to generate random numbers.

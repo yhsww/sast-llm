@@ -1,0 +1,18 @@
+CWE-471: Modification of Assumed-Immutable Data (MAID)
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific, Web Based
+
+## Description
+The product does not properly protect an assumed-immutable element from being modified by an attacker.
+
+## Extended Description
+This occurs when a particular input is critical enough to the functioning of the application that it should not be modifiable at all, but it is. Certain resources are often assumed to be immutable when they are not, such as hidden form fields in web applications, cookies, and reverse DNS lookups.
+
+## Common Consequences
+- Integrity: Modify Application Data — Common data types that are attacked are environment variables, web application parameters, and HTTP headers.
+- Integrity: Unexpected State
+
+## Potential Mitigations
+- [Architecture and Design, Operation, Implementation] When the data is stored or transmitted through untrusted sources that could modify the data, implement integrity checks to detect unauthorized modification, or store/transmit the data in a trusted location that is free from external influence.

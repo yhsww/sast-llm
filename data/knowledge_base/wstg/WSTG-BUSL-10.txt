@@ -1,0 +1,107 @@
+WSTG-BUSL-10: Payment Functionality
+
+## Summary
+Many applications implement payment functionality, including e-commerce sites, subscriptions, charities, donation sites and currency exchanges. The security of this functionality is critical, as vulnerabilities could allow attackers to steal from the organization, make fraudulent purchases, or even to steal payment card details from other users. These issue could result in not only reputational damage to the organization, but also significant financial losses, both from direct losses and fines from industry regulators.
+
+## Test Objectives
+- Determine whether the business logic for the e-commerce functionality is robust.
+- Understand how the payment functionality works.
+- Determine whether the payment functionality is secure.
+
+## How to Test
+### Payment Gateway Integration Methods
+
+There are several different ways that applications can integrate payment functionality, and the testing approach will vary depending on which one is used. The most common methods are:
+
+- Redirecting the user to a third-party payment gateway.
+- Loading a third-party payment gateway in an IFRAME on the application.
+- Having a HTML form that makes a cross-domain POST request to a third-party payment gateway.
+- Accepting the card details directly, and then making a POST from the application backend to the payment gateway's API.
+
+### PCI DSS
+
+The Payment Card Industry Data Security Standard (PCI DSS) is a standard that organizations are required to follow in order process debit and card payments (although it's important to note that it is not a law). A full discussion of this standard is outside of the scope of this guide (and of most penetration tests) - but it's useful for testers to understand a few key points.
+
+The most common misconception about PCI DSS is that it only applies to systems that store cardholder data (i.e, debit or credit card details). This is incorrect: it applies to any system that "stores, processes or transmits" this information. Exactly which requirements need to be followed depends on how which of the payment gateway integration methods are used. The Visa Processing E-Commerce Payments guidance provides further details on this, but as a brief summary:
+
+| Integration Method | Self Assessment Questionnaire (SAQ) |
+|--------------------|-------------------------------------|
+| Redirect | SAQ A |
+| IFRAME | SAQ A |
+| Cross-domain POST | SAQ A-EP |
+| Backend API | SAQ D |
+
+In addition to the differences in the attack surface and risk profile of each approach, there is also a significant difference in the number of requirements between SAQ A (22 requirements) and SAQ D (329 requirements) that the organization needs to meet. As such, it's worth highlighting applications that are not using an redirect or IFRAME, as they represent increased technical and compliance risks.
+
+### Quantity Tampering
+
+Most e-commerce sites allow users to add items to a basket before they start the checkout process. This basket should keep track of which items that have been added, and the quantity of each item. The quantity should normally be a positive integer, but if the site does not properly validate this then it may be possible to specify a decimal quantity of an item (such as `0.1`), or a negative quantity (such as `-1`). Depending on the backend processing, adding negative quantities of an item may result in a negative value, reducing the overall cost of the basket.
+
+There are usually multiple ways to modify the contents of the basket that should be tested, such as:
+
+- Adding a negative quantity of an item.
+- Repeatedly removing items until the quantity is negative.
+- Updating the quantity to a negative value.
+
+Some sites may also provide a drop-down menu of valid quantities (such as items that must be bought in packs of 10), and it may be possible to tamper these requests to add other quantities of items.
+
+If the full basket details are passed to the payment gateway (rather than simply passing a total value), it may also be possible to tamper the values at that stage.
+
+Finally, if the application is vulnerable to HTTP parameter pollution then it may be possible to cause unexpected behavior by passing a parameter multiple times, such as:
+
+```http
+POST /api/basket/add
+Host: example.org
+
+item_id=1&quantity=5&quantity=4
+```
+
+### Price Tampering
+
+#### On the Application
+
+When adding an item to the basket, the application should only include the item and a quantity, such as the example request below:
+
+```http
+POST /api/basket/add HTTP/1.1
+Host: example.org
+
+item_id=1&quantity=5
+```
+
+However, in some cases the application may also include the price, meaning that it may be possible to tamper it:
+
+```http
+POST /api/basket/add HTTP/1.1
+Host: example.org
+
+item_id=1&quantity=5&price=2.00
+```
+
+Different types of items may have different validation rules, so each type needs to be separately tested. Some applications also allow users to add an optional donation to charity as part of their purchase, and this donation can usually be an arbitrary amount. If this amount is not validated, it may be possible to add a negative donation amount, which would then reduce the total value of the basket.
+
+#### On the Payment Gateway
+
+If the checkout process is performed on a third-party payment gateway, then it may be possible to tamper with the prices between the application and the gateway.
+
+The transfer to the gateway may be performed using a cross-domain POST to the gateway, as shown in the HTML example below.
+
+> Note: The card details are not included in this request - the user will be prompted for them on the payment gateway:
+
+```html
+<form action="https://example.org/process_payment" method="POST">
+    <input type="hidden" id="merchant_id" value="123" />
+    <input type="hidden" id="basket_id" value="456" />
+    <input type="hidden" id="item_id" value="1" />
+    <input type="hidden" id="item_quantity" value="5" />
+    <input type="hidden" id="item_total" value="20.00" />
+    <input type="hidden" id="shipping_total" value="2.00" />
+    <input type="hidden" id="basket_total" value="22.00" />
+    <input type="hidden" id="currency" value="GBP" />
+    <input type="submit" id="submit" value="submit" />
+</form>
+```
+
+By modifying the HTML form or intercepting the POST request, it may be possible to modify the prices of items, and to effectively purchase them for less. Consider many payment gateways will reject a transaction with a value of zero, so a total of 0.01 is more likely to succeed. However, some payment gateways may accept negative values (used to process refunds). Where there are multiple values (such as item prices, a shipping cost, and the total basket cost), all of these should be tested.
+
+[...truncated]

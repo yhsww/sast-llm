@@ -1,0 +1,14 @@
+CWE-424: Improper Protection of Alternate Path
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific, Web Based
+
+## Description
+The product does not sufficiently protect all possible paths that a user can take to access restricted functionality or resources.
+
+## Common Consequences
+- Access Control: Bypass Protection Mechanism, Gain Privileges or Assume Identity
+
+## Potential Mitigations
+- [Architecture and Design] Deploy different layers of protection to implement security in depth.

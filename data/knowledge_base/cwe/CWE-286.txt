@@ -1,0 +1,14 @@
+CWE-286: Incorrect User Management
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not properly manage a user within its environment.
+
+## Extended Description
+Users can be assigned to the wrong group (class) of permissions resulting in unintended access rights to sensitive objects.
+
+## Common Consequences
+- Other: Varies by Context

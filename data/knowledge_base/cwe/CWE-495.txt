@@ -1,0 +1,19 @@
+CWE-495: Private Data Structure Returned From A Public Method
+
+Abstraction: Variant
+
+Applicable Platforms: Object-Oriented, C, C++, Java, C#
+
+## Description
+The product has a method that is declared public, but returns a reference to a private data structure, which could then be modified in unexpected ways.
+
+## Common Consequences
+- Integrity: Modify Application Data — The contents of the data structure can be modified from outside the intended scope.
+
+## Potential Mitigations
+- [Implementation] Declare the method private.
+- [Implementation] Clone the member data and keep an unmodified version of the data private to the object.
+- [Implementation] Use public setter methods that govern how a private member can be modified.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

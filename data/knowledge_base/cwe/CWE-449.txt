@@ -1,0 +1,14 @@
+CWE-449: The UI Performs the Wrong Action
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The UI performs the wrong action with respect to the user's request.
+
+## Common Consequences
+- Other: Quality Degradation, Varies by Context
+
+## Detection Methods
+- [Manual Analysis] Perform extensive functionality testing of the UI. The UI should behave as specified.

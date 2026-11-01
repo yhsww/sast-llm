@@ -1,0 +1,23 @@
+CWE-761: Free of Pointer not at Start of Buffer
+
+Abstraction: Variant
+
+Applicable Platforms: Memory-Unsafe, C
+
+## Description
+The product calls free() on a pointer to a memory resource that was allocated on the heap, but the pointer is not at the start of the buffer.
+
+## Extended Description
+This can cause the product to crash, or in some cases, modify critical program variables or execute code. This weakness often occurs when the memory is allocated explicitly on the heap with one of the malloc() family functions and free() is called, but pointer arithmetic has caused the pointer to be in the interior or end of the buffer.
+
+## Common Consequences
+- Integrity, Availability, Confidentiality: Modify Memory, DoS: Crash, Exit, or Restart, Execute Unauthorized Code or Commands
+
+## Potential Mitigations
+- [Implementation] When utilizing pointer arithmetic to traverse a buffer, use a separate variable to track progress through memory and preserve the originally allocated address for later freeing.
+- [Implementation] When programming in C++, consider using smart pointers provided by the boost library to help correctly and consistently manage memory.
+- [Architecture and Design] Use a vetted library or framework that does not allow this weakness to occur or provides constructs that make this weakness easier to avoid. For example, glibc in Linux provides protection against free of invalid pointers.
+- [Architecture and Design] Use a language that provides abstractions for memory allocation and deallocation.
+
+## Detection Methods
+- [Automated Dynamic Analysis] Use tools that are integrated during compilation to insert runtime error-checking mechanisms related to memory safety errors, such as AddressSanitizer (ASan) for C/C++ [REF-1518] or valgrind [REF-480].

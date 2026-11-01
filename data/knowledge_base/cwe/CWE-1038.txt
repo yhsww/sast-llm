@@ -1,0 +1,13 @@
+CWE-1038: Insecure Automated Optimizations
+
+Abstraction: Class
+
+Likelihood of Exploit: Low
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product uses a mechanism that automatically optimizes code, e.g. to improve a characteristic such as performance, but the optimizations can have an unintended side effect that might violate an intended security assumption.
+
+## Common Consequences
+- Integrity: Alter Execution Logic — The optimizations alter the order of execution resulting in side effects that were not intended by the original developer.

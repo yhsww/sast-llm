@@ -1,0 +1,17 @@
+CWE-697: Incorrect Comparison
+
+Abstraction: Pillar
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The product compares two entities in a security-relevant context, but the comparison is incorrect.
+
+## Extended Description
+This Pillar covers several possibilities: the comparison checks one factor incorrectly; the comparison should consider multiple factors, but it does not check at least one of those factors at all; the comparison checks the wrong factor.
+
+## Common Consequences
+- Other: Varies by Context — When the comparison is incorrect, it may lead to resultant weaknesses.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

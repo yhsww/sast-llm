@@ -1,0 +1,91 @@
+WSTG-ATHN-09: Weak Password Change or Reset Functionalities
+
+## Summary
+For any application that requires the user to authenticate with a password, there must be a mechanism by which the user can regain access to their account if they forget their password. Although this can sometimes be a manual process that involves contacting the owner of the website or a support team, users are frequently allowed to carry out a self-service password reset, and to regain access to their account by providing some other evidence of their identity.
+
+As this functionality provides a direct route to compromise the user's account, it is crucial that it is implemented securely.
+
+## Test Objectives
+- Determine whether the password change and reset functionality allows accounts to be compromised.
+
+## How to Test
+### Information Gathering
+
+The first step is to gather information about what mechanisms are available to allow the user to reset their password on the application. If there are multiple interfaces on the same site (such as a web interface, mobile application, and API) then these should all be reviewed, in case they provide different functionality.
+
+Once this has been established, determine what information is required in order for a user to initiate a password reset. This can be the username or email address (both of which may be obtained from public information), but it could also be an internally-generated user ID.
+
+### General Concerns
+
+Regardless of the specific methods used to reset passwords, there are a number of common areas that need to be considered:
+
+- Is the password reset process weaker than the authentication process?
+
+  The password reset process provides an alternative mechanism to access a user's account, and so should be at least as secure as the usual authentication process. However, it can provide an easier way to compromise the account, especially if it uses weaker authentication factors such as security questions.
+
+  Additionally, the password reset process may bypass the requirement to use Multi-Factor Authentication (MFA), which can substantially reduce the security of the application.
+
+- Is there rate limiting or other protection against automated attacks?
+
+  As with any authentication mechanism, the password reset process should have protection against automated or brute-force attacks. There are a variety of different methods that can be used to achieve this, such as rate limiting or the use of CAPTCHA. These are particularly important on functionality that triggers external actions (such as sending an email or SMS), or when the user is entering a password reset token.
+
+  It is also possible to protect against brute-force attacks by locking out the account from the password reset process after a certain number of consecutive attempts. This could also prevent a legitimate user from being able to reset their password and regain access to their account, however.
+
+- Is it vulnerable to common attacks?
+
+  As well as the specific areas discussed in this guide, it's also important to check for other common vulnerabilities such as SQL injection or cross-site scripting.
+
+- Does the reset process allow user enumeration?
+
+  See the Account Enumeration guide for further information.
+
+### Email - New Password Sent
+
+In this model, the user is sent a new password via email once they have proved their identity. This is considered less secure for two main reasons:
+
+- The password is sent to the user in an unencrypted form.
+- The password for the account is changed when the request is made, effectively locking the user out of their account until they receive the email. By making repeated requests, it is possible to prevent a user from being able to access their account.
+
+Where this approach is used, the following areas should be reviewed:
+
+- Is the user forced to change the password on initial login?
+
+  The new password is sent over unencrypted email, and may sit in the user's inbox indefinitely if they don't delete the email. As such, the user should be required to change the password as soon as they log in for the first time.
+
+- Is the password securely generated?
+
+  The password should be generated using a Cryptographically Secure Pseudo-Random Number Generator (CSPRNG), and should be sufficiently long to prevent password guessing or brute-force attacks. For a secure user-friendly experience, it should be generated using a secure passphrase-style approach (i.e, combining multiple words), rather than a string of random characters.
+
+- Is the user's existing password sent to them?
+
+  Rather than generating a new password for the user, some applications will send the user their existing password. This is a very insecure approach, as it exposes their current password over unencrypted email. Additionally, if the site is able to recover the existing password, this implies that passwords are either stored using reversible encryption, or (more likely) in unencrypted plain text, both of which represent a serious security weakness.
+
+- Are the emails sent from a domain with anti-spoofing protection?
+
+  The domain should implement SPF, DKIM, and DMARC to prevent attackers from spoofing emails from it, which could be used as part of a social engineering attack.
+
+- Is email considered sufficiently secure?
+
+  Emails are typically sent unencrypted, and in many cases the user's email account will not be protected by MFA. It may also be shared between multiple individuals, particularly in a corporate environment.
+
+  Consider whether email-based password reset functionality is appropriate, based on the context of the application that is being tested.
+
+### Email - Link Sent
+
+In this model, the user is emailed a link that contains a token. They can then click this link, and are prompted to enter a new password on the site. This is the most common approach used for password reset, but is more complex to implement than the previously discussed approach. The key areas to test are:
+
+- Does the link use HTTPS?
+
+  If the token is sent over unencrypted HTTP, it may be possible for an attacker to intercept it.
+
+- Can the link be used multiple times?
+
+  Links should expire after they are used, otherwise they provide a persistent backdoor for the account.
+
+- Does the link expire if it remains unused?
+
+  Links should be time limited. Exactly how long is appropriate will depend on the site, but it should rarely be more than an hour.
+
+- Is the token sufficiently long and random?
+
+[...truncated]

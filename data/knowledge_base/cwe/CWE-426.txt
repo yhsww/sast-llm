@@ -1,0 +1,30 @@
+CWE-426: Untrusted Search Path
+
+Abstraction: Base
+
+Likelihood of Exploit: High
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product searches for critical resources using an externally-supplied search path that can point to resources that are not under the product's direct control.
+
+## Extended Description
+This might allow attackers to execute their own programs, access unauthorized data files, or modify configuration in unexpected ways. If the product uses a search path to locate critical resources such as programs, then an attacker could modify that search path to point to a malicious program, which the targeted product would then execute. The problem extends to any type of critical resource that the product trusts. Some of the most common variants of untrusted search path are: In various UNIX and Linux-based systems, the PATH environment variable may be consulted to locate executable programs, and LD_PRELOAD may be used to locate a separate library. In various Microsoft-based systems, the PATH environment variable is consulted to locate a DLL, if the DLL is not found in other paths that a
+
+## Common Consequences
+- Integrity, Confidentiality, Availability, Access Control: Gain Privileges or Assume Identity, Execute Unauthorized Code or Commands — There is the potential for arbitrary code execution with privileges of the vulnerable program.
+- Availability: DoS: Crash, Exit, or Restart — The program could be redirected to the wrong files, potentially triggering a crash or hang when the targeted file is too large or does not have the expected format.
+- Confidentiality: Read Files or Directories — The program could send the output of unauthorized files to the attacker.
+
+## Potential Mitigations
+- [Architecture and Design, Implementation] Hard-code the search path to a set of known-safe values (such as system directories), or only allow them to be specified by the administrator in a configuration file. Do not allow these settings to be modified by an external party. Be careful to avoid related weaknesses such as CWE-426 and CWE-428.
+- [Implementation] When invoking other programs, specify those programs using fully-qualified pathnames. While this is an effective approach, code that uses fully-qualified pathnames might not be portable to other systems that do not use the same pathnames. The portability can be improved by locating the full-qualified paths in a centralized, easily-modifiable location within the source code, and having the code refer to these paths.
+- [Implementation] Remove or restrict all environment settings before invoking other programs. This includes the PATH environment variable, LD_LIBRARY_PATH, and other settings that identify the location of code libraries, and any application-specific search paths.
+- [Implementation] Check your search path before use and remove any elements that are likely to be unsafe, such as the current working directory or a temporary files directory.
+- [Implementation] Use other functions that require explicit paths. Making use of any of the other readily available functions that require explicit paths is a safe way to avoid this problem. For example, system() in C does not require a full path since the shell can take care of it, while execl() and execv() require a full path.
+
+## Detection Methods
+- [Black Box] Use monitoring tools that examine the software's process as it interacts with the operating system and the network. This technique is useful in cases when source code is unavailable, if the software was not developed by you, or if you want to verify that the build phase did not introduce any new wea
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea
+- [Manual Analysis] Use tools and techniques that require manual (human) analysis, such as penetration testing, threat modeling, and interactive tools that allow the tester to record and modify an active session. These may be more effective than strictly automated techniques. This is especially the case with weaknesses

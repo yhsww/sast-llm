@@ -1,0 +1,17 @@
+CWE-598: Use of HTTP Request With Sensitive Query String
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific, Web Based, Web Server
+
+## Description
+The web application uses an HTTP method to process a request, but the request includes sensitive information in the query string.
+
+## Common Consequences
+- Confidentiality: Read Application Data — At a minimum, attackers can garner information from query strings that can be utilized in escalating their method of attack, such as information about the internal workings of the application or datab
+
+## Potential Mitigations
+- [Implementation] When sending sensitive information, only include it in the request body or request headers instead of the query string. This may require avoiding use of GET requests.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

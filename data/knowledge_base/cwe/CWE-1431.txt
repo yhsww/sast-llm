@@ -1,0 +1,21 @@
+CWE-1431: Driving Intermediate Cryptographic State/Results to Hardware Module Outputs
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, System on Chip
+
+## Description
+The product uses a hardware module implementing a cryptographic algorithm that writes sensitive information about the intermediate state or results of its cryptographic operations via one of its output wires (typically the output port containing the final result).
+
+## Common Consequences
+- Confidentiality: Read Memory, Read Application Data — Mathematically sound cryptographic algorithms rely on their correct implementation for security. These assumptions might break when a hardware crypto module leaks intermediate encryption states or res
+
+## Potential Mitigations
+- [Architecture and Design] Designers/developers should add or modify existing control flow logic along any data flow paths that connect "sources" (signals with intermediate cryptographic state/results) with "sinks" (hardware module outputs and other signals outside of trusted cryptographic zone). The control flow logic should only allow cryptographic results to be driven to "sinks" when appropriate conditions are satisfied (typically when the final result for a cryptographic operation has been generated). When the appropriate conditions are not satisfied (i.e., before or during a cryptographic operation), the control flow logic should drive a safe default value to "sinks".
+- [Implementation] Designers/developers should add or modify existing control flow logic along any data flow paths that connect "sources" (signals with intermediate cryptographic state/results) with "sinks" (hardware module outputs and other signals outside of trusted cryptographic zone). The control flow logic should only allow cryptographic results to be driven to "sinks" when appropriate conditions are satisfied (typically when the final result for a cryptographic operation has been generated). When the appropriate conditions are not satisfied (i.e., before or during a cryptographic operation), the control flow logic should drive a safe default value to "sinks".
+
+## Detection Methods
+- [Automated Static Analysis - Source Code] Automated static analysis can find some instances of this weakness by analyzing source register-transfer level (RTL) code without having to simulate it or analyze it with a formal verification engine. Typically, this is done by building a model of data flow and control flow, then searching for poten
+- [Simulation / Emulation] Simulation/emulation based analysis can find some instances of this weakness by simulating source register-transfer level (RTL) code along with a set of assertions that incorporate the simulated values of relevant design signals. Typically, these assertions will capture desired or undesired behavior
+- [Formal Verification] Formal verification can find some instances of this weakness by exhaustively analyzing whether a given assertion holds true for a given hardware design specified in register-transfer level (RTL) code. Typically, these assertions will capture desired or undesired behavior. For this weakness, an asser
+- [Manual Analysis] Manual analysis can find some instances of this weakness by manually reviewing relevant lines of source register-transfer level (RTL) code to detect potentially-vulnerable patterns. Typically, the reviewer will trace the sequence of assignments that connect "sources" (signals with intermediate crypt

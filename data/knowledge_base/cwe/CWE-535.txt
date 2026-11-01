@@ -1,0 +1,14 @@
+CWE-535: Exposure of Information Through Shell Error Message
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+A command shell error message indicates that there exists an unhandled exception in the web application code. In many cases, an attacker can leverage the conditions that cause these errors in order to gain unauthorized access to the system.
+
+## Common Consequences
+- Confidentiality: Read Application Data
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

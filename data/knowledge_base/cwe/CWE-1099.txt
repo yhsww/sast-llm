@@ -1,0 +1,14 @@
+CWE-1099: Inconsistent Naming Conventions for Identifiers
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product's code, documentation, or other artifacts do not consistently use the same naming conventions for variables, callables, groups of related callables, I/O capabilities, data types, file names, or similar types of elements.
+
+## Common Consequences
+- Other: Reduce Maintainability, Increase Analytical Complexity — This issue makes it more difficult to understand and/or maintain the product due to inconsistencies, which indirectly affects security by making it more difficult or time-consuming to find and/or fix 
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

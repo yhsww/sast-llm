@@ -1,0 +1,11 @@
+CWE-1176: Inefficient CPU Computation
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product performs CPU computations using algorithms that are not as efficient as they could be for the needs of the developer, i.e., the computations can be optimized further.
+
+## Common Consequences
+- Availability: Reduce Performance, DoS: Resource Consumption (CPU) — This issue can make the product perform more slowly, possibly in ways that are noticeable to the users. If an attacker can influence the amount of computation that must be performed, e.g. by triggerin

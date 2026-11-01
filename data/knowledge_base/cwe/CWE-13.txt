@@ -1,0 +1,14 @@
+CWE-13: ASP.NET Misconfiguration: Password in Configuration File
+
+Abstraction: Variant
+
+Applicable Platforms: ASP.NET
+
+## Description
+Storing a plaintext password in a configuration file allows anyone who can read the file access to the password-protected resource making them an easy target for attackers.
+
+## Common Consequences
+- Access Control: Gain Privileges or Assume Identity
+
+## Potential Mitigations
+- [Implementation] Credentials stored in configuration files should be encrypted, Use standard APIs and industry accepted algorithms to encrypt the credentials stored in configuration files.

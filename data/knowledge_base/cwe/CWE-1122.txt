@@ -1,0 +1,14 @@
+CWE-1122: Excessive Halstead Complexity
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The code is structured in a way that a Halstead complexity measure exceeds a desirable maximum.
+
+## Extended Description
+A variety of Halstead complexity measures exist, such as program vocabulary size or volume.
+
+## Common Consequences
+- Other: Reduce Maintainability, Increase Analytical Complexity — This issue makes it more difficult to understand and/or maintain the product, which indirectly affects security by making it more difficult or time-consuming to find and/or fix vulnerabilities. It als

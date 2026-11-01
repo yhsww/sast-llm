@@ -1,0 +1,15 @@
+CWE-1078: Inappropriate Source Code Style or Formatting
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The source code does not follow desired style or formatting for indentation, white space, comments, etc.
+
+## Common Consequences
+- Other: Increase Analytical Complexity — Variations in indentation and other white space, comments, etc. can make it more difficult for human analysts to understand the actual behavior that is being implemented.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea
+- [Automated Static Analysis - Source Code] An Integrated Development Environment (IDE) or linter can report or highlight this weaknesses.

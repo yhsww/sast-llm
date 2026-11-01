@@ -1,0 +1,20 @@
+CWE-262: Not Using Password Aging
+
+Abstraction: Base
+
+Likelihood of Exploit: Low
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not have a mechanism in place for managing password aging.
+
+## Extended Description
+Password aging (or password rotation) is a policy that forces users to change their passwords after a defined time period passes, such as every 30 or 90 days. Without mechanisms such as aging, users might not change their passwords in a timely manner. Note that while password aging was once considered an important security feature, it has since fallen out of favor by many, because it is not as effective against modern threats compared to other mechanisms such as slow hashes. In addition, forcing frequent changes can unintentionally encourage users to select less-secure passwords. However, password aging is still in use due to factors such as compliance requirements, e.g., Payment Card Industry Data Security Standard (PCI DSS).
+
+## Common Consequences
+- Access Control: Gain Privileges or Assume Identity — As passwords age, the probability that they are compromised grows.
+
+## Potential Mitigations
+- [Architecture and Design] As part of a product's design, require users to change their passwords regularly and avoid reusing previous passwords.
+- [Implementation] Developers might disable clipboard paste operations into password fields as a way to discourage users from pasting a password into a clipboard. However, this might encourage users to choose less-secure passwords that are easier to type, and it can reduce the usability of password managers [REF-1294].

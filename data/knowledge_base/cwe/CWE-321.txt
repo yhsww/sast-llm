@@ -1,0 +1,19 @@
+CWE-321: Use of Hard-coded Cryptographic Key
+
+Abstraction: Variant
+
+Likelihood of Exploit: High
+
+Applicable Platforms: Not Language-Specific, ICS/OT
+
+## Description
+The product uses a hard-coded, unchangeable cryptographic key.
+
+## Common Consequences
+- Access Control: Bypass Protection Mechanism, Gain Privileges or Assume Identity, Read Application Data — If hard-coded cryptographic keys are used, it is almost certain that malicious users will gain access through the account in question. The use of a hard-coded cryptographic key significantly increases
+
+## Potential Mitigations
+- [Architecture and Design] Prevention schemes mirror that of hard-coded password storage.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

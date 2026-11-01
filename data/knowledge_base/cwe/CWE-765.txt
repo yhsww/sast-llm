@@ -1,0 +1,20 @@
+CWE-765: Multiple Unlocks of a Critical Resource
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product unlocks a critical resource more times than intended, leading to an unexpected state in the system.
+
+## Extended Description
+When the product is operating in a concurrent environment and repeatedly unlocks a critical resource, the consequences will vary based on the type of lock, the lock's implementation, and the resource being protected. In some situations such as with semaphores, the resources are pooled and extra calls to unlock will increase the count for the number of available resources, likely resulting in a crash or unpredictable behavior when the system nears capacity.
+
+## Common Consequences
+- Availability, Integrity: DoS: Crash, Exit, or Restart, Modify Memory, Unexpected State
+
+## Potential Mitigations
+- [Implementation] When locking and unlocking a resource, try to be sure that all control paths through the code in which the resource is locked one or more times correspond to exactly as many unlocks. If the product acquires a lock and then determines it is not able to perform its intended behavior, be sure to release the lock(s) before waiting for conditions to improve. Reacquire the lock(s) before trying again.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

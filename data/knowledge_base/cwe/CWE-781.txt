@@ -1,0 +1,19 @@
+CWE-781: Improper Address Validation in IOCTL with METHOD_NEITHER I/O Control Code
+
+Abstraction: Variant
+
+Applicable Platforms: C, C++
+
+## Description
+The product defines an IOCTL that uses METHOD_NEITHER for I/O, but it does not validate or incorrectly validates the addresses that are provided.
+
+## Extended Description
+When an IOCTL uses the METHOD_NEITHER option for I/O control, it is the responsibility of the IOCTL to validate the addresses that have been supplied to it. If validation is missing or incorrect, attackers can supply arbitrary memory addresses, leading to code execution or a denial of service.
+
+## Common Consequences
+- Integrity, Availability, Confidentiality: Modify Memory, Read Memory, Execute Unauthorized Code or Commands, DoS: Crash, Exit, or Restart — An attacker may be able to access memory that belongs to another process or user. If the attacker can control the contents that the IOCTL writes, it may lead to code execution at high privilege levels
+
+## Potential Mitigations
+- [Implementation] If METHOD_NEITHER is required for the IOCTL, then ensure that all user-space addresses are properly validated before they are first accessed. The ProbeForRead and ProbeForWrite routines are available for this task. Also properly protect and manage the user-supplied buffers, since the I/O Manager does not do this when METHOD_NEITHER is being used. See References.
+- [Architecture and Design] If possible, avoid using METHOD_NEITHER in the IOCTL and select methods that effectively control the buffer size, such as METHOD_BUFFERED, METHOD_IN_DIRECT, or METHOD_OUT_DIRECT.
+- [Architecture and Design, Implementation] If the IOCTL is part of a driver that is only intended to be accessed by trusted users, then use proper access control for the associated device or device namespace. See References.

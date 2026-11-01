@@ -1,0 +1,23 @@
+CWE-587: Assignment of a Fixed Address to a Pointer
+
+Abstraction: Variant
+
+Applicable Platforms: Memory-Unsafe, C, C++, C#, Assembly
+
+## Description
+The product sets a pointer to a specific address other than NULL or 0.
+
+## Extended Description
+Using a fixed address is not portable, because that address will probably not be valid in all environments or platforms.
+
+## Common Consequences
+- Integrity, Confidentiality, Availability: Execute Unauthorized Code or Commands — If one executes code at a known location, an attacker might be able to inject code there beforehand.
+- Availability: DoS: Crash, Exit, or Restart, Reduce Maintainability, Reduce Reliability — If the code is ported to another platform or environment, the pointer is likely to be invalid and cause a crash.
+- Confidentiality, Integrity: Read Memory, Modify Memory — The data at a known pointer location can be easily read or influenced by an attacker.
+
+## Potential Mitigations
+- [Implementation] Never set a pointer to a fixed address.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea
+- [Automated Dynamic Analysis] Use tools that are integrated during compilation to insert runtime error-checking mechanisms related to memory safety errors, such as AddressSanitizer (ASan) for C/C++ [REF-1518].

@@ -1,0 +1,11 @@
+CWE-756: Missing Custom Error Page
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Web Server
+
+## Description
+The product does not return custom error pages to the user, possibly exposing sensitive information.
+
+## Common Consequences
+- Confidentiality: Read Application Data — Attackers can leverage the additional information provided by a default error page to mount attacks targeted on the framework, database, or other resources used by the application.

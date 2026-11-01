@@ -1,0 +1,18 @@
+CWE-555: J2EE Misconfiguration: Plaintext Password in Configuration File
+
+Abstraction: Variant
+
+Applicable Platforms: Java
+
+## Description
+The J2EE application stores a plaintext password in a configuration file.
+
+## Extended Description
+Storing a plaintext password in a configuration file allows anyone who can read the file to access the password-protected resource, making it an easy target for attackers.
+
+## Common Consequences
+- Access Control: Bypass Protection Mechanism
+
+## Potential Mitigations
+- [Architecture and Design] Do not hardwire passwords into your software.
+- [Architecture and Design] Use industry standard libraries to encrypt passwords before storage in configuration files.

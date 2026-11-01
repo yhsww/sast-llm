@@ -1,0 +1,11 @@
+CWE-691: Insufficient Control Flow Management
+
+Abstraction: Pillar
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The code does not sufficiently manage its control flow during execution, creating conditions in which the control flow can be modified in unexpected ways.
+
+## Common Consequences
+- Other: Alter Execution Logic

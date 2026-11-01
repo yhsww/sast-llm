@@ -1,0 +1,26 @@
+CWE-330: Use of Insufficiently Random Values
+
+Abstraction: Class
+
+Likelihood of Exploit: High
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The product uses insufficiently random numbers or values in a security context that depends on unpredictable numbers.
+
+## Common Consequences
+- Confidentiality, Other: Other — When a protection mechanism relies on random values to restrict access to a sensitive resource, such as a session ID or a seed for generating a cryptographic key, then the resource being protected cou
+- Access Control, Other: Bypass Protection Mechanism, Other — If product relies on unique, unguessable IDs to identify a resource, an attacker might be able to guess an ID for a resource that is owned by another user. The attacker could then read the resource, o
+- Access Control: Bypass Protection Mechanism, Gain Privileges or Assume Identity — When an authorization or authentication mechanism relies on random values to restrict access to restricted functionality, such as a session ID or a seed for generating a cryptographic key, then an att
+
+## Potential Mitigations
+- [Architecture and Design] Use a well-vetted algorithm that is currently considered to be strong by experts in the field, and select well-tested implementations with adequate length seeds. In general, if a pseudo-random number generator is not advertised as being cryptographically secure, then it is probably a statistical PRNG and should not be used in security-sensitive contexts. Pseudo-random number generators can produce predictable numbers if the generator is known and the seed can be guessed. A 256-bit seed is a good starting point for producing a "random enough" number.
+- [Implementation] Consider a PRNG that re-seeds itself as needed from high quality pseudo-random output sources, such as hardware devices.
+- [Architecture and Design, Requirements] Use products or modules that conform to FIPS 140-2 [REF-267] to avoid obvious entropy problems. Consult FIPS 140-2 Annex C ("Approved Random Number Generators").
+
+## Detection Methods
+- [Black Box] Use monitoring tools that examine the software's process as it interacts with the operating system and the network. This technique is useful in cases when source code is unavailable, if the software was not developed by you, or if you want to verify that the build phase did not introduce any new wea
+- [Automated Static Analysis - Binary or Bytecode] According to SOAR [REF-1479], the following detection techniques may be useful: Cost effective for partial coverage: Bytecode Weakness Analysis - including disassembler + source code weakness analysis Binary Weakness Analysis - including disassembler + source code weakness analysis
+- [Manual Static Analysis - Binary or Bytecode] According to SOAR [REF-1479], the following detection techniques may be useful: Cost effective for partial coverage: Binary / Bytecode disassembler - then use manual analysis for vulnerabilities & anomalies
+- [Dynamic Analysis with Manual Results Interpretation] According to SOAR [REF-1479], the following detection techniques may be useful: Cost effective for partial coverage: Man-in-the-middle attack tool

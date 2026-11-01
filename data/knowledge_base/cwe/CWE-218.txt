@@ -1,0 +1,6 @@
+CWE-218: DEPRECATED: Failure to provide confidentiality for stored data
+
+Abstraction: Base
+
+## Description
+This weakness has been deprecated because it was a duplicate of CWE-493. All content has been transferred to CWE-493.

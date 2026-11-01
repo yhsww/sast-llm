@@ -1,0 +1,75 @@
+WSTG-CONF-04: Review Old Backup and Unreferenced Files for Sensitive Information
+
+## Summary
+Web servers commonly accumulate unreferenced or forgotten files: renamed old versions, editor/manual backups (`file~`, `file.old`, `.bak`), archives, and file-system "snapshots". Because these often keep a different extension or name than the original (e.g. `login.asp.old` alongside `login.asp`), they tend to be served as plain text/source rather than executed, exposing server-side code, credentials, and internal details. The same problem now also shows up as forgotten objects left in cloud object storage (buckets/containers) backing an application or its deployment pipeline.
+
+### Threats
+
+- Disclosure of credentials, internal paths, or other sensitive data via unreferenced include/config files.
+- Access to powerful unreferenced functionality (e.g. an unlinked admin page).
+- Exposure of vulnerabilities already fixed in the current version, via an old/backup copy that still contains them.
+- Source code disclosure when a backup/copy of an executable file is served as plain text instead of executed.
+- Bulk disclosure via backup archives containing many files at once (source, includes, compiled classes for decompilation).
+- Sensitive data in log files (session IDs, URL parameters, admin activity).
+- Forgotten backup/deployment artifacts (database dumps, `.tfstate`, `.env` files) left in cloud object storage (buckets/containers), reachable directly without going through the application at all - see Cloud Object Storage Artifacts.
+
+## Test Objectives
+- Find and analyze old, backup, and unreferenced files - including files exposed only through their extension, and objects left in cloud storage - that might contain sensitive information.
+- Validate that no system or framework bypasses exist for any rules put in place to prevent these files from being served.
+
+## How to Test
+### Black-Box Testing
+
+Testing for old, backup, and unreferenced files uses both automated and manual techniques, and typically involves a combination of the following. As a general principle, treat automated discovery as a way to generate a candidate list cheaply at scale, and always manually verify a sample of hits - automated tools report on status codes and fingerprints, not on whether a file actually contains sensitive data, and both false positives (custom "not found" pages returning `200`) and false negatives (sensitive content behind an unexpected response code) are common.
+
+#### Sensitive File Extensions
+
+Submit requests with different file extensions and verify how they are handled, on a per-directory basis, since directories may be configured differently (for example, one directory may execute `.php` files while another serves them as plain text). Web server directories can be identified by scanning tools which look for well-known directories, and mirroring the site structure helps reconstruct the directory tree served by the application.
+
+If the web application architecture is load-balanced or otherwise heterogeneous (for example, a mix of IIS and Apache nodes), assess all of the servers, since configuration may vary slightly between nodes and introduce asymmetric behavior or vulnerabilities.
+
+##### Example
+
+The tester has identified the existence of a file named `connection.inc`. Trying to access it directly gives back its contents, which are:
+
+```php
+<?
+    mysql_connect("127.0.0.1", "root", "password")
+        or die("Could not connect");
+?>
+```
+
+The tester determines the existence of a MySQL DBMS backend and the weak credentials used by the web application to access it.
+
+The extensions and paths worth checking for fall into different categories, which matter because they carry different levels of risk and require different handling once found. A hit in any category is a candidate finding only - confirm the response actually returns the file's content (not a custom 404 or an access-denied page), and read enough of that content to confirm it is genuinely sensitive, before reporting it. This is especially important for the "may be legitimately served" and "sensitivity depends on content" categories below, where the mere presence of the extension is not itself a finding.
+
+| Type | Category | Examples |
+|------|----------|----------|
+| Credentials and secrets | Should generally never be publicly served | `.env`, `.pem`, `.key`, `.p12`, `.pfx`, `.tfstate`, `.tfvars`, `.kdbx`, `.htpasswd`, `.npmrc`, `.dockercfg`/`.docker/config.json`, `.asa`, `.inc`, `.config` |
+| Source/configuration | Should generally never be publicly served | `.java` source files, `.yaml`/`.yml` and `.json` outside expected API paths (Kubernetes manifests, CI pipeline definitions, `docker-compose.yml`) |
+| Backups and archives | Should generally never be publicly served | `.bak`, `.old`, `.orig`, `.save`, `.swp`, `~` (editor backups), `.zip`, `.tar`, `.gz`, `.tgz`, `.rar`, `.7z` |
+| Data artifacts | Sensitivity depends heavily on content | `.db`, `.sqlite`, `.sqlite3`, `.parquet`, `.avro`, `.csv`, `.ipynb` (notebooks in particular can contain hardcoded credentials in cell output, but frequently don't) |
+| May be legitimately served | May be legitimately served | `.txt`, `.md`, `.log`, `.pdf`, `.docx`, `.rtf`, `.xlsx`, `.pptx` |
+| Special paths (not file extensions) | Directory names and paths, not extensions | `.git/`, `.docker/` |
+
+The list given above details only a few examples, since file extensions and filenames worth checking are too numerous to be comprehensively treated here. Refer to FILExt for a more thorough extension database, and see SecLists' raft/common backup/config wordlists for maintained, up-to-date filename lists to drive automated discovery.
+
+To identify files with a given extension, use a mix of vulnerability scanners, spidering/mirroring tools, search-engine queries (see Testing: Spidering and googling), and manual inspection, since manual review overcomes gaps in automated spidering (for example, links that only appear after client-side JavaScript execution).
+
+##### Windows 8.3 Legacy Filename Handling
+
+On Windows-based systems, legacy 8.3 short filename generation can affect how files are resolved and accessed by the web server, independent of any file-upload logic. In environments where 8.3 filename generation is enabled, sensitive files that are not directly reachable by their long filename may still be reachable through their shortened equivalent, which can disclose source code or configuration files even when access controls correctly block the long filename.
+
+Examples of 8.3 filename resolution behavior that may lead to unintended file exposure:
+
+1. A file such as `file.phtml` may be processed as PHP code.
+2. A corresponding shortened filename (for example, `FILE~1.PHT`) may be accessible depending on server and handler configuration.
+3. Files with misleading or extended filenames may still resolve to executable handlers once expanded by the operating system.
+
+Testing should focus on whether legacy filename handling allows access to sensitive files that were not intended to be served this way; testing of file upload mechanisms themselves is covered separately under File Upload and Business Logic test cases.
+
+#### Inference from the Naming Scheme Used for Published Content
+
+Enumerate all of the application's pages and functionality, manually or with a spidering tool. Most applications use a recognizable naming scheme and organize resources into pages and directories using words that describe their function, so it is often possible to infer the name and location of unreferenced pages from the naming scheme used for published content. For example, if a page titled `viewuser.asp` is found, one should also look for `edituser.asp`, `adduser.asp`, and `deleteuser.asp`. Similarly, if a directory `/app/user` is discovered, one should also search for `/app/admin` and `/app/manager`.
+
+[...truncated]

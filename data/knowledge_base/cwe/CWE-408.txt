@@ -1,0 +1,11 @@
+CWE-408: Incorrect Behavior Order: Early Amplification
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product allows an entity to perform a legitimate but expensive operation before authentication or authorization has taken place.
+
+## Common Consequences
+- Availability: DoS: Amplification, DoS: Crash, Exit, or Restart, DoS: Resource Consumption (CPU), DoS: Resource Consumption (Memory) — System resources, CPU and memory, can be quickly consumed. This can lead to poor system performance or system crash.

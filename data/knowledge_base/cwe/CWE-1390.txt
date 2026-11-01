@@ -1,0 +1,14 @@
+CWE-1390: Weak Authentication
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific, ICS/OT, Not Technology-Specific
+
+## Description
+The product uses an authentication mechanism to restrict access to specific users or identities, but the mechanism does not sufficiently prove that the claimed identity is correct.
+
+## Extended Description
+Attackers may be able to bypass weak authentication faster and/or with less effort than expected.
+
+## Common Consequences
+- Integrity, Confidentiality, Availability, Access Control: Read Application Data, Gain Privileges or Assume Identity, Execute Unauthorized Code or Commands — This weakness can lead to the exposure of resources or functionality to unintended actors, possibly providing attackers with sensitive information or even execute arbitrary code.

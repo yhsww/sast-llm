@@ -1,0 +1,11 @@
+CWE-392: Missing Report of Error Condition
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product encounters an error but does not provide a status code or return value to indicate that an error has occurred.
+
+## Common Consequences
+- Integrity, Other: Varies by Context, Unexpected State — Errors that are not properly reported could place the system in an unexpected state that could lead to unintended behaviors.

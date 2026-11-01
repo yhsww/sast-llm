@@ -1,0 +1,12 @@
+CWE-1111: Incomplete I/O Documentation
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product's documentation does not adequately define inputs, outputs, or system/software interfaces.
+
+## Common Consequences
+- Other: Reduce Maintainability
+- Other: Increase Analytical Complexity

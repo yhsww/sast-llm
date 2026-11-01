@@ -1,0 +1,11 @@
+CWE-97: Improper Neutralization of Server-Side Includes (SSI) Within a Web Page
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific, Web Based, Web Server
+
+## Description
+The product generates a web page, but does not neutralize or incorrectly neutralizes user-controllable input that could be interpreted as a server-side include (SSI) directive.
+
+## Common Consequences
+- Confidentiality, Integrity, Availability: Execute Unauthorized Code or Commands

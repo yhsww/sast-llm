@@ -1,0 +1,21 @@
+CWE-256: Plaintext Storage of a Password
+
+Abstraction: Base
+
+Likelihood of Exploit: High
+
+Applicable Platforms: Not Language-Specific, ICS/OT
+
+## Description
+The product stores a password in plaintext within resources such as memory or files.
+
+## Common Consequences
+- Access Control: Gain Privileges or Assume Identity — Storing a plaintext password in a configuration file allows anyone who can read the file to access the password-protected resource. In some contexts, even storage of a plaintext password in memory is 
+
+## Potential Mitigations
+- [Architecture and Design] Avoid storing passwords in easily accessible locations.
+- [Architecture and Design] Consider storing cryptographic hashes of passwords as an alternative to storing in plaintext.
+- A programmer might attempt to remedy the password management problem by obscuring the password with an encoding function, such as base 64 encoding, but this effort does not adequately protect the password because the encoding can be detected and decoded easily.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

@@ -1,0 +1,14 @@
+CWE-1188: Initialization of a Resource with an Insecure Default
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product initializes or sets a resource with a default that is intended to be changed by the product's installer, administrator, or maintainer, but the default is not secure.
+
+## Common Consequences
+- Other: Varies by Context — The impact of insecure defaults varies widely depending on the functionality that the product controls.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

@@ -1,0 +1,18 @@
+CWE-710: Improper Adherence to Coding Standards
+
+Abstraction: Pillar
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The product does not follow certain coding rules for development, which can lead to resultant weaknesses or increase the severity of the associated vulnerabilities.
+
+## Common Consequences
+- Other: Other
+
+## Potential Mitigations
+- [Policy] Select and require coding standards. Ensure that they include security concerns.
+- [Implementation] Closely follow coding standards, possibly enforcing them upon checkin of the code into a source control system or with periodic analyses.
+
+## Detection Methods
+- [Automated Static Analysis] Automated tools can detect violations of many code standards.

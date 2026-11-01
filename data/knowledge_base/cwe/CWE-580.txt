@@ -1,0 +1,21 @@
+CWE-580: clone() Method Without super.clone()
+
+Abstraction: Variant
+
+Applicable Platforms: Java
+
+## Description
+The product contains a clone() method that does not call super.clone() to obtain the new object.
+
+## Extended Description
+All implementations of clone() should obtain the new object by calling super.clone(). If a class does not follow this convention, a subclass's clone() method will return an object of the wrong type.
+
+## Common Consequences
+- Integrity, Other: Unexpected State, Quality Degradation
+
+## Potential Mitigations
+- [Implementation] Call super.clone() within your clone() method, when obtaining a new object.
+- [Implementation] In some cases, you can eliminate the clone method altogether and use copy constructors.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

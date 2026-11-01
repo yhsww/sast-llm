@@ -1,0 +1,17 @@
+CWE-282: Improper Ownership Management
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product assigns the wrong ownership, or does not properly verify the ownership, of an object or resource.
+
+## Common Consequences
+- Access Control: Gain Privileges or Assume Identity
+
+## Potential Mitigations
+- [Architecture and Design, Operation] Very carefully manage the setting, management, and handling of privileges. Explicitly manage trust zones in the software.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

@@ -1,0 +1,22 @@
+CWE-783: Operator Precedence Logic Error
+
+Abstraction: Base
+
+Likelihood of Exploit: Low
+
+Applicable Platforms: C, C++, Not Language-Specific
+
+## Description
+The product uses an expression in which operator precedence causes incorrect logic to be used.
+
+## Extended Description
+While often just a bug, operator precedence logic errors can have serious consequences if they are used in security-critical code, such as making an authentication decision.
+
+## Common Consequences
+- Confidentiality, Integrity, Availability: Varies by Context, Unexpected State — The consequences will vary based on the context surrounding the incorrect precedence. In a security decision, integrity or confidentiality are the most likely results. Otherwise, a crash may occur due
+
+## Potential Mitigations
+- [Implementation] Regularly wrap sub-expressions in parentheses, especially in security-critical code.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

@@ -1,0 +1,20 @@
+CWE-301: Reflection Attack in an Authentication Protocol
+
+Abstraction: Base
+
+Likelihood of Exploit: Medium
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+Simple authentication protocols are subject to reflection attacks if a malicious user can use the target machine to impersonate a trusted user.
+
+## Extended Description
+A mutual authentication protocol requires each party to respond to a random challenge by the other party by encrypting it with a pre-shared key. Often, however, such protocols employ the same pre-shared key for communication with a number of different entities. A malicious user or an attacker can easily compromise this protocol without possessing the correct key by employing a reflection attack on the protocol. Reflection attacks capitalize on mutual authentication schemes in order to trick the target into revealing the secret shared between it and another valid user. In a basic mutual-authentication scheme, a secret is known to both the valid user and the server; this allows them to authenticate. In order that they may verify this shared secret without sending it plainly over the wire, th
+
+## Common Consequences
+- Access Control: Gain Privileges or Assume Identity — The primary result of reflection attacks is successful authentication with a target machine -- as an impersonated user.
+
+## Potential Mitigations
+- [Architecture and Design] Use different keys for the initiator and responder or of a different type of challenge for the initiator and responder.
+- [Architecture and Design] Let the initiator prove its identity before proceeding.

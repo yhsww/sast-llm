@@ -1,0 +1,24 @@
+CWE-1277: Firmware Not Updateable
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The product does not provide its users with the ability to update or patch its firmware to address any vulnerabilities or weaknesses that may be present.
+
+## Extended Description
+Without the ability to patch or update firmware, consumers will be left vulnerable to exploitation of any known vulnerabilities, or any vulnerabilities that are discovered in the future. This can expose consumers to permanent risk throughout the entire lifetime of the device, which could be years or decades. Some external protective measures and mitigations might be employed to aid in preventing or reducing the risk of malicious attack, but the root weakness cannot be corrected.
+
+## Common Consequences
+- Confidentiality, Integrity, Access Control, Authentication, Authorization: Gain Privileges or Assume Identity, Bypass Protection Mechanism, Execute Unauthorized Code or Commands, DoS: Crash, Exit, or Restart — If an attacker can identify an exploitable vulnerability in one device that has no means of patching, the attack may be used against an entire class of devices.
+
+## Potential Mitigations
+- [Requirements] Specify requirements to include the ability to update the firmware. Include integrity checks and authentication to ensure that untrusted firmware cannot be installed.
+- [Architecture and Design] Design the device to allow for updating the firmware. Ensure that the design specifies how to distribute the updates and ensure their integrity and authentication.
+- [Implementation] Implement the necessary functionality to allow the firmware to be updated.
+
+## Detection Methods
+- [Manual Analysis] Create a new installable boot image of the current build with a minor version number change. Use the standard installation method to update the boot image. Verify that the minor version number has changed. Create a fake image. Verify that the boot updater will not install the fake image and generate
+- [Architecture or Design Review] Check the consumer or maintainer documentation, the architecture/design documentation, or the original requirements to ensure that the documentation includes details for how to update the firmware.
+- [Manual Dynamic Analysis] Determine if there is a lack of a capability to update read-only memory (ROM) structure. This could manifest as a difference between the latest firmware version and the current version within the device.

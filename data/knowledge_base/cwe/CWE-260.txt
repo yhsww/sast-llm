@@ -1,0 +1,21 @@
+CWE-260: Password in Configuration File
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product stores a password in a configuration file that might be accessible to actors who do not know the password.
+
+## Extended Description
+This can result in compromise of the system for which the password is used. An attacker could gain access to this file and learn the stored password or worse yet, change the password to one of their choosing.
+
+## Common Consequences
+- Access Control: Gain Privileges or Assume Identity
+
+## Potential Mitigations
+- [Architecture and Design] Avoid storing passwords in easily accessible locations.
+- [Architecture and Design] Consider storing cryptographic hashes of passwords as an alternative to storing in plaintext.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

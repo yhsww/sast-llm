@@ -1,0 +1,11 @@
+CWE-239: Failure to Handle Incomplete Element
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not properly handle when a particular element is not completely specified.
+
+## Common Consequences
+- Integrity, Other: Varies by Context, Unexpected State

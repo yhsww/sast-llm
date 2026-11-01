@@ -1,0 +1,15 @@
+CWE-220: Storage of File With Sensitive Data Under FTP Root
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product stores sensitive data under the FTP server root with insufficient access control, which might make it accessible to untrusted parties.
+
+## Common Consequences
+- Confidentiality: Read Application Data
+
+## Potential Mitigations
+- [Implementation, System Configuration] Avoid storing information under the FTP root directory.
+- [System Configuration] Access control permissions should be set to prevent reading/writing of sensitive files inside/outside of the FTP directory.

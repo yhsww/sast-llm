@@ -1,0 +1,17 @@
+CWE-821: Incorrect Synchronization
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product utilizes a shared resource in a concurrent manner, but it does not correctly synchronize access to the resource.
+
+## Extended Description
+If access to a shared resource is not correctly synchronized, then the resource may not be in a state that is expected by the product. This might lead to unexpected or insecure behaviors, especially if an attacker can influence the shared resource.
+
+## Common Consequences
+- Integrity, Confidentiality, Other: Modify Application Data, Read Application Data, Alter Execution Logic
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

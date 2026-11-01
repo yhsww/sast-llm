@@ -1,0 +1,19 @@
+CWE-341: Predictable from Observable State
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+A number or object is predictable based on observations that the attacker can make about the state of the system or network, such as time, process ID, etc.
+
+## Common Consequences
+- Other: Varies by Context — This weakness could be exploited by an attacker in a number ways depending on the context. If a predictable number is used to generate IDs or keys that are used within protection mechanisms, then an a
+
+## Potential Mitigations
+- [Implementation] Increase the entropy used to seed a PRNG.
+- [Architecture and Design, Requirements] Use products or modules that conform to FIPS 140-2 [REF-267] to avoid obvious entropy problems. Consult FIPS 140-2 Annex C ("Approved Random Number Generators").
+- [Implementation] Use a PRNG that periodically re-seeds itself using input from high-quality sources, such as hardware devices with high entropy. However, do not re-seed too frequently, or else the entropy source might block.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

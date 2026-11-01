@@ -1,0 +1,15 @@
+CWE-672: Operation on a Resource after Expiration or Release
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific, Mobile
+
+## Description
+The product uses, accesses, or otherwise operates on a resource after that resource has been expired, released, or revoked.
+
+## Common Consequences
+- Integrity, Confidentiality: Modify Application Data, Read Application Data — If a released resource is subsequently reused or reallocated, then an attempt to use the original resource might allow access to sensitive data that is associated with a different user or entity.
+- Other, Availability: Other, DoS: Crash, Exit, or Restart — When a resource is released it might not be in an expected state, later attempts to access the resource may lead to resultant errors that may lead to a crash.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

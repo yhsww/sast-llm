@@ -1,0 +1,20 @@
+CWE-546: Suspicious Comment
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The code contains comments that suggest the presence of bugs, incomplete functionality, or weaknesses.
+
+## Extended Description
+Many suspicious comments, such as BUG, HACK, FIXME, LATER, LATER2, TODO, in the code indicate missing security functionality and checking. Others indicate code problems that programmers should fix, such as hard-coded variables, error handling, not using stored procedures, and performance issues.
+
+## Common Consequences
+- Other: Quality Degradation — Suspicious comments could be an indication that there are problems in the source code that may need to be fixed and is an indication of poor quality. This could lead to further bugs and the introducti
+
+## Potential Mitigations
+- [Documentation] Remove comments that suggest the presence of bugs, incomplete functionality, or weaknesses, before deploying the application.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

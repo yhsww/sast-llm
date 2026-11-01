@@ -1,0 +1,25 @@
+CWE-1419: Incorrect Initialization of Resource
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The product attempts to initialize a resource but does not correctly do so, which might leave the resource in an unexpected, incorrect, or insecure state when it is accessed.
+
+## Extended Description
+This can have security implications when the associated resource is expected to have certain properties or values. Examples include a variable that determines whether a user has been authenticated or not, or a register or fuse value that determines the security state of the product. For software, this weakness can frequently occur when implicit initialization is used, meaning the resource is not explicitly set to a specific value. For example, in C, memory is not necessarily cleared when it is allocated on the stack, and many scripting languages use a default empty, null value, or zero value when a variable is not explicitly initialized. For hardware, this weakness frequently appears with reset values and fuses. After a product reset, hardware may initialize registers incorrectly. During d
+
+## Common Consequences
+- Confidentiality: Read Memory, Read Application Data, Unexpected State
+- Authorization, Integrity: Gain Privileges or Assume Identity
+- Other: Varies by Context — The technical impact can vary widely based on how the resource is used in the product, and whether its contents affect security decisions.
+
+## Potential Mitigations
+- [Implementation] Choose the safest-possible initialization for security-related resources.
+- [Implementation] Ensure that each resource (whether variable, memory buffer, register, etc.) is fully initialized.
+- [Implementation] Pay close attention to complex conditionals or reset sources that affect initialization, since some paths might not perform the initialization.
+- [Architecture and Design] Ensure that the design and architecture clearly identify what the initialization should be, and that the initialization does not have security implications.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

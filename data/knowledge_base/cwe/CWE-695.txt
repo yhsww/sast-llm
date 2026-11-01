@@ -1,0 +1,17 @@
+CWE-695: Use of Low-Level Functionality
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product uses low-level functionality that is explicitly prohibited by the framework or specification under which the product is supposed to operate.
+
+## Extended Description
+The use of low-level functionality can violate the specification in unexpected ways that effectively disable built-in protection mechanisms, introduce exploitable inconsistencies, or otherwise expose the functionality to attack.
+
+## Common Consequences
+- Other: Other
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

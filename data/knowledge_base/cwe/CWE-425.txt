@@ -1,0 +1,15 @@
+CWE-425: Direct Request ('Forced Browsing')
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Web Based, Web Server
+
+## Description
+The web application does not adequately enforce appropriate authorization on all restricted URLs, scripts, or files.
+
+## Common Consequences
+- Confidentiality, Integrity, Availability, Access Control: Read Application Data, Modify Application Data, Execute Unauthorized Code or Commands, Gain Privileges or Assume Identity
+
+## Potential Mitigations
+- [Architecture and Design, Operation] Apply appropriate access control authorizations for each access to all restricted URLs, scripts or files.
+- [Architecture and Design] Consider using MVC based frameworks such as Struts.

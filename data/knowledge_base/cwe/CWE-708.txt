@@ -1,0 +1,20 @@
+CWE-708: Incorrect Ownership Assignment
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product assigns an owner to a resource, but the owner is outside of the intended control sphere.
+
+## Extended Description
+This may allow the resource to be manipulated by actors outside of the intended control sphere.
+
+## Common Consequences
+- Confidentiality, Integrity: Read Application Data, Modify Application Data — An attacker could read and modify data for which they do not have permissions to access directly.
+
+## Potential Mitigations
+- [Policy] Periodically review the privileges and their owners.
+
+## Detection Methods
+- [Automated Analysis] Use automated tools to check for privilege settings.

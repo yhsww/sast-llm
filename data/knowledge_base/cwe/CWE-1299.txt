@@ -1,0 +1,19 @@
+CWE-1299: Missing Protection Mechanism for Alternate Hardware Interface
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Microcontroller Hardware, Processor Hardware, Bus/Interface Hardware, Not Technology-Specific
+
+## Description
+The lack of protections on alternate paths to access control-protected assets (such as unprotected shadow registers and other external facing unguarded interfaces) allows an attacker to bypass existing protections to the asset that are only performed against the primary path.
+
+## Extended Description
+An asset inside a chip might have access-control protections through one interface. However, if all paths to the asset are not protected, an attacker might compromise the asset through alternate paths. These alternate paths could be through shadow or mirror registers inside the IP core, or could be paths from other external-facing interfaces to the IP core or SoC. Consider an SoC with various interfaces such as UART, SMBUS, PCIe, USB, etc. If access control is implemented for SoC internal registers only over the PCIe interface, then an attacker could still modify the SoC internal registers through alternate paths by coming through interfaces such as UART, SMBUS, USB, etc. Alternatively, attackers might be able to bypass existing protections by exploiting unprotected, shadow registers. Shad
+
+## Common Consequences
+- Confidentiality, Integrity, Availability, Access Control: Modify Memory, Read Memory, DoS: Resource Consumption (Other), Execute Unauthorized Code or Commands, Gain Privileges or Assume Identity, Alter Execution Logic, Bypass Protection Mechanism, Quality Degradation
+
+## Potential Mitigations
+- [Requirements] Protect assets from accesses against all potential interfaces and alternate paths.
+- [Architecture and Design] Protect assets from accesses against all potential interfaces and alternate paths.
+- [Implementation] Protect assets from accesses against all potential interfaces and alternate paths.

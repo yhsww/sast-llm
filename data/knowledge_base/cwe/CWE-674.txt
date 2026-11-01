@@ -1,0 +1,19 @@
+CWE-674: Uncontrolled Recursion
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not properly control the amount of recursion that takes place, consuming excessive resources, such as allocated memory or the program stack.
+
+## Common Consequences
+- Availability: DoS: Resource Consumption (CPU), DoS: Resource Consumption (Memory) — Resources including CPU, memory, and stack memory could be rapidly consumed or exhausted, eventually leading to an exit or crash.
+- Confidentiality: Read Application Data — In some cases, an application's interpreter might kill a process or thread that appears to be consuming too much resources, such as with PHP's memory_limit setting. When the interpreter kills the proc
+
+## Potential Mitigations
+- [Implementation] Ensure that an end condition will be reached under all logic conditions. The end condition may include checking against the depth of recursion and exiting with an error if the recursion goes too deep. The complexity of the end condition contributes to the effectiveness of this action.
+- [Implementation] Increase the stack size.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

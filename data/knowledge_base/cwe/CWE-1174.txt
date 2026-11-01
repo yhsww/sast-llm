@@ -1,0 +1,11 @@
+CWE-1174: ASP.NET Misconfiguration: Improper Model Validation
+
+Abstraction: Variant
+
+Applicable Platforms: ASP.NET
+
+## Description
+The ASP.NET application does not use, or incorrectly uses, the model validation framework.
+
+## Common Consequences
+- Integrity: Unexpected State — Unchecked input leads to cross-site scripting, process control, and SQL injection vulnerabilities, among others.

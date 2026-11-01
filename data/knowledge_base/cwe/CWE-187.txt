@@ -1,0 +1,17 @@
+CWE-187: Partial String Comparison
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The product performs a comparison that only examines a portion of a factor before determining whether there is a match, such as a substring, leading to resultant weaknesses.
+
+## Extended Description
+For example, an attacker might succeed in authentication by providing a small password that matches the associated portion of the larger, correct password.
+
+## Common Consequences
+- Integrity, Access Control: Alter Execution Logic, Bypass Protection Mechanism
+
+## Potential Mitigations
+- [Testing] Thoroughly test the comparison scheme before deploying code into production. Perform positive testing as well as negative testing.

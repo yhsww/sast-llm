@@ -1,0 +1,20 @@
+CWE-597: Use of Wrong Operator in String Comparison
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific, Java, JavaScript, PHP
+
+## Description
+The product uses the wrong operator when comparing a string, such as using "==" when the .equals() method should be used instead.
+
+## Extended Description
+In Java, using == or != to compare two strings for equality actually compares two objects for equality rather than their string values for equality. Chances are good that the two references will never be equal. While this weakness often only affects program correctness, if the equality is used for a security decision, the unintended comparison result could be leveraged to affect program security.
+
+## Common Consequences
+- Other: Other
+
+## Potential Mitigations
+- [Implementation] Within Java, use .equals() to compare string values. Within JavaScript, use == to compare string values. Within PHP, use == to compare a numeric value to a string value. (PHP converts the string to a number.)
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

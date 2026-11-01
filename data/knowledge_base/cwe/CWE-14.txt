@@ -1,0 +1,23 @@
+CWE-14: Compiler Removal of Code to Clear Buffers
+
+Abstraction: Variant
+
+Applicable Platforms: C, C++, Compiled
+
+## Description
+Sensitive memory is cleared according to the source code, but compiler optimizations leave the memory untouched when it is not read from again, aka "dead store removal."
+
+## Extended Description
+This compiler optimization error occurs when: Secret data are stored in memory. The secret data are scrubbed from memory by overwriting its contents. The source code is compiled using an optimizing compiler, which identifies and removes the function that overwrites the contents as a dead store because the memory is not used subsequently.
+
+## Common Consequences
+- Confidentiality, Access Control: Read Memory, Bypass Protection Mechanism — This weakness will allow data that has not been cleared from memory to be read. If this data contains sensitive password information, then an attacker can read the password and use the information to 
+
+## Potential Mitigations
+- [Implementation] Store the sensitive data in a "volatile" memory location if available.
+- [Build and Compilation] If possible, configure your compiler so that it does not remove dead stores.
+- [Architecture and Design] Where possible, encrypt sensitive data that are used by a software system.
+
+## Detection Methods
+- [Black Box] This specific weakness is impossible to detect using black box methods. While an analyst could examine memory to see that it has not been scrubbed, an analysis of the executable would not be successful. This is because the compiler has already removed the relevant code. Only the source code shows wh
+- [White Box] This weakness is only detectable using white box methods (see black box detection factor). Careful analysis is required to determine if the code is likely to be removed by the compiler.

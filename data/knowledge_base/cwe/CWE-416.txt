@@ -1,0 +1,25 @@
+CWE-416: Use After Free
+
+Abstraction: Variant
+
+Likelihood of Exploit: High
+
+Applicable Platforms: Memory-Unsafe, C, C++
+
+## Description
+The product reuses or references memory after it has been freed. At some point afterward, the memory may be allocated again and saved in another pointer, while the original pointer references a location somewhere within the new allocation. Any operations using the original pointer are no longer valid because the memory "belongs" to the code that operates on the new pointer.
+
+## Common Consequences
+- Integrity: Modify Memory — The use of previously freed memory may corrupt valid data, if the memory area in question has been allocated and used properly elsewhere.
+- Availability: DoS: Crash, Exit, or Restart — If chunk consolidation occurs after the use of previously freed data, the process may crash when invalid data is used as chunk information.
+- Confidentiality: Read Memory — Read operations on freed memory can sometimes leak sensitive information instead of causing a crash
+- Integrity, Confidentiality, Availability: Execute Unauthorized Code or Commands — If malicious data is entered before chunk consolidation can take place, it may be possible to take advantage of a write-what-where primitive to execute arbitrary code. If the newly allocated data happ
+
+## Potential Mitigations
+- [Architecture and Design] Choose a language that provides automatic memory management.
+- [Implementation] When freeing pointers, be sure to set them to NULL once they are freed. However, the utilization of multiple or complex data structures may lower the usefulness of this strategy.
+
+## Detection Methods
+- [Fuzzing] Fuzz testing (fuzzing) is a powerful technique for generating large numbers of diverse inputs - either randomly or algorithmically - and dynamically invoking the code with those inputs. Even with random inputs, it is often capable of generating unexpected results such as crashes, memory corruption, 
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea
+- [Automated Dynamic Analysis] Use tools that are integrated during compilation to insert runtime error-checking mechanisms related to memory safety errors, such as AddressSanitizer (ASan) for C/C++ [REF-1518].

@@ -1,0 +1,14 @@
+CWE-1127: Compilation with Insufficient Warnings or Errors
+
+Abstraction: Base
+
+Applicable Platforms: Compiled, Not Language-Specific
+
+## Description
+The code is compiled without sufficient warnings enabled, which may prevent the detection of subtle bugs or quality issues.
+
+## Common Consequences
+- Other: Reduce Maintainability — This issue makes it more difficult to maintain the product, which indirectly affects security by making it more difficult or time-consuming to find and/or fix vulnerabilities. It also might make it ea
+
+## Detection Methods
+- [Manual Analysis] Inspect scripts and tools that invoke the compiler. Ensure that the appropriate command line switches and/or configuration are specified to report warnings and errors.

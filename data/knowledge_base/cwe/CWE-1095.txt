@@ -1,0 +1,11 @@
+CWE-1095: Loop Condition Value Update within the Loop
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product uses a loop with a control flow condition based on a value that is updated within the body of the loop.
+
+## Common Consequences
+- Other: Reduce Maintainability, Increase Analytical Complexity — This issue makes it more difficult to understand and/or maintain the product, which indirectly affects security by making it more difficult or time-consuming to find and/or fix vulnerabilities. It als

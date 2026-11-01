@@ -1,0 +1,1 @@
+WSTG-INPV-03: HTTP Verb Tampering

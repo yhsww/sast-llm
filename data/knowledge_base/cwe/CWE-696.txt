@@ -1,0 +1,11 @@
+CWE-696: Incorrect Behavior Order
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific, Web Based
+
+## Description
+The product performs multiple related behaviors, but the behaviors are performed in the wrong order in ways that may produce resultant weaknesses.
+
+## Common Consequences
+- Integrity: Alter Execution Logic

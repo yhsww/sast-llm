@@ -1,0 +1,11 @@
+CWE-1068: Inconsistency Between Implementation and Documented Design
+
+Abstraction: Base
+
+Applicable Platforms: Not Technology-Specific, ICS/OT
+
+## Description
+The implementation of the product is not consistent with the design as described within the relevant documentation.
+
+## Common Consequences
+- Other: Reduce Maintainability, Increase Analytical Complexity — This issue makes it more difficult to maintain the product due to inconsistencies, which indirectly affects security by making it more difficult or time-consuming to find and/or fix vulnerabilities. I

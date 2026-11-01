@@ -1,0 +1,11 @@
+CWE-237: Improper Handling of Structural Elements
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not handle or incorrectly handles inputs that are related to complex structures.
+
+## Common Consequences
+- Integrity: Unexpected State

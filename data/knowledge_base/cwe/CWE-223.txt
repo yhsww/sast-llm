@@ -1,0 +1,11 @@
+CWE-223: Omission of Security-relevant Information
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not record or display information that would be important for identifying the source or nature of an attack, or determining if an action is safe.
+
+## Common Consequences
+- Non-Repudiation: Hide Activities — The source of an attack will be difficult or impossible to determine. This can allow attacks to the system to continue without notice.

@@ -1,0 +1,20 @@
+CWE-939: Improper Authorization in Handler for Custom URL Scheme
+
+Abstraction: Base
+
+Applicable Platforms: Mobile
+
+## Description
+The product uses a handler for a custom URL scheme, but it does not properly restrict which actors can invoke the handler using the scheme.
+
+## Extended Description
+Mobile platforms and other architectures allow the use of custom URL schemes to facilitate communication between applications. In the case of iOS, this is the only method to do inter-application communication. The implementation is at the developer's discretion which may open security flaws in the application. An example could be potentially dangerous functionality such as modifying files through a custom URL scheme.
+
+## Common Consequences
+- Access Control, Other: Gain Privileges or Assume Identity, Varies by Context, Bypass Protection Mechanism — An attacker can access any functionality that is inadvertently accessible to the source.
+
+## Potential Mitigations
+- [Architecture and Design] Utilize a user prompt pop-up to authorize potentially harmful actions such as those modifying data or dealing with sensitive information. When designing functionality of actions in the URL scheme, consider whether the action should be accessible to all mobile applications, or if an allowlist of applications to interface with is appropriate.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

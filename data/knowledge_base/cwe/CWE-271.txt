@@ -1,0 +1,22 @@
+CWE-271: Privilege Dropping / Lowering Errors
+
+Abstraction: Class
+
+Likelihood of Exploit: High
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not drop privileges before passing control of a resource to an actor that does not have those privileges.
+
+## Extended Description
+In some contexts, a system executing with elevated permissions will hand off a process/file/etc. to another process or user. If the privileges of an entity are not reduced, then elevated privileges are spread throughout a system and possibly to an attacker.
+
+## Common Consequences
+- Access Control: Gain Privileges or Assume Identity — If privileges are not dropped, neither are access rights of the user. Often these rights can be prevented from being dropped.
+- Access Control, Non-Repudiation: Gain Privileges or Assume Identity, Hide Activities — If privileges are not dropped, in some cases the system may record actions as the user which is being impersonated rather than the impersonator.
+
+## Potential Mitigations
+- [Architecture and Design] Compartmentalize the system to have "safe" areas where trust boundaries can be unambiguously drawn. Do not allow sensitive data to go outside of the trust boundary and always be careful when interfacing with a compartment outside of the safe area. Ensure that appropriate compartmentalization is built into the system design, and the compartmentalization allows for and reinforces privilege separation functionality. Architects and designers should rely on the principle of least privilege to decide the appropriate time to use privileges and the time to drop privileges.
+- [Architecture and Design, Operation] Very carefully manage the setting, management, and handling of privileges. Explicitly manage trust zones in the software.
+- [Architecture and Design] Consider following the principle of separation of privilege. Require multiple conditions to be met before permitting access to a system resource.

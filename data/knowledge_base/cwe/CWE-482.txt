@@ -1,0 +1,23 @@
+CWE-482: Comparing instead of Assigning
+
+Abstraction: Variant
+
+Likelihood of Exploit: Low
+
+Applicable Platforms: C, C++
+
+## Description
+The code uses an operator for comparison when the intention was to perform an assignment.
+
+## Extended Description
+In many languages, the compare statement is very close in appearance to the assignment statement; they are often confused.
+
+## Common Consequences
+- Availability, Integrity: Unexpected State — The assignment will not take place, which should cause obvious program execution problems.
+
+## Potential Mitigations
+- [Testing] Many IDEs and static analysis products will detect this problem.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea
+- [Automated Static Analysis - Source Code] An Integrated Development Environment (IDE) or linter can report or highlight this weaknesses.

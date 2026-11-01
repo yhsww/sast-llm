@@ -1,0 +1,20 @@
+CWE-823: Use of Out-of-range Pointer Offset
+
+Abstraction: Base
+
+Applicable Platforms: Memory-Unsafe, C, C++
+
+## Description
+The product performs pointer arithmetic on a valid pointer, but it uses an offset that can point outside of the intended range of valid memory locations for the resulting pointer.
+
+## Extended Description
+While a pointer can contain a reference to any arbitrary memory location, a program typically only intends to use the pointer to access limited portions of memory, such as contiguous memory used to access an individual array. Programs may use offsets in order to access fields or sub-elements stored within structured data. The offset might be out-of-range if it comes from an untrusted source, is the result of an incorrect calculation, or occurs because of another error. If an attacker can control or influence the offset so that it points outside of the intended boundaries of the structure, then the attacker may be able to read or write to memory locations that are used elsewhere in the product. As a result, the attack might change the state of the product as accessed through program variabl
+
+## Common Consequences
+- Confidentiality: Read Memory — If the untrusted pointer is used in a read operation, an attacker might be able to read sensitive portions of memory.
+- Availability: DoS: Crash, Exit, or Restart — If the untrusted pointer references a memory location that is not accessible to the program, or points to a location that is "malformed" or larger than expected by a read or write operation, the appli
+- Integrity, Confidentiality, Availability: Execute Unauthorized Code or Commands, Modify Memory — If the untrusted pointer is used in a function call, or points to unexpected data in a write operation, then code execution may be possible.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea
+- [Automated Dynamic Analysis] Use tools that are integrated during compilation to insert runtime error-checking mechanisms related to memory safety errors, such as AddressSanitizer (ASan) for C/C++ [REF-1518].

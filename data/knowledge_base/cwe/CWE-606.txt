@@ -1,0 +1,18 @@
+CWE-606: Unchecked Input for Loop Condition
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not properly check inputs that are used for loop conditions, potentially leading to a denial of service or other consequences because of excessive looping.
+
+## Common Consequences
+- Availability: DoS: Resource Consumption (CPU)
+
+## Potential Mitigations
+- [Implementation] Do not use user-controlled data for loop conditions.
+- [Implementation] Perform input validation.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

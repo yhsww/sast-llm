@@ -1,0 +1,18 @@
+CWE-234: Failure to Handle Missing Parameter
+
+Abstraction: Variant
+
+Likelihood of Exploit: High
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+If too few arguments are sent to a function, the function will still pop the expected number of arguments from the stack. Potentially, a variable number of arguments could be exhausted in a function as well.
+
+## Common Consequences
+- Integrity, Confidentiality, Availability, Access Control: Execute Unauthorized Code or Commands, Gain Privileges or Assume Identity — There is the potential for arbitrary code execution with privileges of the vulnerable program if function parameter list is exhausted.
+- Availability: DoS: Crash, Exit, or Restart — Potentially a program could fail if it needs more arguments then are available.
+
+## Potential Mitigations
+- [Build and Compilation] This issue can be simply combated with the use of proper build process.
+- [Implementation] Forward declare all functions. This is the recommended solution. Properly forward declaration of all used functions will result in a compiler error if too few arguments are sent to a function.

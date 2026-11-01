@@ -1,0 +1,17 @@
+CWE-363: Race Condition Enabling Link Following
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product checks the status of a file or directory before accessing it, which produces a race condition in which the file can be replaced with a link before the access is performed, causing the product to access the wrong file.
+
+## Extended Description
+While developers might expect that there is a very narrow time window between the time of check and time of use, there is still a race condition. An attacker could cause the product to slow down (e.g. with memory consumption), causing the time window to become larger. Alternately, in some situations, the attacker could win the race by performing a large number of attacks.
+
+## Common Consequences
+- Confidentiality, Integrity: Read Files or Directories, Modify Files or Directories
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

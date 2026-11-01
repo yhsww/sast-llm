@@ -1,0 +1,19 @@
+CWE-1249: Application-Level Admin Tool with Inconsistent View of Underlying Operating System
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Web Based
+
+## Description
+The product provides an application for administrators to manage parts of the underlying operating system, but the application does not accurately identify all of the relevant entities or resources that exist in the OS; that is, the application's model of the OS's state is inconsistent with the OS's actual state.
+
+## Extended Description
+Many products provide web-based applications or other interfaces for managing the underlying operating system. This is common with cloud, network access devices, home networking, and other systems. When the management tool does not accurately represent what is in the OS - such as user accounts - then the administrator might not see suspicious activities that would be noticed otherwise. For example, numerous systems utilize a web front-end for administrative control. They also offer the ability to add, alter, and drop users with various privileges as it relates to the functionality of the system. A potential architectural weakness may exist where the user information reflected in the web interface does not mirror the users in the underlying operating system. Many web UI or REST APIs use the
+
+## Common Consequences
+- Access Control: Varies by Context
+- Accountability: Hide Activities
+- Other: Unexpected State
+
+## Potential Mitigations
+- [Architecture and Design] Ensure that the admin tool refreshes its model of the underlying OS on a regular basis, and note any inconsistencies with configuration files or other data sources that are expected to have the same data.

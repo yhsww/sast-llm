@@ -1,0 +1,14 @@
+CWE-831: Signal Handler Function Associated with Multiple Signals
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product defines a function that is used as a handler for more than one signal.
+
+## Extended Description
+While sometimes intentional and safe, when the same function is used to handle multiple signals, a race condition could occur if the function uses any state outside of its local declaration, such as global variables or non-reentrant functions, or has any side effects. An attacker could send one signal that invokes the handler function; in many OSes, this will typically prevent the same signal from invoking the handler again, at least until the handler function has completed execution. However, the attacker could then send a different signal that is associated with the same handler function. This could interrupt the original handler function while it is still executing. If there is shared state, then the state could be corrupted. This can lead to a variety of potential consequences dependin
+
+## Common Consequences
+- Availability, Integrity, Confidentiality, Access Control, Other: DoS: Crash, Exit, or Restart, Execute Unauthorized Code or Commands, Read Application Data, Gain Privileges or Assume Identity, Bypass Protection Mechanism, Varies by Context — The most common consequence will be a corruption of the state of the product, possibly leading to a crash or exit. However, if the signal handler is operating on state variables for security relevant

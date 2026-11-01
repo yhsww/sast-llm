@@ -1,0 +1,17 @@
+CWE-599: Missing Validation of OpenSSL Certificate
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product uses OpenSSL and trusts or uses a certificate without using the SSL_get_verify_result() function to ensure that the certificate satisfies all necessary security requirements.
+
+## Common Consequences
+- Confidentiality: Read Application Data — The data read may not be properly secured - it might be viewed by an attacker.
+- Access Control: Bypass Protection Mechanism, Gain Privileges or Assume Identity — Trust afforded to the system in question may allow for spoofing or redirection attacks.
+- Access Control: Gain Privileges or Assume Identity — If the certificate is not checked, it may be possible for a redirection or spoofing attack to allow a malicious host with a valid certificate to provide data under the guise of a trusted host. While t
+
+## Potential Mitigations
+- [Architecture and Design] Ensure that proper authentication is included in the system design.
+- [Implementation] Understand and properly implement all checks necessary to ensure the identity of entities involved in encrypted communications.

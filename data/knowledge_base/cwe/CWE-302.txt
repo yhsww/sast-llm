@@ -1,0 +1,14 @@
+CWE-302: Authentication Bypass by Assumed-Immutable Data
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific, Web Based
+
+## Description
+The authentication scheme or implementation uses key data elements that are assumed to be immutable, but can be controlled or modified by the attacker.
+
+## Common Consequences
+- Access Control: Bypass Protection Mechanism
+
+## Potential Mitigations
+- [Architecture and Design, Operation, Implementation] Implement proper protection for immutable data (e.g. environment variable, hidden form fields, etc.)

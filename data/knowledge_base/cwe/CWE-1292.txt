@@ -1,0 +1,18 @@
+CWE-1292: Incorrect Conversion of Security Identifiers
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Bus/Interface Hardware, Not Technology-Specific
+
+## Description
+The product implements a conversion mechanism to map certain bus-transaction signals to security identifiers. However, if the conversion is incorrectly implemented, untrusted agents can gain unauthorized access to the asset.
+
+## Extended Description
+In a System-On-Chip (SoC), various integrated circuits and hardware engines generate transactions such as to access (reads/writes) assets or perform certain actions (e.g., reset, fetch, compute, etc.). Among various types of message information, a typical transaction is comprised of source identity (to identify the originator of the transaction) and a destination identity (to route the transaction to the respective entity). Sometimes the transactions are qualified with a security identifier. This security identifier helps the destination agent decide on the set of allowed actions (e.g., access an asset for read and writes). A typical bus connects several leader and follower agents. Some follower agents implement bus protocols differently from leader agents. A protocol conversion happens at
+
+## Common Consequences
+- Confidentiality, Integrity, Availability, Access Control: Modify Memory, Read Memory, DoS: Resource Consumption (Other), Execute Unauthorized Code or Commands, Gain Privileges or Assume Identity, Quality Degradation
+
+## Potential Mitigations
+- [Architecture and Design] Security identifier decoders must be reviewed for design inconsistency and common weaknesses.
+- [Implementation] Access and programming flows must be tested in pre-silicon and post-silicon testing.

@@ -1,0 +1,11 @@
+CWE-1097: Persistent Storable Data Element without Associated Comparison Control Element
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product uses a storable data element that does not have all of the associated functions or methods that are necessary to support comparison.
+
+## Common Consequences
+- Other: Reduce Reliability — This issue can prevent the product from running reliably, due to incorrect or unexpected comparison results. If the relevant code is reachable by an attacker, then this reliability problem might intro

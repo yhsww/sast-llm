@@ -1,0 +1,17 @@
+CWE-528: Exposure of Core Dump File to an Unauthorized Control Sphere
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product generates a core dump file in a directory, archive, or other resource that is stored, transferred, or otherwise made accessible to unauthorized actors.
+
+## Common Consequences
+- Confidentiality: Read Application Data, Read Files or Directories
+
+## Potential Mitigations
+- [System Configuration] Protect the core dump files from unauthorized access.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

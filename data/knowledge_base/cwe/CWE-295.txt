@@ -1,0 +1,21 @@
+CWE-295: Improper Certificate Validation
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific, Web Based, Mobile
+
+## Description
+The product does not validate, or incorrectly validates, a certificate.
+
+## Common Consequences
+- Integrity, Authentication: Bypass Protection Mechanism, Gain Privileges or Assume Identity — When a certificate is invalid or malicious, it might allow an attacker to spoof a trusted entity by interfering in the communication path between the host and client. The product might connect to a ma
+
+## Potential Mitigations
+- [Architecture and Design, Implementation] Certificates should be carefully managed and checked to assure that data are encrypted with the intended owner's public key.
+- [Implementation] If certificate pinning is being used, ensure that all relevant properties of the certificate are fully validated before the certificate is pinned, including the hostname.
+
+## Detection Methods
+- [Automated Static Analysis - Binary or Bytecode] According to SOAR [REF-1479], the following detection techniques may be useful: Cost effective for partial coverage: Bytecode Weakness Analysis - including disassembler + source code weakness analysis Binary Weakness Analysis - including disassembler + source code weakness analysis
+- [Manual Static Analysis - Binary or Bytecode] According to SOAR [REF-1479], the following detection techniques may be useful: Cost effective for partial coverage: Binary / Bytecode disassembler - then use manual analysis for vulnerabilities & anomalies
+- [Dynamic Analysis with Automated Results Interpretation] According to SOAR [REF-1479], the following detection techniques may be useful: Cost effective for partial coverage: Web Application Scanner
+- [Dynamic Analysis with Manual Results Interpretation] According to SOAR [REF-1479], the following detection techniques may be useful: Highly cost effective: Man-in-the-middle attack tool

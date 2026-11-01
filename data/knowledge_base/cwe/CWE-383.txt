@@ -1,0 +1,20 @@
+CWE-383: J2EE Bad Practices: Direct Use of Threads
+
+Abstraction: Variant
+
+Applicable Platforms: Java, Web Based, Web Server
+
+## Description
+Thread management in a Web application is forbidden in some circumstances and is always highly error prone.
+
+## Extended Description
+Thread management in a web application is forbidden by the J2EE standard in some circumstances and is always highly error prone. Managing threads is difficult and is likely to interfere in unpredictable ways with the behavior of the application container. Even without interfering with the container, thread management usually leads to bugs that are hard to detect and diagnose like deadlock, race conditions, and other synchronization errors.
+
+## Common Consequences
+- Other: Quality Degradation
+
+## Potential Mitigations
+- [Architecture and Design] For EJB, use framework approaches for parallel execution, instead of using threads.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

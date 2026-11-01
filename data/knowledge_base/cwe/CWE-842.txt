@@ -1,0 +1,14 @@
+CWE-842: Placement of User into Incorrect Group
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The product or the administrator places a user into an incorrect group.
+
+## Extended Description
+If the incorrect group has more access or privileges than the intended group, the user might be able to bypass intended security policy to access unexpected resources or perform unexpected actions. The access-control system might not be able to detect malicious usage of this group membership.
+
+## Common Consequences
+- Access Control: Gain Privileges or Assume Identity

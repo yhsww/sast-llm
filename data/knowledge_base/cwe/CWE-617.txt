@@ -1,0 +1,21 @@
+CWE-617: Reachable Assertion
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, C, Java, Rust, Not Technology-Specific
+
+## Description
+The product contains an assert() or similar statement that can be triggered by an attacker, which leads to an application exit or other behavior that is more severe than necessary.
+
+## Extended Description
+While assertion is good for catching logic errors and reducing the chances of reaching more serious vulnerability conditions, it can still lead to a denial of service. For example, if a server handles multiple simultaneous connections, and an assert() occurs in one single connection that causes all other connections to be dropped, this is a reachable assertion that leads to a denial of service.
+
+## Common Consequences
+- Availability: DoS: Crash, Exit, or Restart — An attacker that can trigger an assert statement can still lead to a denial of service if the relevant code can be triggered by an attacker, and if the scope of the assert() extends beyond the attacke
+
+## Potential Mitigations
+- [Implementation] Make sensitive open/close operation non reachable by directly user-controlled data (e.g. open/close resources)
+- [Implementation] Perform input validation on user data.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

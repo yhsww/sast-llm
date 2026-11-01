@@ -1,0 +1,23 @@
+CWE-917: Improper Neutralization of Special Elements used in an Expression Language Statement ('Expression Language Injection')
+
+Abstraction: Base
+
+Applicable Platforms: Java
+
+## Description
+The product constructs all or part of an expression language (EL) statement in a framework such as a Java Server Page (JSP) using externally-influenced input from an upstream component, but it does not neutralize or incorrectly neutralizes special elements that could modify the intended EL statement before it is executed.
+
+## Extended Description
+Frameworks such as Java Server Page (JSP) allow a developer to insert executable expressions within otherwise-static content. When the developer is not aware of the executable nature of these expressions and/or does not disable them, then if an attacker can inject expressions, this could lead to code execution or other unexpected behaviors.
+
+## Common Consequences
+- Confidentiality: Read Application Data
+- Integrity: Execute Unauthorized Code or Commands
+
+## Potential Mitigations
+- [Architecture and Design] Avoid adding user-controlled data into an expression interpreter when possible.
+- [Implementation] If user-controlled data must be added to an expression interpreter, one or more of the following should be performed: Validate that the user input will not evaluate as an expression Encode the user input in a way that ensures it is not evaluated as an expression
+- [System Configuration, Operation] The framework or tooling might allow the developer to disable or deactivate the processing of EL expressions, such as setting the isELIgnored attribute for a JSP page to "true".
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

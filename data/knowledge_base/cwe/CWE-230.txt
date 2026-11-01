@@ -1,0 +1,11 @@
+CWE-230: Improper Handling of Missing Values
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not handle or incorrectly handles when a parameter, field, or argument name is specified, but the associated value is missing, i.e. it is empty, blank, or null.
+
+## Common Consequences
+- Integrity: Unexpected State

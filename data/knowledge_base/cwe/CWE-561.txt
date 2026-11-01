@@ -1,0 +1,24 @@
+CWE-561: Dead Code
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product contains dead code, which can never be executed.
+
+## Extended Description
+Dead code is code that can never be executed in a running program. The surrounding code makes it impossible for a section of code to ever be executed.
+
+## Common Consequences
+- Other: Quality Degradation — Dead code that results from code that can never be executed is an indication of problems with the source code that needs to be fixed and is an indication of poor quality.
+- Other: Reduce Maintainability
+
+## Potential Mitigations
+- [Implementation] Remove dead code before deploying the application.
+
+## Detection Methods
+- [Architecture or Design Review] According to SOAR [REF-1479], the following detection techniques may be useful: Highly cost effective: Inspection (IEEE 1028 standard) (can apply to requirements, design, source code, etc.) Formal Methods / Correct-By-Construction Cost effective for partial coverage: Attack Modeling
+- [Automated Static Analysis - Binary or Bytecode] According to SOAR [REF-1479], the following detection techniques may be useful: Highly cost effective: Binary / Bytecode Quality Analysis Compare binary / bytecode to application permission manifest
+- [Dynamic Analysis with Manual Results Interpretation] According to SOAR [REF-1479], the following detection techniques may be useful: Cost effective for partial coverage: Automated Monitored Execution
+- [Automated Static Analysis] According to SOAR [REF-1479], the following detection techniques may be useful: Cost effective for partial coverage: Permission Manifest Analysis

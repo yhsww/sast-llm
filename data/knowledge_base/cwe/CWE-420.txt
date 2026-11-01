@@ -1,0 +1,14 @@
+CWE-420: Unprotected Alternate Channel
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product protects a primary channel, but it does not use the same level of protection for an alternate channel.
+
+## Common Consequences
+- Access Control: Gain Privileges or Assume Identity, Bypass Protection Mechanism
+
+## Potential Mitigations
+- [Architecture and Design] Identify all alternate channels and use the same protection mechanisms that are used for the primary channels.

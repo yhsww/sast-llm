@@ -1,0 +1,11 @@
+CWE-118: Incorrect Access of Indexable Resource ('Range Error')
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The product does not restrict or incorrectly restricts operations within the boundaries of a resource that is accessed using an index or pointer, such as memory or files.
+
+## Common Consequences
+- Other: Varies by Context

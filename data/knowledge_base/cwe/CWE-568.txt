@@ -1,0 +1,20 @@
+CWE-568: finalize() Method Without super.finalize()
+
+Abstraction: Variant
+
+Applicable Platforms: Java
+
+## Description
+The product contains a finalize() method that does not call super.finalize().
+
+## Extended Description
+The Java Language Specification states that it is a good practice for a finalize() method to call super.finalize().
+
+## Common Consequences
+- Other: Quality Degradation
+
+## Potential Mitigations
+- [Implementation] Call the super.finalize() method.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

@@ -1,0 +1,14 @@
+CWE-1047: Modules with Circular Dependencies
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product contains modules in which one module has references that cycle back to itself, i.e., there are circular dependencies.
+
+## Extended Description
+As an example, with Java, this weakness might indicate cycles between packages.
+
+## Common Consequences
+- Other: Reduce Maintainability — This issue makes it more difficult to maintain the product due to insufficient modularity, which indirectly affects security by making it more difficult or time-consuming to find and/or fix vulnerabil

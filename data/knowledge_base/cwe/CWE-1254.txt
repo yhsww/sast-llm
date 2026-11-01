@@ -1,0 +1,17 @@
+CWE-1254: Incorrect Comparison Logic Granularity
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The product's comparison logic is performed over a series of steps rather than across the entire string in one operation. If there is a comparison logic failure on one of these steps, the operation may be vulnerable to a timing attack that can result in the interception of the process for nefarious purposes.
+
+## Extended Description
+Comparison logic is used to compare a variety of objects including passwords, Message Authentication Codes (MACs), and responses to verification challenges. When comparison logic is implemented at a finer granularity (e.g., byte-by-byte comparison) and breaks in the case of a comparison failure, an attacker can exploit this implementation to identify when exactly the failure occurred. With multiple attempts, the attacker may be able to guesses the correct password/response to challenge and elevate their privileges.
+
+## Common Consequences
+- Confidentiality, Authorization: Bypass Protection Mechanism
+
+## Potential Mitigations
+- [Implementation] The hardware designer should ensure that comparison logic is implemented so as to compare in one operation instead in smaller chunks.

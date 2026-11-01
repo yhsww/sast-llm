@@ -1,0 +1,14 @@
+CWE-288: Authentication Bypass Using an Alternate Path or Channel
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific, Web Based
+
+## Description
+The product requires authentication, but the product has an alternate path or channel that does not require authentication.
+
+## Common Consequences
+- Access Control: Bypass Protection Mechanism
+
+## Potential Mitigations
+- [Architecture and Design] Funnel all access through a single choke point to simplify how users can access a resource. For every access, perform a check to determine if the user has permissions to access the resource.

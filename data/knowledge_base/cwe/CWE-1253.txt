@@ -1,0 +1,20 @@
+CWE-1253: Incorrect Selection of Fuse Values
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The logic level used to set a system to a secure state relies on a fuse being unblown.
+
+## Extended Description
+Fuses are often used to store secret data, including security configuration data. When not blown, a fuse is considered to store a logic 0, and, when blown, it indicates a logic 1. Fuses are generally considered to be one-directional, i.e., once blown to logic 1, it cannot be reset to logic 0.
+
+## Common Consequences
+- Access Control, Authorization: Bypass Protection Mechanism, Gain Privileges or Assume Identity — If the logic used to determine system-security state (by leveraging the values sensed from the fuses) uses negative logic, an attacker might blow the fuse and drive the system to an insecure state.
+- Availability: DoS: Crash, Exit, or Restart
+- Confidentiality: Read Memory
+- Integrity: Modify Memory, Execute Unauthorized Code or Commands
+
+## Potential Mitigations
+- [Architecture and Design] Logic should be designed in a way that blown fuses do not put the product into an insecure state that can be leveraged by an attacker.

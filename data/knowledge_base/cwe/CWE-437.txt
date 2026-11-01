@@ -1,0 +1,11 @@
+CWE-437: Incomplete Model of Endpoint Features
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+A product acts as an intermediary or monitor between two or more endpoints, but it does not have a complete model of an endpoint's features, behaviors, or state, potentially causing the product to perform incorrect actions based on this incomplete model.
+
+## Common Consequences
+- Integrity, Other: Unexpected State, Varies by Context

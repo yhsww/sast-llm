@@ -1,0 +1,21 @@
+CWE-269: Improper Privilege Management
+
+Abstraction: Class
+
+Likelihood of Exploit: Medium
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not properly assign, modify, track, or check privileges for an actor, creating an unintended sphere of control for that actor.
+
+## Common Consequences
+- Access Control: Gain Privileges or Assume Identity
+
+## Potential Mitigations
+- [Architecture and Design, Operation] Very carefully manage the setting, management, and handling of privileges. Explicitly manage trust zones in the software.
+- [Architecture and Design] Follow the principle of least privilege when assigning access rights to entities in a software system.
+- [Architecture and Design] Consider following the principle of separation of privilege. Require multiple conditions to be met before permitting access to a system resource.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

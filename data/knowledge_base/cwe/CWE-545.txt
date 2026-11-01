@@ -1,0 +1,6 @@
+CWE-545: DEPRECATED: Use of Dynamic Class Loading
+
+Abstraction: Variant
+
+## Description
+This weakness has been deprecated because it partially overlaps CWE-470, it describes legitimate programmer behavior, and other portions will need to be integrated into other entries.

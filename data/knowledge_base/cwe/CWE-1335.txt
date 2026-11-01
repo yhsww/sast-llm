@@ -1,0 +1,20 @@
+CWE-1335: Incorrect Bitwise Shift of Integer
+
+Abstraction: Base
+
+Applicable Platforms: C, C++, C#, Java, JavaScript, Not Technology-Specific
+
+## Description
+An integer value is specified to be shifted by a negative amount or an amount greater than or equal to the number of bits contained in the value causing an unexpected or indeterminate result.
+
+## Extended Description
+Specifying a value to be shifted by a negative amount is undefined in various languages. Various computer architectures implement this action in different ways. The compilers and interpreters when generating code to accomplish a shift generally do not do a check for this issue. Specifying an over-shift, a shift greater than or equal to the number of bits contained in a value to be shifted, produces a result which varies by architecture and compiler. In some languages, this action is specifically listed as producing an undefined result.
+
+## Common Consequences
+- Integrity: DoS: Crash, Exit, or Restart
+
+## Potential Mitigations
+- [Implementation] Implicitly or explicitly add checks and mitigation for negative or over-shift values.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

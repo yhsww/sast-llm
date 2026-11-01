@@ -1,0 +1,22 @@
+CWE-467: Use of sizeof() on a Pointer Type
+
+Abstraction: Variant
+
+Likelihood of Exploit: High
+
+Applicable Platforms: C, C++
+
+## Description
+The code calls sizeof() on a pointer type, which can be an incorrect calculation if the programmer intended to determine the size of the data that is being pointed to.
+
+## Extended Description
+The use of sizeof() on a pointer can sometimes generate useful information. An obvious case is to find out the wordsize on a platform. More often than not, the appearance of sizeof(pointer) indicates a bug.
+
+## Common Consequences
+- Integrity, Confidentiality: Modify Memory, Read Memory — This error can often cause one to allocate a buffer that is much smaller than what is needed, leading to resultant weaknesses such as buffer overflows.
+
+## Potential Mitigations
+- [Implementation] Use expressions such as "sizeof(*pointer)" instead of "sizeof(pointer)", unless you intend to run sizeof() on a pointer type to gain some platform independence or if you are allocating a variable on the stack.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

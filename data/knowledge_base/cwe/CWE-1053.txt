@@ -1,0 +1,11 @@
+CWE-1053: Missing Documentation for Design
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not have documentation that represents how it is designed.
+
+## Common Consequences
+- Other: Reduce Maintainability, Increase Analytical Complexity — This issue can make it more difficult to understand and maintain the product. It can make it more difficult and time-consuming to detect and/or fix vulnerabilities.

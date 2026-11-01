@@ -1,0 +1,14 @@
+CWE-402: Transmission of Private Resources into a New Sphere ('Resource Leak')
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product makes resources available to untrusted parties when those resources are only intended to be accessed by the product.
+
+## Common Consequences
+- Confidentiality: Read Application Data
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

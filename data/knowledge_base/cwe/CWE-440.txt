@@ -1,0 +1,11 @@
+CWE-440: Expected Behavior Violation
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, ICS/OT
+
+## Description
+A feature, API, or function does not perform according to its specification.
+
+## Common Consequences
+- Other: Quality Degradation, Varies by Context

@@ -1,0 +1,11 @@
+CWE-790: Improper Filtering of Special Elements
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product receives data from an upstream component, but does not filter or incorrectly filters special elements before sending it to a downstream component.
+
+## Common Consequences
+- Integrity: Unexpected State

@@ -1,0 +1,21 @@
+CWE-788: Access of Memory Location After End of Buffer
+
+Abstraction: Base
+
+Applicable Platforms: Memory-Unsafe, C, C++
+
+## Description
+The product reads or writes to a buffer using an index or pointer that references a memory location after the end of the buffer.
+
+## Extended Description
+This typically occurs when a pointer or its index is incremented to a position after the buffer; or when pointer arithmetic results in a position after the buffer.
+
+## Common Consequences
+- Confidentiality: Read Memory — For an out-of-bounds read, the attacker may have access to sensitive information. If the sensitive information contains system details, such as the current buffer's position in memory, this knowledge 
+- Integrity, Availability: Modify Memory, DoS: Crash, Exit, or Restart — Out of bounds memory access will very likely result in the corruption of relevant memory, and perhaps instructions, possibly leading to a crash. Other attacks leading to lack of availability are possi
+- Integrity: Modify Memory, Execute Unauthorized Code or Commands — If the memory accessible by the attacker can be effectively controlled, it may be possible to execute arbitrary code, as with a standard buffer overflow. If the attacker can overwrite a pointer's wort
+
+## Detection Methods
+- [Fuzzing] Fuzz testing (fuzzing) is a powerful technique for generating large numbers of diverse inputs - either randomly or algorithmically - and dynamically invoking the code with those inputs. Even with random inputs, it is often capable of generating unexpected results such as crashes, memory corruption, 
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea
+- [Automated Dynamic Analysis] Use tools that are integrated during compilation to insert runtime error-checking mechanisms related to memory safety errors, such as AddressSanitizer (ASan) for C/C++ [REF-1518].

@@ -1,0 +1,15 @@
+CWE-1112: Incomplete Documentation of Program Execution
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The document does not fully define all mechanisms that are used to control or influence how product-specific programs are executed.
+
+## Extended Description
+This includes environmental variables, configuration files, registry keys, command-line switches or options, or system settings.
+
+## Common Consequences
+- Other: Reduce Maintainability
+- Other: Increase Analytical Complexity

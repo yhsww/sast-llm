@@ -1,0 +1,17 @@
+CWE-315: Cleartext Storage of Sensitive Information in a Cookie
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product stores sensitive information in cleartext in a cookie.
+
+## Extended Description
+Attackers can use widely-available tools to view the cookie and read the sensitive information. Even if the information is encoded in a way that is not human-readable, certain techniques could determine which encoding is being used, then decode the information.
+
+## Common Consequences
+- Confidentiality: Read Application Data
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

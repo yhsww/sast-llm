@@ -1,0 +1,11 @@
+CWE-1100: Insufficient Isolation of System-Dependent Functions
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product or code does not isolate system-dependent functionality into separate standalone modules.
+
+## Common Consequences
+- Other: Reduce Maintainability — This issue makes it more difficult to maintain and/or port the product, which indirectly affects security by making it more difficult or time-consuming to find and/or fix vulnerabilities. It also migh

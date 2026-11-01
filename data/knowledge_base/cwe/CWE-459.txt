@@ -1,0 +1,17 @@
+CWE-459: Incomplete Cleanup
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not properly "clean up" and remove temporary or supporting resources after they have been used.
+
+## Common Consequences
+- Other, Confidentiality, Integrity: Other, Read Application Data, Modify Application Data, DoS: Resource Consumption (Other) — It is possible to overflow the number of temporary files because directories typically have limits on the number of files allowed. This could create a denial of service problem.
+
+## Potential Mitigations
+- [Architecture and Design, Implementation] Temporary files and other supporting resources should be deleted/released immediately after they are no longer needed.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

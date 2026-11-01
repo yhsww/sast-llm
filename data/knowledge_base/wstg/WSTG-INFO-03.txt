@@ -1,0 +1,105 @@
+WSTG-INFO-03: Review Webserver Metafiles for Information Leakage
+
+## Summary
+This section describes how to test various metadata files for information leakage of the web application's path(s), or functionality. Furthermore, the list of directories that are to be avoided by Spiders, Robots, or Crawlers can also be created as a dependency for Map execution paths through application. Other information may also be collected to identify attack surface, technology details, or for use in social engineering engagement.
+
+## Test Objectives
+- Identify hidden or obfuscated paths and functionality through the analysis of metadata files.
+- Extract and map other information that could lead to a better understanding of the systems at hand.
+
+## How to Test
+> Any of the actions performed below with `wget` could also be done with `curl`. Many Dynamic Application Security Testing (DAST) tools such as ZAP and Burp Suite include checks or parsing for these resources as part of their spider/crawler functionality. They can also be identified using various Google Dorks or leveraging advanced search features such as `inurl:`.
+
+### Robots
+
+Web Spiders, Robots, or Crawlers retrieve a web page and then recursively traverse hyperlinks to retrieve further web content. Their accepted behavior is specified by the Robots Exclusion Protocol (RFC 9309) via a `robots.txt` file in the web root directory.
+
+As an example, a sample of the `robots.txt` file from Google sampled on 2026 Sept 13 is quoted below:
+
+```text
+User-agent: *
+User-agent: Yandex
+Disallow: /search
+Allow: /search/about
+Allow: /search/howsearchworks
+Disallow: /sdch
+Disallow: /groups
+...
+# Crawlers of certain social media sites are allowed to access page markup when
+# google.com/imgres* links are shared. To learn more, please contact
+# images-robots-allowlist@google.com.
+User-agent: facebookexternalhit
+User-agent: Twitterbot
+Allow: /imgres
+Allow: /search
+Disallow: /groups
+Disallow: /hosted/images/
+Disallow: /m/
+
+Sitemap: https://www.google.com/sitemap.xml
+```
+
+The User-Agent directive refers to the specific web spider/robot/crawler. For example, the `User-Agent: Googlebot` refers to the spider from Google while `User-Agent: bingbot` refers to a crawler from Microsoft. `User-Agent: *` in the example above applies to all web spiders/robots/crawlers.
+
+The `Disallow` directive specifies which resources are prohibited by spiders/robots/crawlers. In the example above, the following are prohibited:
+
+```text
+...
+Disallow: /search
+...
+Disallow: /sdch
+...
+```
+
+Web spiders/robots/crawlers can intentionally ignore the `Disallow` directives specified in a `robots.txt` file. Hence, `robots.txt` should not be considered as a mechanism to enforce restrictions on how web content is accessed, stored, or republished by third parties.
+
+The `robots.txt` file is retrieved from the web root directory of the web server. For example, to retrieve the `robots.txt` from `www.google.com` using `wget` or `curl`:
+
+```bash
+$ curl -O -Ss https://www.google.com/robots.txt && head -n5 robots.txt
+User-agent: *
+Disallow: /search
+Allow: /search/about
+Allow: /search/static
+Allow: /search/howsearchworks
+...
+```
+
+#### AI Crawlers
+
+Many AI crawlers, used by AI companies to collect training data, have been observed ignoring `robots.txt` directives. Developers and site owners have explored countermeasures to protect their content; as described in a 2025 TechCrunch article, the open-source community has responded with tactics such as generating endless fake content to consume crawler resources, or serving misleading data to degrade the quality of AI training sets. The Free Software Foundation has also documented the operational burden that large volumes of AI crawlers impose on small teams, highlighting how even well-intentioned `robots.txt` rules are routinely disregarded.
+
+From a testing perspective, `robots.txt` entries intended to block AI crawlers (e.g., `User-Agent: GPTBot`, `User-Agent: ClaudeBot`) may be ineffective and sensitive paths listed in `robots.txt` remain discoverable by any crawler that ignores the protocol.
+
+#### Analyze robots.txt Using Google Webmaster Tools
+
+Site owners can use the Google "Analyze robots.txt" function to analyze the site as part of its Google Webmaster Tools. This tool can assist with testing and the procedure is as follows:
+
+1. Sign into Google Webmaster Tools with a Google account.
+2. On the dashboard, enter the URL for the site to be analyzed.
+3. Choose between the available methods and follow the on screen instruction.
+
+### META Tags
+
+`<META>` tags are located within the `HEAD` section of each HTML document and should be consistent across a site in the event that the robot/spider/crawler start point does not begin from a document link other than webroot i.e. a deep link. The Robots directive can also be specified using a specific META tag.
+
+#### Robots META Tag
+
+If there is no `<META NAME="ROBOTS" ... >` entry, then the "Robots Exclusion Protocol" defaults to `INDEX,FOLLOW` respectively. Therefore, the other two valid entries defined by the "Robots Exclusion Protocol" are prefixed with `NO...` i.e. `NOINDEX` and `NOFOLLOW`.
+
+Based on the Disallow directive(s) listed within the `robots.txt` file in webroot, a regular expression search for `<META NAME="ROBOTS"` is undertaken within each web page. The result is then compared to the robots.txt file in the webroot.
+
+#### Miscellaneous META Information Tags
+
+Organizations often embed informational META tags in web content to support various technologies such as screen readers, social networking previews, search engine indexing, etc. Such meta-information can be of value to testers in identifying technologies used, and additional paths/functionality to explore and test. The following meta information was retrieved from `www.whitehouse.gov` via View Page Source on 2026 Sept 13:
+
+```html
+...
+<meta name="description" content="President Donald J. Trump and Vice President JD Vance are committed to lowering costs for all Americans, securing our borders, unleashing American energy dominance, restoring peace through strength, and making all Americans safe and secure once again." />
+<link rel="canonical" href="https://www.whitehouse.gov/" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="The White House" />
+<meta property="og:description" content="President Donald J. Trump and Vice President JD Vance are committed to lowering costs for all Americans, securing our borders, unleashing American energy dominance, restoring peace through strength, and making all Americans safe and secure once again." />
+<meta property="og:url" content="https://www.whitehouse.gov/" />
+[...truncated]

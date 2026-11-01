@@ -1,0 +1,14 @@
+CWE-553: Command Shell in Externally Accessible Directory
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific, Web Based, Web Server
+
+## Description
+A possible shell file exists in /cgi-bin/ or other accessible directories. This is extremely dangerous and can be used by an attacker to execute commands on the web server.
+
+## Common Consequences
+- Confidentiality, Integrity, Availability: Execute Unauthorized Code or Commands
+
+## Potential Mitigations
+- [Installation, System Configuration] Remove any Shells accessible under the web root folder and children directories.

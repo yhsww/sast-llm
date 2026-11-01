@@ -1,0 +1,22 @@
+CWE-1338: Improper Protections Against Hardware Overheating
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific, ICS/OT, Power Management Hardware, Processor Hardware
+
+## Description
+A hardware device is missing or has inadequate protection features to prevent overheating.
+
+## Extended Description
+Hardware, electrical circuits, and semiconductor silicon have thermal side effects, such that some of the energy consumed by the device gets dissipated as heat and increases the temperature of the device. For example, in semiconductors, higher-operating frequency of silicon results in higher power dissipation and heat. The leakage current in CMOS circuits increases with temperature, and this creates positive feedback that can result in thermal runaway and damage the device permanently. Any device lacking protections such as thermal sensors, adequate platform cooling, or thermal insulation is susceptible to attacks by malicious software that might deliberately operate the device in modes that result in overheating. This can be used as an effective denial of service (DoS) or permanent denial
+
+## Common Consequences
+- Availability: DoS: Resource Consumption (Other)
+
+## Potential Mitigations
+- [Architecture and Design] Temperature maximum and minimum limits should be enforced using thermal sensors both in silicon and at the platform level.
+- [Implementation] The platform should support cooling solutions such as fans that can be modulated based on device-operation needs to maintain a stable temperature.
+
+## Detection Methods
+- [Dynamic Analysis with Manual Results Interpretation] Dynamic tests should be performed to stress-test temperature controls.
+- [Architecture or Design Review] Power management controls should be part of Architecture and Design reviews.

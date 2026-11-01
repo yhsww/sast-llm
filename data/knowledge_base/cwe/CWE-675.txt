@@ -1,0 +1,11 @@
+CWE-675: Multiple Operations on Resource in Single-Operation Context
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product performs the same operation on a resource two or more times, when the operation should only be applied once.
+
+## Common Consequences
+- Other: Other

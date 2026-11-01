@@ -1,0 +1,22 @@
+CWE-1275: Sensitive Cookie with Improper SameSite Attribute
+
+Abstraction: Variant
+
+Likelihood of Exploit: Medium
+
+Applicable Platforms: Not Language-Specific, Web Based, Web Server
+
+## Description
+The SameSite attribute for sensitive cookies is not set, or an insecure value is used.
+
+## Extended Description
+The SameSite attribute controls how cookies are sent for cross-domain requests. This attribute may have three values: 'Lax', 'Strict', or 'None'. If the 'None' value is used, a website may create a cross-domain POST HTTP request to another website, and the browser automatically adds cookies to this request. This may lead to Cross-Site-Request-Forgery (CSRF) attacks if there are no additional protections in place (such as Anti-CSRF tokens).
+
+## Common Consequences
+- Confidentiality, Integrity, Non-Repudiation, Access Control: Modify Application Data — If the website does not impose additional defense against CSRF attacks, failing to use the 'Lax' or 'Strict' values could increase the risk of exposure to CSRF attacks. The likelihood of the integrity
+
+## Potential Mitigations
+- [Implementation] Set the SameSite attribute of a sensitive cookie to 'Lax' or 'Strict'. This instructs the browser to apply this cookie only to same-domain requests, which provides a good Defense in Depth against CSRF attacks. When the 'Lax' value is in use, cookies are also sent for top-level cross-domain navigation via HTTP GET, HEAD, OPTIONS, and TRACE methods, but not for other HTTP methods that are more like to cause side-effects of state mutation.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

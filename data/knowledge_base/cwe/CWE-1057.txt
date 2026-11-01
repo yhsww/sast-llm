@@ -1,0 +1,11 @@
+CWE-1057: Data Access Operations Outside of Expected Data Manager Component
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product uses a dedicated, central data manager component as required by design, but it contains code that performs data-access operations that do not use this data manager.
+
+## Common Consequences
+- Availability: Reduce Performance — This issue can make the product perform more slowly than intended, since the intended central data manager may have been explicitly optimized for performance or other quality characteristics. If the r

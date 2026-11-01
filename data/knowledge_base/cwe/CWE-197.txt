@@ -1,0 +1,23 @@
+CWE-197: Numeric Truncation Error
+
+Abstraction: Base
+
+Likelihood of Exploit: Low
+
+Applicable Platforms: C, C++, Java, C#
+
+## Description
+Truncation errors occur when a primitive is cast to a primitive of a smaller size and data is lost in the conversion.
+
+## Extended Description
+When a primitive is cast to a smaller primitive, the high order bits of the large value are lost in the conversion, potentially resulting in an unexpected value that is not equal to the original value. This value may be required as an index into a buffer, a loop iterator, or simply necessary state data. In any case, the value cannot be trusted and the system will be in an undefined state. While this method may be employed viably to isolate the low bits of a value, this usage is rare, and truncation usually implies that an implementation error has occurred.
+
+## Common Consequences
+- Integrity: Modify Memory — The true value of the data is lost and corrupted data is used.
+
+## Potential Mitigations
+- [Implementation] Ensure that no casts, implicit or explicit, take place that move from a larger size primitive or a smaller size primitive.
+
+## Detection Methods
+- [Fuzzing] Fuzz testing (fuzzing) is a powerful technique for generating large numbers of diverse inputs - either randomly or algorithmically - and dynamically invoking the code with those inputs. Even with random inputs, it is often capable of generating unexpected results such as crashes, memory corruption, 
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

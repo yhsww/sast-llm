@@ -1,0 +1,17 @@
+CWE-248: Uncaught Exception
+
+Abstraction: Base
+
+Applicable Platforms: C++, Java, C#
+
+## Description
+An exception is thrown from a function, but it is not caught.
+
+## Extended Description
+When an exception is not caught, it may cause the program to crash or expose sensitive information.
+
+## Common Consequences
+- Availability, Confidentiality: DoS: Crash, Exit, or Restart, Read Application Data — An uncaught exception could cause the system to be placed in a state that could lead to a crash, exposure of sensitive information or other unintended behaviors.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

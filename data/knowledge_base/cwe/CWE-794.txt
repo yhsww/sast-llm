@@ -1,0 +1,14 @@
+CWE-794: Incomplete Filtering of Multiple Instances of Special Elements
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product receives data from an upstream component, but does not filter all instances of a special element before sending it to a downstream component.
+
+## Extended Description
+Incomplete filtering of this nature may be applied to: sequential elements (special elements that appear next to each other) or non-sequential elements (special elements that appear multiple times in different locations).
+
+## Common Consequences
+- Integrity: Unexpected State

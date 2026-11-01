@@ -1,0 +1,14 @@
+CWE-924: Improper Enforcement of Message Integrity During Transmission in a Communication Channel
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product establishes a communication channel with an endpoint and receives a message from that endpoint, but it does not sufficiently ensure that the message was not modified during transmission.
+
+## Extended Description
+Attackers might be able to modify the message and spoof the endpoint by interfering with the data as it crosses the network or by redirecting the connection to a system under their control.
+
+## Common Consequences
+- Integrity, Confidentiality: Gain Privileges or Assume Identity — If an attackers can spoof the endpoint, the attacker gains all the privileges that were intended for the original endpoint.

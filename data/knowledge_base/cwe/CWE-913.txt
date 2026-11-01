@@ -1,0 +1,22 @@
+CWE-913: Improper Control of Dynamically-Managed Code Resources
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific, Interpreted
+
+## Description
+The product does not properly restrict reading from or writing to dynamically-managed code resources such as variables, objects, classes, attributes, functions, or executable instructions or statements.
+
+## Extended Description
+Many languages offer powerful features that allow the programmer to dynamically create or modify existing code, or resources used by code such as variables and objects. While these features can offer significant flexibility and reduce development time, they can be extremely dangerous if attackers can directly influence these code resources in unexpected ways.
+
+## Common Consequences
+- Integrity: Execute Unauthorized Code or Commands
+- Other, Integrity: Varies by Context, Alter Execution Logic
+
+## Potential Mitigations
+- [Implementation] For any externally-influenced input, check the input against an allowlist of acceptable values.
+- [Implementation, Architecture and Design] Refactor the code so that it does not need to be dynamically managed.
+
+## Detection Methods
+- [Fuzzing] Fuzz testing (fuzzing) is a powerful technique for generating large numbers of diverse inputs - either randomly or algorithmically - and dynamically invoking the code with those inputs. Even with random inputs, it is often capable of generating unexpected results such as crashes, memory corruption,

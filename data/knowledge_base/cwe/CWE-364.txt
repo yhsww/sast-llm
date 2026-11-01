@@ -1,0 +1,25 @@
+CWE-364: Signal Handler Race Condition
+
+Abstraction: Base
+
+Likelihood of Exploit: Medium
+
+Applicable Platforms: C, C++
+
+## Description
+The product uses a signal handler that introduces a race condition.
+
+## Extended Description
+Race conditions frequently occur in signal handlers, since signal handlers support asynchronous actions. These race conditions have a variety of root causes and symptoms. Attackers may be able to exploit a signal handler race condition to cause the product state to be corrupted, possibly leading to a denial of service or even code execution. These issues occur when non-reentrant functions, or state-sensitive actions occur in the signal handler, where they may be called at any time. These behaviors can violate assumptions being made by the "regular" code that is interrupted, or by other signal handlers that may also be invoked. If these functions are called at an inopportune moment - such as while a non-reentrant function is already running - memory corruption could occur that may be exploi
+
+## Common Consequences
+- Integrity, Confidentiality, Availability: Modify Application Data, Modify Memory, DoS: Crash, Exit, or Restart, Execute Unauthorized Code or Commands — It may be possible to cause data corruption and possibly execute arbitrary code by modifying global variables or data structures at unexpected times, violating the assumptions of code that uses this g
+- Access Control: Gain Privileges or Assume Identity — If a signal handler interrupts code that is executing with privileges, it may be possible that the signal handler will also be executed with elevated privileges, possibly making subsequent exploits mo
+
+## Potential Mitigations
+- [Requirements] Use a language that does not allow this weakness to occur or provides constructs that make this weakness easier to avoid.
+- [Architecture and Design] Design signal handlers to only set flags, rather than perform complex functionality. These flags can then be checked and acted upon within the main program loop.
+- [Implementation] Only use reentrant functions within signal handlers. Also, use validation to ensure that state is consistent while performing asynchronous actions that affect the state of execution.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

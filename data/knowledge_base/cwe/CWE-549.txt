@@ -1,0 +1,17 @@
+CWE-549: Missing Password Field Masking
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific, Web Based
+
+## Description
+The product does not mask passwords during entry, increasing the potential for attackers to observe and capture passwords.
+
+## Common Consequences
+- Access Control: Bypass Protection Mechanism
+
+## Potential Mitigations
+- [Implementation, Requirements] Recommendations include requiring all password fields in your web application be masked to prevent other users from seeing this information.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

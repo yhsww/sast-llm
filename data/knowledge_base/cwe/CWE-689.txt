@@ -1,0 +1,11 @@
+CWE-689: Permission Race Condition During Resource Copy
+
+Abstraction: Compound
+
+Applicable Platforms: C, Perl
+
+## Description
+The product, while copying or cloning a resource, does not set the resource's permissions or access control until the copy is complete, leaving the resource exposed to other spheres while the copy is taking place.
+
+## Common Consequences
+- Confidentiality, Integrity: Read Application Data, Modify Application Data

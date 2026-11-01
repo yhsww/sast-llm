@@ -1,0 +1,16 @@
+CWE-325: Missing Cryptographic Step
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The product does not implement a required step in a cryptographic algorithm, resulting in weaker encryption than advertised by the algorithm.
+
+## Common Consequences
+- Access Control: Bypass Protection Mechanism
+- Confidentiality, Integrity: Read Application Data, Modify Application Data
+- Accountability, Non-Repudiation: Hide Activities
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

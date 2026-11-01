@@ -1,0 +1,30 @@
+CWE-1427: Improper Neutralization of Input Used for LLM Prompting
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, AI/ML
+
+## Description
+The product uses externally-provided data to build prompts provided to large language models (LLMs), but the way these prompts are constructed causes the LLM to fail to distinguish between user-supplied inputs and developer provided system directives.
+
+## Extended Description
+When prompts are constructed using externally controllable data, it is often possible to cause an LLM to ignore the original guidance provided by its creators (known as the "system prompt") by inserting malicious instructions in plain human language or using bypasses such as special characters or tags. Because LLMs are designed to treat all instructions as legitimate, there is often no way for the model to differentiate between what prompt language is malicious when it performs inference and returns data. Many LLM systems incorporate data from other adjacent products or external data sources like Wikipedia using API calls and retrieval augmented generation (RAG). Any external sources in use that may contain untrusted data should also be considered potentially malicious.
+
+## Common Consequences
+- Confidentiality, Integrity, Availability: Execute Unauthorized Code or Commands, Varies by Context — The consequences are entirely contextual, depending on the system that the model is integrated into. For example, the consequence could include output that would not have been desired by the model des
+- Confidentiality: Read Application Data — An attacker might be able to extract sensitive information from the model.
+- Integrity: Modify Application Data, Execute Unauthorized Code or Commands — The extent to which integrity can be impacted is dependent on the LLM application use case.
+- Access Control: Read Application Data, Modify Application Data, Gain Privileges or Assume Identity — The extent to which access control can be impacted is dependent on the LLM application use case.
+
+## Potential Mitigations
+- [Architecture and Design] LLM-enabled applications should be designed to ensure proper sanitization of user-controllable input, ensuring that no intentionally misleading or dangerous characters can be included. Additionally, they should be designed in a way that ensures that user-controllable input is identified as untrusted and potentially dangerous.
+- [Implementation] LLM prompts should be constructed in a way that effectively differentiates between user-supplied input and developer-constructed system prompting to reduce the chance of model confusion at inference-time.
+- [Architecture and Design] LLM-enabled applications should be designed to ensure proper sanitization of user-controllable input, ensuring that no intentionally misleading or dangerous characters can be included. Additionally, they should be designed in a way that ensures that user-controllable input is identified as untrusted and potentially dangerous.
+- [Implementation] Ensure that model training includes training examples that avoid leaking secrets and disregard malicious inputs. Train the model to recognize secrets, and label training data appropriately. Note that due to the non-deterministic nature of prompting LLMs, it is necessary to perform testing of the same test case several times in order to ensure that troublesome behavior is not possible. Additionally, testing should be performed each time a new model is used or a model's weights are updated.
+- [Installation, Operation] During deployment/operation, use components that operate externally to the system to monitor the output and act as a moderator. These components are called different terms, such as supervisors or guardrails.
+- [System Configuration] During system configuration, the model could be fine-tuned to better control and neutralize potentially dangerous inputs.
+
+## Detection Methods
+- [Dynamic Analysis with Manual Results Interpretation] Use known techniques for prompt injection and other attacks, and adjust the attacks to be more specific to the model or system.
+- [Dynamic Analysis with Automated Results Interpretation] Use known techniques for prompt injection and other attacks, and adjust the attacks to be more specific to the model or system.
+- [Architecture or Design Review] Review of the product design can be effective, but it works best in conjunction with dynamic analysis.

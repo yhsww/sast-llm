@@ -1,0 +1,11 @@
+CWE-305: Authentication Bypass by Primary Weakness
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The authentication algorithm is sound, but the implemented mechanism can be bypassed as the result of a separate weakness that is primary to the authentication error.
+
+## Common Consequences
+- Access Control: Bypass Protection Mechanism

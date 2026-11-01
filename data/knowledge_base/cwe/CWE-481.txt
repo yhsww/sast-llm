@@ -1,0 +1,23 @@
+CWE-481: Assigning instead of Comparing
+
+Abstraction: Variant
+
+Likelihood of Exploit: Low
+
+Applicable Platforms: C, C++, Java, C#
+
+## Description
+The code uses an operator for assignment when the intention was to perform a comparison.
+
+## Extended Description
+In many languages the compare statement is very close in appearance to the assignment statement and are often confused. This bug is generally the result of a typo and usually causes obvious problems with program execution. If the comparison is in an if statement, the if statement will usually evaluate the value of the right-hand side of the predicate.
+
+## Common Consequences
+- Other: Alter Execution Logic
+
+## Potential Mitigations
+- [Implementation] Place constants on the left. If one attempts to assign a constant with a variable, the compiler will produce an error.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea
+- [Automated Static Analysis - Source Code] An Integrated Development Environment (IDE) or linter can report or highlight this weaknesses.

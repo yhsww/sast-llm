@@ -1,0 +1,14 @@
+CWE-706: Use of Incorrectly-Resolved Name or Reference
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The product uses a name or reference to access a resource, but the name/reference resolves to a resource that is outside of the intended control sphere.
+
+## Common Consequences
+- Confidentiality, Integrity: Read Application Data, Modify Application Data
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

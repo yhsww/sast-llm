@@ -1,0 +1,15 @@
+CWE-509: Replicating Malicious Code (Virus or Worm)
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+Replicating malicious code, including viruses and worms, will attempt to attack other systems once it has successfully compromised the target system or the product.
+
+## Common Consequences
+- Confidentiality, Integrity, Availability: Execute Unauthorized Code or Commands
+
+## Potential Mitigations
+- [Operation] Antivirus software scans for viruses or worms.
+- [Installation] Always verify the integrity of the software that is being installed.

@@ -1,0 +1,23 @@
+CWE-415: Double Free
+
+Abstraction: Variant
+
+Likelihood of Exploit: High
+
+Applicable Platforms: Memory-Unsafe, C, C++
+
+## Description
+The product calls free() twice on the same memory address.
+
+## Common Consequences
+- Integrity, Confidentiality, Availability: Modify Memory, Execute Unauthorized Code or Commands — When a program calls free() twice with the same argument, the program's memory management data structures may become corrupted, potentially leading to the reading or modification of unexpected memory 
+
+## Potential Mitigations
+- [Architecture and Design] Choose a language that provides automatic memory management.
+- [Implementation] Ensure that each allocation is freed only once. After freeing a chunk, set the pointer to NULL to ensure the pointer cannot be freed again. In complicated error conditions, be sure that clean-up routines respect the state of allocation properly. If the language is object oriented, ensure that object destructors delete each chunk of memory only once.
+- [Implementation] Use a static analysis tool to find double free instances.
+
+## Detection Methods
+- [Fuzzing] Fuzz testing (fuzzing) is a powerful technique for generating large numbers of diverse inputs - either randomly or algorithmically - and dynamically invoking the code with those inputs. Even with random inputs, it is often capable of generating unexpected results such as crashes, memory corruption, 
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea
+- [Automated Dynamic Analysis] Use tools that are integrated during compilation to insert runtime error-checking mechanisms related to memory safety errors, such as AddressSanitizer (ASan) for C/C++ [REF-1518].

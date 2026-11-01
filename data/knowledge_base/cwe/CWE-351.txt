@@ -1,0 +1,11 @@
+CWE-351: Insufficient Type Distinction
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not properly distinguish between different types of elements in a way that leads to insecure behavior.
+
+## Common Consequences
+- Other: Other

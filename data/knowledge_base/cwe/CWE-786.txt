@@ -1,0 +1,20 @@
+CWE-786: Access of Memory Location Before Start of Buffer
+
+Abstraction: Base
+
+Applicable Platforms: Memory-Unsafe, C, C++
+
+## Description
+The product reads or writes to a buffer using an index or pointer that references a memory location prior to the beginning of the buffer.
+
+## Extended Description
+This typically occurs when a pointer or its index is decremented to a position before the buffer, when pointer arithmetic results in a position before the beginning of the valid memory location, or when a negative index is used.
+
+## Common Consequences
+- Confidentiality: Read Memory — For an out-of-bounds read, the attacker may have access to sensitive information. If the sensitive information contains system details, such as the current buffer's position in memory, this knowledge 
+- Integrity, Availability: Modify Memory, DoS: Crash, Exit, or Restart — Out of bounds memory access will very likely result in the corruption of relevant memory, and perhaps instructions, possibly leading to a crash.
+- Integrity: Modify Memory, Execute Unauthorized Code or Commands — If the corrupted memory can be effectively controlled, it may be possible to execute arbitrary code. If the corrupted memory is data rather than instructions, the system will continue to function with
+
+## Detection Methods
+- [Fuzzing] Fuzz testing (fuzzing) is a powerful technique for generating large numbers of diverse inputs - either randomly or algorithmically - and dynamically invoking the code with those inputs. Even with random inputs, it is often capable of generating unexpected results such as crashes, memory corruption, 
+- [Automated Dynamic Analysis] Use tools that are integrated during compilation to insert runtime error-checking mechanisms related to memory safety errors, such as AddressSanitizer (ASan) for C/C++ [REF-1518].

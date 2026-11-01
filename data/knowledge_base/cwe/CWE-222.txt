@@ -1,0 +1,11 @@
+CWE-222: Truncation of Security-relevant Information
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The product truncates the display, recording, or processing of security-relevant information in a way that can obscure the source or nature of an attack.
+
+## Common Consequences
+- Non-Repudiation: Hide Activities — The source of an attack will be difficult or impossible to determine. This can allow attacks to the system to continue without notice.

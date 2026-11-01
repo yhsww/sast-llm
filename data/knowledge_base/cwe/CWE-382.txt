@@ -1,0 +1,23 @@
+CWE-382: J2EE Bad Practices: Use of System.exit()
+
+Abstraction: Variant
+
+Applicable Platforms: Java, Web Based, Web Server
+
+## Description
+A J2EE application uses System.exit(), which also shuts down its container.
+
+## Extended Description
+It is never a good idea for a web application to attempt to shut down the application container. Access to a function that can shut down the application is an avenue for Denial of Service (DoS) attacks.
+
+## Common Consequences
+- Availability: DoS: Crash, Exit, or Restart
+
+## Potential Mitigations
+- [Architecture and Design] The shutdown function should be a privileged function available only to a properly authorized administrative user
+- [Implementation] Web applications should not call methods that cause the virtual machine to exit, such as System.exit()
+- [Implementation] Web applications should also not throw any Throwables to the application server as this may adversely affect the container.
+- [Implementation] Non-web applications may have a main() method that contains a System.exit(), but generally should not call System.exit() from other locations in the code
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

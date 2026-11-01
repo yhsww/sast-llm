@@ -1,0 +1,22 @@
+CWE-483: Incorrect Block Delimitation
+
+Abstraction: Base
+
+Likelihood of Exploit: Low
+
+Applicable Platforms: C, C++
+
+## Description
+The code does not explicitly delimit a block that is intended to contain 2 or more statements, creating a logic error.
+
+## Extended Description
+In some languages, braces (or other delimiters) are optional for blocks. When the delimiter is omitted, it is possible to insert a logic error in which a statement is thought to be in a block but is not. In some cases, the logic error can have security implications.
+
+## Common Consequences
+- Confidentiality, Integrity, Availability: Alter Execution Logic — This is a general logic error which will often lead to obviously-incorrect behaviors that are quickly noticed and fixed. In lightly tested or untested code, this error may be introduced it into a prod
+
+## Potential Mitigations
+- [Implementation] Always use explicit block delimitation and use static-analysis technologies to enforce this practice.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

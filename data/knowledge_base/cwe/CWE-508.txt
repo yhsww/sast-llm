@@ -1,0 +1,15 @@
+CWE-508: Non-Replicating Malicious Code
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+Non-replicating malicious code only resides on the target system or product that is attacked; it does not attempt to spread to other systems.
+
+## Common Consequences
+- Confidentiality, Integrity, Availability: Execute Unauthorized Code or Commands
+
+## Potential Mitigations
+- [Operation] Antivirus software can help mitigate known malicious code.
+- [Installation] Verify the integrity of the software that is being installed.

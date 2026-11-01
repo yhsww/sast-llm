@@ -1,0 +1,15 @@
+CWE-283: Unverified Ownership
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not properly verify that a critical resource is owned by the proper entity.
+
+## Common Consequences
+- Access Control: Gain Privileges or Assume Identity — An attacker could gain unauthorized access to system resources.
+
+## Potential Mitigations
+- [Architecture and Design, Operation] Very carefully manage the setting, management, and handling of privileges. Explicitly manage trust zones in the software.
+- [Architecture and Design] Consider following the principle of separation of privilege. Require multiple conditions to be met before permitting access to a system resource.

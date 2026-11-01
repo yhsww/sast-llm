@@ -1,0 +1,11 @@
+CWE-235: Improper Handling of Extra Parameters
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not handle or incorrectly handles when the number of parameters, fields, or arguments with the same name exceeds the expected amount.
+
+## Common Consequences
+- Integrity: Unexpected State

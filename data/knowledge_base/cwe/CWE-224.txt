@@ -1,0 +1,11 @@
+CWE-224: Obscured Security-relevant Information by Alternate Name
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product records security-relevant information according to an alternate name of the affected entity, instead of the canonical name.
+
+## Common Consequences
+- Non-Repudiation, Access Control: Hide Activities, Gain Privileges or Assume Identity

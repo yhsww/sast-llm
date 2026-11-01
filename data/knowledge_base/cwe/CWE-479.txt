@@ -1,0 +1,26 @@
+CWE-479: Signal Handler Use of a Non-reentrant Function
+
+Abstraction: Variant
+
+Likelihood of Exploit: Low
+
+Applicable Platforms: C, C++
+
+## Description
+The product defines a signal handler that calls a non-reentrant function.
+
+## Extended Description
+Non-reentrant functions are functions that cannot safely be called, interrupted, and then recalled before the first call has finished without resulting in memory corruption. This can lead to an unexpected system state and unpredictable results with a variety of potential consequences depending on context, including denial of service and code execution. Many functions are not reentrant, but some of them can result in the corruption of memory if they are used in a signal handler. The function call syslog() is an example of this. In order to perform its functionality, it allocates a small amount of memory as "scratch space." If syslog() is suspended by a signal call and the signal handler calls syslog(), the memory used by both of these functions enters an undefined, and possibly, exploitable
+
+## Common Consequences
+- Integrity, Confidentiality, Availability: Execute Unauthorized Code or Commands — It may be possible to execute arbitrary code through the use of a write-what-where condition.
+- Integrity: Modify Memory, Modify Application Data — Signal race conditions often result in data corruption.
+
+## Potential Mitigations
+- [Requirements] Require languages or libraries that provide reentrant functionality, or otherwise make it easier to avoid this weakness.
+- [Architecture and Design] Design signal handlers to only set flags rather than perform complex functionality.
+- [Implementation] Ensure that non-reentrant functions are not found in signal handlers.
+- [Implementation] Use sanity checks to reduce the timing window for exploitation of race conditions. This is only a partial solution, since many attacks might fail, but other attacks still might work within the narrower window, even accidentally.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

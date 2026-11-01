@@ -1,0 +1,30 @@
+CWE-1423: Exposure of Sensitive Information caused by Shared Microarchitectural Predictor State that Influences Transient Execution
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Microcontroller Hardware, Processor Hardware, Memory Hardware, System on Chip
+
+## Description
+Shared microarchitectural predictor state may allow code to influence transient execution across a hardware boundary, potentially exposing data that is accessible beyond the boundary over a covert channel.
+
+## Extended Description
+Many commodity processors have Instruction Set Architecture (ISA) features that protect software components from one another. These features can include memory segmentation, virtual memory, privilege rings, trusted execution environments, and virtual machines, among others. For example, virtual memory provides each process with its own address space, which prevents processes from accessing each other's private data. Many of these features can be used to form hardware-enforced security boundaries between software components. When separate software components (for example, two processes) share microarchitectural predictor state across a hardware boundary, code in one component may be able to influence microarchitectural predictor behavior in another component. If the predictor can cause tran
+
+## Common Consequences
+- Confidentiality: Read Memory
+
+## Potential Mitigations
+- [Architecture and Design] The hardware designer can attempt to prevent transient execution from causing observable discrepancies in specific covert channels.
+- [Architecture and Design] Hardware designers may choose to use microarchitectural bits to tag predictor entries. For example, each predictor entry may be tagged with a kernel-mode bit which, when set, indicates that the predictor entry was created in kernel mode. The processor can use this bit to enforce that predictions in the current mode must have been trained in the current mode. This can prevent malicious cross-mode training, such as when user-mode software attempts to create predictor entries that influence transient execution in the kernel. Predictor entry tags can also be used to associate each predictor entry with the SMT thread that created it, and thus the processor can enforce that each predictor entry can only be used by the SMT thread that created it. This can prevent an SMT thread from using predictor entries crafted by a malicious sibling SMT thread.
+- [Architecture and Design] Hardware designers may choose to sanitize microarchitectural predictor state (for example, branch prediction history) when the processor transitions to a different context, for example, whenever a system call is invoked. Alternatively, the hardware may expose instruction(s) that allow software to sanitize predictor state according to the user's threat model. For example, this can allow operating system software to sanitize predictor state when performing a context switch from one process to another.
+- [Implementation] System software can mitigate this weakness by invoking predictor-state-sanitizing operations (for example, the indirect branch prediction barrier on Intel x86) when switching from one context to another, according to the hardware vendor's recommendations.
+- [Build and Compilation] If the weakness is exposed by a single instruction (or a small set of instructions), then the compiler (or JIT, etc.) can be configured to prevent the affected instruction(s) from being generated. One prominent example of this mitigation is retpoline ([REF-1414]).
+- [Build and Compilation] Use control-flow integrity (CFI) techniques to constrain the behavior of instructions that redirect the instruction pointer, such as indirect branch instructions.
+- [Build and Compilation] Use software techniques (including the use of serialization instructions) that are intended to reduce the number of instructions that can be executed transiently after a processor event or misprediction.
+- [System Configuration] Some systems may allow the user to disable predictor sharing. For example, this could be a BIOS configuration, or a model-specific register (MSR) that can be configured by the operating system or virtual machine monitor.
+[...truncated]
+
+## Detection Methods
+- [Manual Analysis] This weakness can be detected in hardware by manually inspecting processor specifications. Features that exhibit this weakness may have microarchitectural predictor state that is shared between hardware threads, execution contexts (for example, user and kernel), or other components that may host mut
+- [Automated Analysis] Software vendors can release tools that detect presence of known weaknesses on a processor. For example, some of these tools can attempt to transiently execute a vulnerable code sequence and detect whether code successfully leaks data in a manner consistent with the weakness under test. Alternativel
+- [Automated Analysis] This weakness can be detected in hardware by employing static or dynamic taint analysis methods [REF-1401]. These methods can label each predictor entry (or prediction history, etc.) according to the processor context that created it. Taint analysis or information flow analysis can then be applied t

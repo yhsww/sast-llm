@@ -1,0 +1,16 @@
+CWE-12: ASP.NET Misconfiguration: Missing Custom Error Page
+
+Abstraction: Variant
+
+Applicable Platforms: ASP.NET
+
+## Description
+An ASP .NET application must enable custom error pages in order to prevent attackers from mining information from the framework's built-in responses.
+
+## Common Consequences
+- Confidentiality: Read Application Data — Default error pages gives detailed information about the error that occurred, and should not be used in production environments. Attackers can leverage the additional information provided by a default
+
+## Potential Mitigations
+- [System Configuration] Handle exceptions appropriately in source code. ASP .NET applications should be configured to use custom error pages instead of the framework default page.
+- [Architecture and Design] Do not attempt to process an error or attempt to mask it.
+- [Implementation] Verify return values are correct and do not supply sensitive information about the system.

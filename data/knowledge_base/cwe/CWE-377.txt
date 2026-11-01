@@ -1,0 +1,14 @@
+CWE-377: Insecure Temporary File
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+Creating and using insecure temporary files can leave application and system data vulnerable to attack.
+
+## Common Consequences
+- Confidentiality, Integrity: Read Files or Directories, Modify Files or Directories
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

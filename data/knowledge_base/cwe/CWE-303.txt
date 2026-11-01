@@ -1,0 +1,14 @@
+CWE-303: Incorrect Implementation of Authentication Algorithm
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The requirements for the product dictate the use of an established authentication algorithm, but the implementation of the algorithm is incorrect.
+
+## Extended Description
+This incorrect implementation may allow authentication to be bypassed.
+
+## Common Consequences
+- Access Control: Bypass Protection Mechanism

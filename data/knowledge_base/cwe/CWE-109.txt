@@ -1,0 +1,14 @@
+CWE-109: Struts: Validator Turned Off
+
+Abstraction: Variant
+
+Applicable Platforms: Java
+
+## Description
+Automatic filtering via a Struts bean has been turned off, which disables the Struts Validator and custom validation logic. This exposes the application to other weaknesses related to insufficient input validation.
+
+## Common Consequences
+- Access Control: Bypass Protection Mechanism
+
+## Potential Mitigations
+- [Implementation] Ensure that an action form mapping enables validation. Set the validate field to true.

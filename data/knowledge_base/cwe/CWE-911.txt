@@ -1,0 +1,17 @@
+CWE-911: Improper Update of Reference Count
+
+Abstraction: Base
+
+Likelihood of Exploit: Medium
+
+Applicable Platforms: C, C++, Not Language-Specific
+
+## Description
+The product uses a reference count to manage a resource, but it does not update or incorrectly updates the reference count.
+
+## Extended Description
+Reference counts can be used when tracking how many objects contain a reference to a particular resource, such as in memory management or garbage collection. When the reference count reaches zero, the resource can be de-allocated or reused because there are no more objects that use it. If the reference count accidentally reaches zero, then the resource might be released too soon, even though it is still in use. If all objects no longer use the resource, but the reference count is not zero, then the resource might not ever be released.
+
+## Common Consequences
+- Availability: DoS: Resource Consumption (Memory), DoS: Resource Consumption (Other) — An adversary that can cause a resource counter to become inaccurate may be able to create situations where resources are not accounted for and not released, thus causing resources to become scarce for
+- Availability: DoS: Crash, Exit, or Restart — An adversary that can cause a resource counter to become inaccurate may be able to force an error that causes the product to crash or exit out of its current operation.

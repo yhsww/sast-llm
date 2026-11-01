@@ -1,0 +1,14 @@
+CWE-705: Incorrect Control Flow Scoping
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not properly return control flow to the proper location after it has completed a task or detected an unusual condition.
+
+## Common Consequences
+- Other: Alter Execution Logic, Other
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

@@ -1,0 +1,17 @@
+CWE-414: Missing Lock Check
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+A product does not check to see if a lock is present before performing sensitive operations on a resource.
+
+## Common Consequences
+- Integrity, Availability: Modify Application Data, DoS: Instability, DoS: Crash, Exit, or Restart
+
+## Potential Mitigations
+- [Architecture and Design, Implementation] Implement a reliable lock mechanism.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

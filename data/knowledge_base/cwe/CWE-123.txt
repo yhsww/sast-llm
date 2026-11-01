@@ -1,0 +1,23 @@
+CWE-123: Write-what-where Condition
+
+Abstraction: Base
+
+Likelihood of Exploit: High
+
+Applicable Platforms: Memory-Unsafe, C, C++
+
+## Description
+Any condition where the attacker has the ability to write an arbitrary value to an arbitrary location, often as the result of a buffer overflow.
+
+## Common Consequences
+- Integrity, Confidentiality, Availability, Access Control: Modify Memory, Execute Unauthorized Code or Commands, Gain Privileges or Assume Identity, DoS: Crash, Exit, or Restart, Bypass Protection Mechanism — Clearly, write-what-where conditions can be used to write data to areas of memory outside the scope of a policy. Also, they almost invariably can be used to execute arbitrary code, which is usually ou
+- Integrity, Availability: DoS: Crash, Exit, or Restart, Modify Memory — Many memory accesses can lead to program termination, such as when writing to addresses that are invalid for the current process.
+- Access Control, Other: Bypass Protection Mechanism, Other — When the consequence is arbitrary code execution, this can often be used to subvert any other security service.
+
+## Potential Mitigations
+- [Architecture and Design] Use a language that provides appropriate memory abstractions.
+- [Operation] Use OS-level preventative functionality integrated after the fact. Not a complete solution.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea
+- [Automated Dynamic Analysis] Use tools that are integrated during compilation to insert runtime error-checking mechanisms related to memory safety errors, such as AddressSanitizer (ASan) for C/C++ [REF-1518].

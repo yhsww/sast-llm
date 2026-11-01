@@ -1,0 +1,19 @@
+CWE-681: Incorrect Conversion between Numeric Types
+
+Abstraction: Base
+
+Likelihood of Exploit: High
+
+Applicable Platforms: C, Not Language-Specific, Not Technology-Specific
+
+## Description
+When converting from one data type to another, such as long to integer, data can be omitted or translated in a way that produces unexpected values. If the resulting values are used in a sensitive context, then dangerous behaviors may occur.
+
+## Common Consequences
+- Other, Integrity: Unexpected State, Quality Degradation — The program could wind up using the wrong number and generate incorrect results. If the number is used to allocate resources or make a security decision, then this could introduce a vulnerability.
+
+## Potential Mitigations
+- [Implementation] Avoid making conversion between numeric types. Always check for the allowed ranges.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

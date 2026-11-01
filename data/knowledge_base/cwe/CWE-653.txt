@@ -1,0 +1,22 @@
+CWE-653: Improper Isolation or Compartmentalization
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not properly compartmentalize or isolate functionality, processes, or resources that require different privilege levels, rights, or permissions.
+
+## Extended Description
+When a weakness occurs in functionality that is accessible by lower-privileged users, then without strong boundaries, an attack might extend the scope of the damage to higher-privileged users.
+
+## Common Consequences
+- Access Control: Gain Privileges or Assume Identity, Bypass Protection Mechanism — The exploitation of a weakness in low-privileged areas of the software can be leveraged to reach higher-privileged areas without having to overcome any additional obstacles.
+
+## Potential Mitigations
+- [Architecture and Design] Break up privileges between different modules, objects, or entities. Minimize the interfaces between modules and require strong access control between them.
+
+## Detection Methods
+- [Automated Static Analysis - Binary or Bytecode] According to SOAR, the following detection techniques may be useful: Cost effective for partial coverage: Compare binary / bytecode to application permission manifest
+- [Manual Static Analysis - Source Code] According to SOAR, the following detection techniques may be useful: Highly cost effective: Manual Source Code Review (not inspections) Cost effective for partial coverage: Focused Manual Spotcheck - Focused manual analysis of source
+- [Architecture or Design Review] According to SOAR, the following detection techniques may be useful: Highly cost effective: Inspection (IEEE 1028 standard) (can apply to requirements, design, source code, etc.) Formal Methods / Correct-By-Construction Cost effective for partial coverage: Attack Modeling

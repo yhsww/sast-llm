@@ -1,0 +1,23 @@
+CWE-1341: Multiple Releases of Same Resource or Handle
+
+Abstraction: Base
+
+Applicable Platforms: Java, Rust, Not Language-Specific, C, C++, Not Technology-Specific
+
+## Description
+The product attempts to close or release a resource or handle more than once, without any successful open between the close operations.
+
+## Extended Description
+Code typically requires "opening" handles or references to resources such as memory, files, devices, socket connections, services, etc. When the code is finished with using the resource, it is typically expected to "close" or "release" the resource, which indicates to the environment (such as the OS) that the resource can be re-assigned or reused by unrelated processes or actors - or in some cases, within the same process. API functions or other abstractions are often used to perform this release, such as free() or delete() within C/C++, or file-handle close() operations that are used in many languages. Unfortunately, the implementation or design of such APIs might expect the developer to be responsible for ensuring that such APIs are only called once per release of the resource. If the de
+
+## Common Consequences
+- Availability, Integrity: DoS: Crash, Exit, or Restart
+
+## Potential Mitigations
+- [Implementation] Change the code's logic so that the resource is only closed once. This might require simplifying or refactoring. This fix can be simple to do in small code blocks, but more difficult when multiple closes are buried within complex conditionals.
+- [Implementation] It can be effective to implement a flag that is (1) set when the resource is opened, (2) cleared when it is closed, and (3) checked before closing. This approach can be useful when there are disparate cases in which closes must be performed. However, flag-tracking can increase code complexity and requires diligent compliance by the programmer.
+- [Implementation] When closing a resource, set the resource's associated variable to NULL or equivalent value for the given language. Some APIs will ignore this null value without causing errors. For other APIs, this can lead to application crashes or exceptions, which may still be preferable to corrupting an unintended resource such as memory or data.
+
+## Detection Methods
+- [Automated Static Analysis] For commonly-used APIs and resource types, automated tools often have signatures that can spot this issue.
+- [Automated Dynamic Analysis] Some compiler instrumentation tools such as AddressSanitizer (ASan) can indirectly detect some instances of this weakness.

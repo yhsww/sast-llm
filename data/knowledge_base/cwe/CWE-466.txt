@@ -1,0 +1,15 @@
+CWE-466: Return of Pointer Value Outside of Expected Range
+
+Abstraction: Base
+
+Applicable Platforms: Memory-Unsafe, C, C++
+
+## Description
+A function can return a pointer to memory that is outside of the buffer that the pointer is expected to reference.
+
+## Common Consequences
+- Confidentiality, Integrity: Read Memory, Modify Memory
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea
+- [Automated Dynamic Analysis] Use tools that are integrated during compilation to insert runtime error-checking mechanisms related to memory safety errors, such as AddressSanitizer (ASan) for C/C++ [REF-1518].

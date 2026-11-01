@@ -1,0 +1,14 @@
+CWE-475: Undefined Behavior for Input to API
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The behavior of this function is undefined unless its control parameter is set to a specific value.
+
+## Common Consequences
+- Other: Quality Degradation, Varies by Context
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

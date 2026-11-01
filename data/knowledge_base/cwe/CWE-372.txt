@@ -1,0 +1,11 @@
+CWE-372: Incomplete Internal State Distinction
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not properly determine which state it is in, causing it to assume it is in state X when in fact it is in state Y, causing it to perform incorrect operations in a security-relevant manner.
+
+## Common Consequences
+- Integrity, Other: Varies by Context, Unexpected State

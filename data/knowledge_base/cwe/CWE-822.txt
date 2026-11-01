@@ -1,0 +1,20 @@
+CWE-822: Untrusted Pointer Dereference
+
+Abstraction: Base
+
+Applicable Platforms: Memory-Unsafe, C, C++
+
+## Description
+The product obtains a value from an untrusted source, converts this value to a pointer, and dereferences the resulting pointer.
+
+## Extended Description
+An attacker can supply a pointer for memory locations that the product is not expecting. If the pointer is dereferenced for a write operation, the attack might allow modification of critical state variables, cause a crash, or execute code. If the dereferencing operation is for a read, then the attack might allow reading of sensitive data, cause a crash, or set a variable to an unexpected value (since the value will be read from an unexpected memory location). There are several variants of this weakness, including but not necessarily limited to: The untrusted value is directly invoked as a function call. In OS kernels or drivers where there is a boundary between "userland" and privileged memory spaces, an untrusted pointer might enter through an API or system call (see CWE-781 for one such 
+
+## Common Consequences
+- Confidentiality: Read Memory — If the untrusted pointer is used in a read operation, an attacker might be able to read sensitive portions of memory.
+- Availability: DoS: Crash, Exit, or Restart — If the untrusted pointer references a memory location that is not accessible to the product, or points to a location that is "malformed" or larger than expected by a read or write operation, the appli
+- Integrity, Confidentiality, Availability: Execute Unauthorized Code or Commands, Modify Memory — If the untrusted pointer is used in a function call, or points to unexpected data in a write operation, then code execution may be possible.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea
+- [Automated Dynamic Analysis] Use tools that are integrated during compilation to insert runtime error-checking mechanisms related to memory safety errors, such as AddressSanitizer (ASan) for C/C++ [REF-1518].

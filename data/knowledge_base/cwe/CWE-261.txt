@@ -1,0 +1,20 @@
+CWE-261: Weak Encoding for Password
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+Obscuring a password with a trivial encoding does not protect the password.
+
+## Extended Description
+Password management issues occur when a password is stored in plaintext in an application's properties or configuration file. A programmer can attempt to remedy the password management problem by obscuring the password with an encoding function, such as base 64 encoding, but this effort does not adequately protect the password.
+
+## Common Consequences
+- Access Control: Gain Privileges or Assume Identity
+
+## Potential Mitigations
+- Passwords should be encrypted with keys that are at least 128 bits in length for adequate security.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

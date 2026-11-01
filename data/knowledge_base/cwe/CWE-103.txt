@@ -1,0 +1,18 @@
+CWE-103: Struts: Incomplete validate() Method Definition
+
+Abstraction: Variant
+
+Applicable Platforms: Java
+
+## Description
+The product has a validator form that either does not define a validate() method, or defines a validate() method but does not call super.validate().
+
+## Common Consequences
+- Other: Unexpected State, Varies by Context — If the code does not call super.validate(), the Validation Framework cannot check the contents of the form against a validation form. In other words, the validation framework will be disabled for the 
+- Confidentiality, Integrity, Availability, Other: Other — Although J2EE applications are not generally susceptible to memory corruption attacks, if a J2EE application interfaces with native code that does not perform array bounds checking, an attacker may be
+
+## Potential Mitigations
+- [Implementation] Implement the validate() method and call super.validate() within that method.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

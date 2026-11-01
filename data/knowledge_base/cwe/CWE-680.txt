@@ -1,0 +1,15 @@
+CWE-680: Integer Overflow to Buffer Overflow
+
+Abstraction: Compound
+
+Applicable Platforms: Memory-Unsafe, C, C++
+
+## Description
+The product performs a calculation to determine how much memory to allocate, but an integer overflow can occur that causes less memory to be allocated than expected, leading to a buffer overflow.
+
+## Common Consequences
+- Integrity, Availability, Confidentiality: Modify Memory, DoS: Crash, Exit, or Restart, Execute Unauthorized Code or Commands
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea
+- [Automated Dynamic Analysis] Use tools that are integrated during compilation to insert runtime error-checking mechanisms related to memory safety errors, such as AddressSanitizer (ASan) for C/C++ [REF-1518].

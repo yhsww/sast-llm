@@ -1,0 +1,14 @@
+CWE-687: Function Call With Incorrectly Specified Argument Value
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product calls a function, procedure, or routine, but the caller specifies an argument that contains the wrong value, which may lead to resultant weaknesses.
+
+## Common Consequences
+- Other: Quality Degradation
+
+## Detection Methods
+- [Manual Static Analysis] This might require an understanding of intended program behavior or design to determine whether the value is incorrect.

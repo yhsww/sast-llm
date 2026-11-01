@@ -1,0 +1,26 @@
+CWE-909: Missing Initialization of Resource
+
+Abstraction: Class
+
+Likelihood of Exploit: Medium
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not initialize a critical resource.
+
+## Extended Description
+Many resources require initialization before they can be properly used. If a resource is not initialized, it could contain unpredictable or expired data, or it could be initialized to defaults that are invalid. This can have security implications when the resource is expected to have certain properties or values.
+
+## Common Consequences
+- Confidentiality: Read Memory, Read Application Data — When reusing a resource such as memory or a program variable, the original contents of that resource may not be cleared before it is sent to an untrusted party.
+- Availability: DoS: Crash, Exit, or Restart — The uninitialized resource may contain values that cause program flow to change in ways that the programmer did not intend.
+
+## Potential Mitigations
+- [Implementation] Explicitly initialize the resource before use. If this is performed through an API function or standard procedure, follow all specified steps.
+- [Implementation] Pay close attention to complex conditionals that affect initialization, since some branches might not perform the initialization.
+- [Implementation] Avoid race conditions (CWE-362) during initialization routines.
+- [Build and Compilation] Run or compile your product with settings that generate warnings about uninitialized variables or data.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

@@ -1,0 +1,20 @@
+CWE-585: Empty Synchronized Block
+
+Abstraction: Variant
+
+Applicable Platforms: Java
+
+## Description
+The product contains an empty synchronized block.
+
+## Extended Description
+An empty synchronized block does not actually accomplish any synchronization and may indicate a troubled section of code. An empty synchronized block can occur because code no longer needed within the synchronized block is commented out without removing the synchronized block.
+
+## Common Consequences
+- Other: Other — An empty synchronized block will wait until nobody else is using the synchronizer being specified. While this may be part of the desired behavior, because you haven't protected the subsequent code by 
+
+## Potential Mitigations
+- [Implementation] When you come across an empty synchronized statement, or a synchronized statement in which the code has been commented out, try to determine what the original intentions were and whether or not the synchronized block is still necessary.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

@@ -1,0 +1,15 @@
+CWE-419: Unprotected Primary Channel
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product uses a primary channel for administration or restricted functionality, but it does not properly protect the channel.
+
+## Common Consequences
+- Access Control: Gain Privileges or Assume Identity, Bypass Protection Mechanism
+
+## Potential Mitigations
+- [Architecture and Design] Do not expose administrative functionnality on the user UI.
+- [Architecture and Design] Protect the administrative/restricted functionality with a strong authentication mechanism.

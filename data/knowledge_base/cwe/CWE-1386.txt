@@ -1,0 +1,19 @@
+CWE-1386: Insecure Operation on Windows Junction / Mount Point
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product opens a file or directory, but it does not properly prevent the name from being associated with a junction or mount point to a destination that is outside of the intended control sphere.
+
+## Extended Description
+Depending on the intended action being performed, this could allow an attacker to cause the product to read, write, delete, or otherwise operate on unauthorized files. In Windows, NTFS5 allows for file system objects called reparse points. Applications can create a hard link from one directory to another directory, called a junction point. They can also create a mapping from a directory to a drive letter, called a mount point. If a file is used by a privileged program, but it can be replaced with a hard link to a sensitive file (e.g., AUTOEXEC.BAT), an attacker could escalate privileges. When the process opens the file, the attacker can assume the privileges of that process, tricking the privileged process to read, modify, or delete the sensitive file, preventing the program from accuratel
+
+## Common Consequences
+- Confidentiality: Read Files or Directories — Read arbitrary files by replacing a user-controlled folder with a mount point and additional hard links.
+- Integrity: Modify Files or Directories — Modify an arbitrary file by replacing the rollback files in installer directories, as they can have the installer execute those rollbacks.
+- Availability: Modify Files or Directories — Even if there is no control of contents, an arbitrary file delete or overwrite (when running as SYSTEM or admin) can be used for a permanent system denial-of-service, e.g. by deleting a startup config
+
+## Potential Mitigations
+- [Architecture and Design] When designing software that will have different rights than the executer, the software should check that files that it is interacting with are not improper hard links or mount points. One way to do this in Windows is to use the functionality embedded in the following command: "dir /al /s /b" or, in PowerShell, use LinkType as a filter. In addition, some software uses authentication via signing to ensure that the file is the correct one to use. Make checks atomic with the file action, otherwise a TOCTOU weakness (CWE-367) can be introduced.

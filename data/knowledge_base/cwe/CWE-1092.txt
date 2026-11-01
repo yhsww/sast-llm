@@ -1,0 +1,11 @@
+CWE-1092: Use of Same Invokable Control Element in Multiple Architectural Layers
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product uses the same control element across multiple architectural layers.
+
+## Common Consequences
+- Other: Reduce Maintainability — This issue makes it more difficult to understand and maintain the product, which indirectly affects security by making it more difficult or time-consuming to find and/or fix vulnerabilities. It also m

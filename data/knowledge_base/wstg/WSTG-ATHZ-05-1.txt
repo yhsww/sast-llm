@@ -1,0 +1,154 @@
+WSTG-ATHZ-05-1: OAuth Authorization Server Weaknesses
+
+## Summary
+OAuth stores the identities of users and their corresponding access rights with the Authorization Server (AS). The AS plays a crucial role during the OAuth flow as it grants clients access to resources. To be able to do that securely, it must properly validate parameters that are part of the OAuth flow.
+
+Failure to validate the parameters may lead to account takeover, unauthorized resource access and the elevation of privileges.
+
+## Test Objectives
+- Identify weaknesses in the Authorization Server.
+
+## How to Test
+In order to test for AS weaknesses, you will aim to:
+
+1. Retrieve credentials used for authorization.
+2. Grant yourself access to arbitrary resources through forced browsing.
+3. Bypass the authorization.
+
+### Insufficient Redirect URI Validation
+
+If the `redirect_uri` is not properly validated, a link can be crafted that contains a URL pointing to a server controlled by an attacker. This can be used to trick the AS into sending an authorization code to the attacker. In the following example, `client.evil.com` is used as the forged `redirect_uri`.
+
+```text
+https://as.example.com/authorize?client_id=example-client&redirect_uri=http%3A%2F%client.evil.com%2F&state=example&response_mode=fragment&response_type=code&scope=openid&nonce=example
+```
+
+If a user opens this link in the user agent, the AS will redirect the user agent to the malicious URL.
+
+An attacker can capture the `code` value passed in the spoofed URL and then submit it to the AS token endpoint.
+
+The following request illustrates an authorization request that sends the `redirect_uri` to the authorization server. The client `client.example.com` sends an authorization request to the AS `as.example.com` with the URL-encoded redirect URI `http%3A%2F%2Fclient.example.com%2F`.
+
+```http
+GET /authorize
+    ?redirect_uri=http%3A%2F%2Fclient.example.com%2F
+    &client_id=example-client
+    &errorPath=%2Ferror
+    &scope=openid%20profile%20email
+    &response_type=code
+    &response_mode=query
+    &state=example
+    &nonce=example
+    &code_challenge=example
+    &code_challenge_method=S256 HTTP/1.1
+Host: as.example.com
+```
+
+The AS responds with a redirect containing the authorization code. This can be exchanged with an access token in the token request. As shown below, the URL in the `Location` header is the URI given in the previous `redirect_uri` parameter.
+
+```http
+HTTP/1.1 302 Found
+Date: Mon, 18 Oct 2021 20:46:44 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 340
+Location: https://client.example.com/?code=example&state=example
+```
+
+To test if the AS is vulnerable to insufficient redirect URI validation, capture the traffic with an HTTP intercepting proxy such as ZAP.
+
+1. Start the OAuth flow and pause it at the authorization request.
+2. Change the value of the `redirect_uri` and observe the response.
+3. Investigate the response and identify if the arbitrary `redirect_uri` parameter was accepted by the AS.
+
+If the AS redirects the user agent to the `redirect_uri` you specified, the AS does not properly validate the `redirect_uri`.
+
+Additionally, see the `Common Filter Bypass` section in Server-Side Request Forgery to identity common bypasses for redirect URI validation.
+
+### Authorization Code Injection
+
+During the Authorization Code flow code exchange, a code is issued by the AS to the client and later exchanged against the token endpoint to retrieve an authorization token and a refresh token.
+
+Conduct the following tests against the AS:
+
+1. Send a valid code for another `client_id`.
+2. Send a valid code for another resource owner.
+3. Send a valid code for another `redirect_uri`.
+4. Resend the code more than once (code replay).
+
+#### Public Clients
+
+The request sent to the token endpoint contains the authorization code. It is exchanged against the token. Capture this request with an HTTP intercepting proxy like ZAP and resend the request with modified values.
+
+```http
+POST /oauth/token HTTP/1.1
+Host: as.example.com
+[...]
+
+{
+    "errorPath":"/error",
+    "client_id":"example-client",
+    "code":"INJECT_CODE_HERE",
+    "grant_type":"authorization_code",
+    "redirect_uri":"https://client.example.com"
+}
+```
+
+If the AS responds with an `access_token`, the code was successfully injected.
+
+#### Test Confidential Clients
+
+As the OAuth flow for confidential clients is additionally protected by a client secret, it is not possible to directly submit an authorization code to the token endpoint. Instead, inject the authorization code into the client. This injected code will then be sent in the token request, issued by the confidential client together with the client secret.
+
+First, capture an authorization code from the AS:
+
+1. Start the authorization code flow with user Alice. Pause when you receive a code from the AS.
+2. Do not submit the code to the client and keep note of the code and corresponding state.
+
+Then, inject the code:
+
+ 1. Start the authorization code flow with user Mallory and inject the previously gathered code and state values for user Alice into the process.
+ 2. When the attack is successful, the client should now be in possession of an `authorization_token` that grants access to resources owned by user Alice.
+
+```http
+GET /callback?code=INJECT_CODE_HERE&state=example HTTP/1.1
+Host: client.example.com
+[...]
+
+```
+
+### PKCE Downgrade Attack
+
+Under certain circumstances the PKCE extension can be removed from the authorization code flow. This has the potential to leave public clients vulnerable to attacks mitigated by the PKCE extension.
+
+This can happen when:
+
+- The AS does not support PKCE.
+- The AS does not properly validate PKCE.
+
+Both can be tested with an HTTP intercepting proxy like ZAP. Conduct the following tests:
+
+1. Send the authorization request without the `code_challenge=sha256(xyz)` and `code_challenge_method` parameter.
+2. Send the authorization request with an empty value for the `code_challenge=sha256(xyz)` parameter.
+3. Send the authorization request with a forged value for the `code_challenge=sha256(xyz)` parameter
+
+The example below highlights the values to modify:
+
+```http
+GET /authorize
+    ?redirect_uri=http%3A%2F%client.example.com
+    &client_id=example-client
+    &errorPath=%2Ferror
+    &scope=openid%20profile%20email
+    &response_type=code
+    &response_mode=web_message
+    &state=example-state
+    &nonce=example-nonce
+    &code_challenge=MODIFY_OR_OMIT_THIS
+    &code_challenge_method=MODIFY_OR_OMIT_THIS
+    &prompt=none HTTP/1.1
+Host: as.example.com
+[...]
+
+```
+
+[...truncated]

@@ -1,0 +1,21 @@
+CWE-558: Use of getlogin() in Multithreaded Application
+
+Abstraction: Variant
+
+Applicable Platforms: C, C++
+
+## Description
+The product uses the getlogin() function in a multithreaded context, potentially causing it to return incorrect values.
+
+## Extended Description
+The getlogin() function returns a pointer to a string that contains the name of the user associated with the calling process. The function is not reentrant, meaning that if it is called from another process, the contents are not locked out and the value of the string can be changed by another process. This makes it very risky to use because the username can be changed by other processes, so the results of the function cannot be trusted.
+
+## Common Consequences
+- Integrity, Access Control, Other: Modify Application Data, Bypass Protection Mechanism, Other
+
+## Potential Mitigations
+- [Architecture and Design] Using names for security purposes is not advised. Names are easy to forge and can have overlapping user IDs, potentially causing confusion or impersonation.
+- [Implementation] Use getlogin_r() instead, which is reentrant, meaning that other processes are locked out from changing the username.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

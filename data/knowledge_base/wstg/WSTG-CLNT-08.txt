@@ -1,0 +1,1 @@
+WSTG-CLNT-08: Cross Site Flashing

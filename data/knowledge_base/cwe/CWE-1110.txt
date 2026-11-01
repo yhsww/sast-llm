@@ -1,0 +1,12 @@
+CWE-1110: Incomplete Design Documentation
+
+Abstraction: Base
+
+Applicable Platforms: Not Technology-Specific, ICS/OT
+
+## Description
+The product's design documentation does not adequately describe control flow, data flow, system initialization, relationships between tasks, components, rationales, or other important aspects of the design.
+
+## Common Consequences
+- Other: Reduce Maintainability
+- Other: Increase Analytical Complexity

@@ -1,0 +1,11 @@
+CWE-1050: Excessive Platform Resource Consumption within a Loop
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product has a loop body or loop condition that contains a control element that directly or indirectly consumes platform resources, e.g. messaging, sessions, locks, or file descriptors.
+
+## Common Consequences
+- Availability: DoS: Resource Consumption (CPU), DoS: Resource Consumption (Memory), DoS: Resource Consumption (Other), Reduce Performance — This issue can make the product perform more slowly. If an attacker can influence the number of iterations in the loop, then this performance problem might allow a denial of service by consuming more

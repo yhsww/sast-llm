@@ -1,0 +1,15 @@
+CWE-1116: Inaccurate Source Code Comments
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The source code contains comments that do not accurately describe or explain aspects of the portion of the code with which the comment is associated.
+
+## Common Consequences
+- Other: Reduce Maintainability — This issue makes it more difficult to maintain the product, which indirectly affects security by making it more difficult or time-consuming to find and/or fix vulnerabilities. It also might make it ea
+- Other: Increase Analytical Complexity — When a comment does not accurately reflect the associated code elements, this can introduce confusion to a reviewer (due to inconsistencies) or make it more difficult and less efficient to validate th
+
+## Potential Mitigations
+- [Implementation] Verify that each comment accurately reflects what is intended to happen during execution of the code.

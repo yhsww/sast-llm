@@ -1,0 +1,20 @@
+CWE-605: Multiple Binds to the Same Port
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+When multiple sockets are allowed to bind to the same port, other services on that port may be stolen or spoofed.
+
+## Extended Description
+On most systems, a combination of setting the SO_REUSEADDR socket option, and a call to bind() allows any process to bind to a port to which a previous process has bound with INADDR_ANY. This allows a user to bind to the specific address of a server bound to INADDR_ANY on an unprivileged port, and steal its UDP packets/TCP connection.
+
+## Common Consequences
+- Confidentiality, Integrity: Read Application Data — Packets from a variety of network services may be stolen or the services spoofed.
+
+## Potential Mitigations
+- [Policy] Restrict server socket address to known local addresses.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

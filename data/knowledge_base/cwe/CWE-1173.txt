@@ -1,0 +1,20 @@
+CWE-1173: Improper Use of Validation Framework
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not use, or incorrectly uses, an input validation framework that is provided by the source language or an independent library.
+
+## Extended Description
+Many modern coding languages provide developers with input validation frameworks to make the task of input validation easier and less error-prone. These frameworks will automatically check all input against specified criteria and direct execution to error handlers when invalid input is received. The improper use (i.e., an incorrect implementation or missing altogether) of these frameworks is not directly exploitable, but can lead to an exploitable condition if proper input validation is not performed later in the product. Not using provided input validation frameworks can also hurt the maintainability of code as future developers may not recognize the downstream input validation being used in the place of the validation framework.
+
+## Common Consequences
+- Integrity: Unexpected State — Unchecked input leads to cross-site scripting, process control, and SQL injection vulnerabilities, among others.
+
+## Potential Mitigations
+- [Implementation] Properly use provided input validation frameworks.
+
+## Detection Methods
+- [Automated Static Analysis] Some instances of improper input validation can be detected using automated static analysis. A static analysis tool might allow the user to specify which application-specific methods or functions perform input validation; the tool might also have built-in knowledge of validation frameworks such as S

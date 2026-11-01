@@ -1,0 +1,19 @@
+CWE-1269: Product Released in Non-Release Configuration
+
+Abstraction: Base
+
+Applicable Platforms: VHDL, Verilog, Compiled, Other, Not Technology-Specific
+
+## Description
+The product released to market is released in pre-production or manufacturing configuration.
+
+## Extended Description
+Products in the pre-production or manufacturing stages are configured to have many debug hooks and debug capabilities, including but not limited to: Ability to override/bypass various cryptographic checks (including authentication, authorization, and integrity) Ability to read/write/modify/dump internal state (including registers and memory) Ability to change system configurations Ability to run hidden or private commands that are not allowed during production (as they expose IP). The above is by no means an exhaustive list, but it alludes to the greater capability and the greater state of vulnerability of a product during it's preproduction or manufacturing state. Complexity increases when multiple parties are involved in executing the tests before the final production version. For exampl
+
+## Common Consequences
+- Confidentiality, Integrity, Availability, Access Control, Accountability, Authentication, Authorization, Non-Repudiation: Other
+
+## Potential Mitigations
+- [Implementation] Ensure that there exists a marker for denoting the Manufacturing Complete stage and that the Manufacturing Complete marker gets updated at the Manufacturing Complete stage (i.e., the Manufacturing Complete fuse gets blown).
+- [Integration] Ensure that there exists a marker for denoting the Manufacturing Complete stage and that the Manufacturing Complete marker gets updated at the Manufacturing Complete stage (i.e., the Manufacturing Complete fuse gets blown).
+- [Manufacturing] Ensure that there exists a marker for denoting the Manufacturing Complete stage and that the Manufacturing Complete marker gets updated at the Manufacturing Complete stage (i.e., the Manufacturing Complete fuse gets blown).

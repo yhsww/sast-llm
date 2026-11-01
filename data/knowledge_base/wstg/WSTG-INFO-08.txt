@@ -1,0 +1,115 @@
+WSTG-INFO-08: Fingerprint Web Application Framework
+
+## Summary
+It wouldn't be a stretch to say that almost every conceivable idea for a web application has already been put into development. With the vast number of free and open-source software projects that are actively developed and deployed globally, it is very likely that an application security test will encounter a target that is entirely or partly dependent on these well-known applications or frameworks (e.g. WordPress, phpBB, Mediawiki, etc). Knowing the web application components that are being tested helps the testing process significantly and will also drastically reduce the effort required during the test. These well-known web applications have specific HTML headers, cookies, and directory structures that can be enumerated to identify the application. Most web frameworks have several markers in these locations, which can assist an attacker or tester in recognizing them. This is basically what all automatic tools do, they look for a marker from a predefined location and then compare it to the database of known signatures. For better accuracy, several markers are usually used.
+
+## Test Objectives
+- Fingerprint the components used by the web applications.
+
+## How to Test
+### Black-Box Testing
+
+There are several common locations to consider in order to identify frameworks or components:
+
+- HTTP headers
+- Cookies
+- HTML source code
+- Specific files and folders
+- File extensions
+- Error messages
+
+#### HTTP Headers
+
+The most basic form of identifying a web framework is to look at the `X-Powered-By` field in the HTTP response header. Many tools can be used to fingerprint a target, the simplest one is netcat.
+
+Consider the following HTTP Request-Response:
+
+```html
+$ nc 127.0.0.1 80
+HEAD / HTTP/1.0
+
+HTTP/1.1 200 OK
+Server: nginx/1.0.14
+[...]
+X-Powered-By: Mono
+```
+
+From the `X-Powered-By` field, we understand that the web application framework is likely to be `Mono`. However, although this approach is simple and quick, this methodology doesn't work in all cases. It is possible to easily disable `X-Powered-By` header by a proper configuration. There are also several techniques that allow a site to obfuscate HTTP headers (see an example in the Remediation section). In the example above, we can also note that a specific version of `nginx` is being used to serve the content.
+
+In the same example, the tester could either miss the `X-Powered-By` header or obtain an answer like the following:
+
+```html
+HTTP/1.1 200 OK
+Server: nginx/1.0.14
+Date: Sat, 07 Sep 2013 08:19:15 GMT
+Content-Type: text/html;charset=ISO-8859-1
+Connection: close
+Vary: Accept-Encoding
+X-Powered-By: Blood, sweat and tears
+```
+
+Sometimes there are more HTTP headers that point at a certain framework. In the following example, according to the information from HTTP request, one can see that `X-Powered-By` header contains PHP version. However, the `X-Generator` header points out the used framework is actually `Swiftlet`, which helps a penetration tester to expand their attack vectors. When performing fingerprinting, carefully inspect every HTTP header for such leaks.
+
+```html
+HTTP/1.1 200 OK
+Server: nginx/1.4.1
+Date: Sat, 07 Sep 2013 09:22:52 GMT
+Content-Type: text/html
+Connection: keep-alive
+Vary: Accept-Encoding
+X-Powered-By: PHP/5.4.16-1~dotdeb.1
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0
+Pragma: no-cache
+X-Generator: Swiftlet
+```
+
+#### Cookies
+
+Another similar and somewhat more reliable way to determine the current web framework are framework-specific cookies.
+
+Consider the following HTTP response headers from a Laravel application:
+
+```http
+HTTP/1.1 200 OK
+Server: nginx
+Content-Type: text/html; charset=utf-8
+Cache-Control: no-cache, private
+Date: Sun, 13 Sep 2026 12:10:25 GMT
+Set-Cookie: XSRF-TOKEN=eyJpdiI6IkpyQWZUUUFjVXBPWWpkSjF3cHlJZnc9PSIsInZhbHVlIjoiZzZlVm1QWlMxRDlqVGpDVHlwdVVPa3BpWDhYd0F2NXlodm1jTmRSU2pFaUh1VUxvL3cyLzhNU2o1blBJSUpQS2srNnBQQUVpUlJJeW9wMkRvZXhqejBySnpGUVVzclllendrQzZDWDBUa0ZiVmVnNlRidDFwVExrdGRZekJyd1ciLCJtYWMiOiJjMjcyN2FjOThlNjEyMGY0YjZkYjEwNWJjZGI2YWE4MzJiNDZjZDg1NDQxN2U0YzcxMDg5NTJhOTVjODE5YzY2IiwidGFnIjoiIn0%3D; expires=Sun, 13 Sep 2026 14:10:26 GMT; Max-Age=7200; path=/; samesite=lax
+Set-Cookie: laravel_session=eyJpdiI6IlV4QkdjeWE2dGpzU2EyWEd4cDRHbXc9PSIsInZhbHVlIjoiMnlFWS9CcW9ncEFKODQzMFFxK0F6ekN4dStJbnF2b2NhaUlmRWVuRU81WFo2OHZwQTlYZ2owdGZlUVVLY29ScWRsZDllTTVVTXBuaE1SanBSak5JeU5NZFJnNFdZUmtOZnUwVTBUYndRbmpJdVRKdW9mZUtrMnRwRXg3TUxiM2MiLCJtYWMiOiI5NDU1ODY2Y2Q5NjhjMGI4NWZkNmZjNjI1NTI1ZDNiNTJjMDU3MTc3ZjAyZDc2YjlmZGE4OTM5NjFhNTY3ZTE3IiwidGFnIjoiIn0%3D; expires=Sun, 13 Sep 2026 14:10:26 GMT; Max-Age=7200; path=/; httponly; samesite=lax
+content-length: 88805
+```
+
+The cookie `laravel_session`, along with the accompanying `XSRF-TOKEN` cookie used for CSRF protection, has automatically been set, which gives information about the framework being used. A list of common cookie names is presented in Cookies section. Limitations still exist in relying on this identification mechanism - it is possible to change the name of cookies. For example, for Laravel this could be done via the `cookie` value in `config/session.php`:
+
+```php
+/*
+|--------------------------------------------------------------------------
+| Session Cookie Name
+|--------------------------------------------------------------------------
+|
+| Here you may change the name of the cookie used to identify a session
+| instance by ID. The name specified here will get used every time a
+| new session cookie is created by the framework for every driver.
+|
+*/
+
+'cookie' => env(
+    'SESSION_COOKIE',
+    Str::slug(env('APP_NAME', 'laravel'), '_').'_session'
+),
+```
+
+However, these changes are less likely to be made than changes to the `X-Powered-By` header, making this approach to identification more reliable.
+
+#### HTML Source Code
+
+This technique is based on finding certain patterns in the HTML page source code. Often one can find a lot of information which helps a tester to recognize a specific component. One of the common markers is HTML comments that directly lead to framework disclosure. More often, certain framework-specific paths can be found, i.e. links to framework-specific CSS or JS folders. Finally, specific script variables might also point to a certain framework.
+
+From the screenshot below, one can easily determine the framework in use and its version by the mentioned markers. Angular applications, for example, add an `ng-version` attribute directly to the root element of the page, explicitly disclosing the exact framework version in use.
+
+\
+*Figure 4.1.8-1: Angular Framework HTML Source Sample*
+
+[...truncated]

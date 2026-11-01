@@ -1,0 +1,14 @@
+CWE-1084: Invokable Control Element with Excessive File or Data Access Operations
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+A function or method contains too many operations that utilize a data manager or file resource.
+
+## Extended Description
+While the interpretation of "too many operations" may vary for each product or developer, CISQ recommends a default maximum of 7 operations for the same data manager or file.
+
+## Common Consequences
+- Other: Reduce Maintainability — This issue makes it more difficult to maintain the product, which indirectly affects security by making it more difficult or time-consuming to find and/or fix vulnerabilities. It also might make it ea

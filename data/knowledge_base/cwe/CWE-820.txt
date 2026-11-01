@@ -1,0 +1,14 @@
+CWE-820: Missing Synchronization
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product utilizes a shared resource in a concurrent manner but does not attempt to synchronize access to the resource.
+
+## Extended Description
+If access to a shared resource is not synchronized, then the resource may not be in a state that is expected by the product. This might lead to unexpected or insecure behaviors, especially if an attacker can influence the shared resource.
+
+## Common Consequences
+- Integrity, Confidentiality, Other: Modify Application Data, Read Application Data, Alter Execution Logic

@@ -1,0 +1,21 @@
+CWE-359: Exposure of Private Personal Information to an Unauthorized Actor
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Mobile
+
+## Description
+The product does not properly prevent a person's private, personal information from being accessed by actors who either (1) are not explicitly authorized to access the information or (2) do not have the implicit consent of the person about whom the information is collected.
+
+## Common Consequences
+- Confidentiality: Read Application Data
+
+## Potential Mitigations
+- [Requirements] Identify and consult all relevant regulations for personal privacy. An organization may be required to comply with certain federal and state regulations, depending on its location, the type of business it conducts, and the nature of any private data it handles. Regulations may include Safe Harbor Privacy Framework [REF-340], Gramm-Leach Bliley Act (GLBA) [REF-341], Health Insurance Portability and Accountability Act (HIPAA) [REF-342], General Data Protection Regulation (GDPR) [REF-1047], California Consumer Privacy Act (CCPA) [REF-1048], and others.
+- [Architecture and Design] Carefully evaluate how secure design may interfere with privacy, and vice versa. Security and privacy concerns often seem to compete with each other. From a security perspective, all important operations should be recorded so that any anomalous activity can later be identified. However, when private data is involved, this practice can in fact create risk. Although there are many ways in which private data can be handled unsafely, a common risk stems from misplaced trust. Programmers often trust the operating environment in which a program runs, and therefore believe that it is acceptable store private information on the file system, in the registry, or in other locally-controlled resources. However, even if access to certain resources is restricted, this does not guarantee that the individuals who do have access can be trusted.
+- [Implementation, Operation] Some tools can automatically analyze documents to redact, strip, or "sanitize" private information, although some human review might be necessary. Tools may vary in terms of which document formats can be processed. When calling an external program to automatically generate or convert documents, invoke the program with any available options that avoid generating sensitive metadata. Some formats have well-defined fields that could contain private data, such as Exchangeable image file format (Exif), which can contain potentially sensitive metadata such as geolocation, date, and time [REF-1515] [REF-1516].
+
+## Detection Methods
+- [Architecture or Design Review] Private personal data can enter a program in a variety of ways: Directly from the user in the form of a password or personal information Accessed from a database or other data store by the application Indirectly from a partner or other third party If the data is written to an external location - suc
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea
+- [Automated Static Analysis] Tools are available to analyze documents (such as PDF, Word, etc.) to look for private information such as names, addresses, etc.

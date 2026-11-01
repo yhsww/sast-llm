@@ -1,0 +1,21 @@
+CWE-468: Incorrect Pointer Scaling
+
+Abstraction: Base
+
+Likelihood of Exploit: Medium
+
+Applicable Platforms: C, C++
+
+## Description
+In C and C++, one may often accidentally refer to the wrong memory due to the semantics of when math operations are implicitly scaled.
+
+## Common Consequences
+- Confidentiality, Integrity: Read Memory, Modify Memory — Incorrect pointer scaling will often result in buffer overflow conditions. Confidentiality can be compromised if the weakness is in the context of a buffer over-read or under-read.
+
+## Potential Mitigations
+- [Architecture and Design] Use a platform with high-level memory abstractions.
+- [Implementation] Always use array indexing instead of direct pointer manipulation.
+- [Architecture and Design] Use technologies for preventing buffer overflows.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

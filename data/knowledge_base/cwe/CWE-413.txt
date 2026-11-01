@@ -1,0 +1,21 @@
+CWE-413: Improper Resource Locking
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not lock or does not correctly lock a resource when the product must have exclusive access to the resource.
+
+## Extended Description
+When a resource is not properly locked, an attacker could modify the resource while it is being operated on by the product. This might violate the product's assumption that the resource will not change, potentially leading to unexpected behaviors.
+
+## Common Consequences
+- Integrity, Availability: Modify Application Data, DoS: Instability, DoS: Crash, Exit, or Restart
+
+## Potential Mitigations
+- [Architecture and Design] Use a non-conflicting privilege scheme.
+- [Architecture and Design, Implementation] Use synchronization when locking a resource.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

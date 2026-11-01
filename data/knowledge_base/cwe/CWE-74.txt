@@ -1,0 +1,24 @@
+CWE-74: Improper Neutralization of Special Elements in Output Used by a Downstream Component ('Injection')
+
+Abstraction: Class
+
+Likelihood of Exploit: High
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product constructs all or part of a command, data structure, or record using externally-influenced input from an upstream component, but it does not neutralize or incorrectly neutralizes special elements that could modify how it is parsed or interpreted when it is sent to a downstream component.
+
+## Common Consequences
+- Confidentiality: Read Application Data — Many injection attacks involve the disclosure of important information -- in terms of both data sensitivity and usefulness in further exploitation.
+- Access Control: Bypass Protection Mechanism — In some cases, injectable code controls authentication; this may lead to a remote vulnerability.
+- Other: Alter Execution Logic — Injection attacks are characterized by the ability to significantly change the flow of a given process, and in some cases, to the execution of arbitrary code.
+- Integrity, Other: Other — Data injection attacks lead to loss of data integrity in nearly all cases as the control-plane data injected is always incidental to data recall or writing.
+- Non-Repudiation: Hide Activities — Often the actions performed by injected control code are unlogged.
+
+## Potential Mitigations
+- [Requirements] Programming languages and supporting technologies might be chosen which are not subject to these issues.
+- [Implementation] Utilize an appropriate mix of allowlist and denylist parsing to filter control-plane syntax from all input.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

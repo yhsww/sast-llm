@@ -1,0 +1,22 @@
+CWE-543: Use of Singleton Pattern Without Synchronization in a Multithreaded Context
+
+Abstraction: Variant
+
+Applicable Platforms: Java, C++
+
+## Description
+The product uses the singleton pattern when creating a resource within a multithreaded environment.
+
+## Extended Description
+The use of a singleton pattern may not be thread-safe.
+
+## Common Consequences
+- Other, Integrity: Other, Modify Application Data
+
+## Potential Mitigations
+- [Architecture and Design] Use the Thread-Specific Storage Pattern. See References.
+- [Implementation] Do not use member fields to store information in the Servlet. In multithreading environments, storing user data in Servlet member fields introduces a data access race condition.
+- [Implementation] Avoid using the double-checked locking pattern in language versions that cannot guarantee thread safety. This pattern may be used to avoid the overhead of a synchronized call, but in certain versions of Java (for example), this has been shown to be unsafe because it still introduces a race condition (CWE-209).
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

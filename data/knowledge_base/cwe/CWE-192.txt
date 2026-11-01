@@ -1,0 +1,26 @@
+CWE-192: Integer Coercion Error
+
+Abstraction: Variant
+
+Likelihood of Exploit: Medium
+
+Applicable Platforms: C, C++, Java, C#
+
+## Description
+Integer coercion refers to a set of flaws pertaining to the type casting, extension, or truncation of primitive data types.
+
+## Extended Description
+Several flaws fall under the category of integer coercion errors. For the most part, these errors in and of themselves result only in availability and data integrity issues. However, in some circumstances, they may result in other, more complicated security related flaws, such as buffer overflow conditions.
+
+## Common Consequences
+- Availability: DoS: Resource Consumption (CPU), DoS: Resource Consumption (Memory), DoS: Crash, Exit, or Restart — Integer coercion often leads to undefined states of execution resulting in infinite loops or crashes.
+- Integrity, Confidentiality, Availability: Execute Unauthorized Code or Commands — In some cases, integer coercion errors can lead to exploitable buffer overflow conditions, resulting in the execution of arbitrary code.
+- Integrity, Other: Other — Integer coercion errors result in an incorrect value being stored for the variable in question.
+
+## Potential Mitigations
+- [Requirements] A language which throws exceptions on ambiguous data casts might be chosen.
+- [Architecture and Design] Design objects and program flow such that multiple or complex casts are unnecessary
+- [Implementation] Ensure that any data type casting that you must used is entirely understood in order to reduce the plausibility of error in use.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

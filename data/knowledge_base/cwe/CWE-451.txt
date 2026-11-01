@@ -1,0 +1,18 @@
+CWE-451: User Interface (UI) Misrepresentation of Critical Information
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The user interface (UI) does not properly represent critical information to the user, allowing the information - or its source - to be obscured or spoofed. This is often a component in phishing attacks.
+
+## Extended Description
+If an attacker can cause the UI to display erroneous data, or to otherwise convince the user to display information that appears to come from a trusted source, then the attacker could trick the user into performing the wrong action. This is often a component in phishing attacks, but other kinds of problems exist. For example, if the UI is used to monitor the security state of a system or network, then omitting or obscuring an important indicator could prevent the user from detecting and reacting to a security-critical event. UI misrepresentation can take many forms: Incorrect indicator: incorrect information is displayed, which prevents the user from understanding the true state of the product or the environment the product is monitoring, especially of potentially-dangerous conditions or o
+
+## Common Consequences
+- Non-Repudiation, Access Control: Hide Activities, Bypass Protection Mechanism
+
+## Potential Mitigations
+- [Implementation] Perform data validation (e.g. syntax, length, etc.) before interpreting the data.
+- [Architecture and Design] Create a strategy for presenting information, and plan for how to display unusual characters.

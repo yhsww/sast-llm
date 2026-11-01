@@ -1,0 +1,29 @@
+CWE-170: Improper Null Termination
+
+Abstraction: Base
+
+Likelihood of Exploit: Medium
+
+Applicable Platforms: C, C++
+
+## Description
+The product does not terminate or incorrectly terminates a string or array with a null character or equivalent terminator.
+
+## Extended Description
+Null termination errors frequently occur in two different ways. An off-by-one error could cause a null to be written out of bounds, leading to an overflow. Or, a program could use a strncpy() function call incorrectly, which prevents a null terminator from being added at all. Other scenarios are possible.
+
+## Common Consequences
+- Confidentiality, Integrity, Availability: Read Memory, Execute Unauthorized Code or Commands — The case of an omitted null character is the most dangerous of the possible issues. This will almost certainly result in information disclosure, and possibly a buffer overflow condition, which may be 
+- Confidentiality, Integrity, Availability: DoS: Crash, Exit, or Restart, Read Memory, DoS: Resource Consumption (CPU), DoS: Resource Consumption (Memory) — If a null character is omitted from a string, then most string-copying functions will read data until they locate a null character, even outside of the intended boundaries of the string. This could: c
+- Integrity, Availability: Modify Memory, DoS: Crash, Exit, or Restart — Misplaced null characters may result in any number of security problems. The biggest issue is a subset of buffer overflow, and write-what-where conditions, where data corruption occurs from the writin
+- Integrity, Confidentiality, Availability, Access Control, Other: Alter Execution Logic, Execute Unauthorized Code or Commands — Should the null character corrupt the process flow, or affect a flag controlling access, it may lead to logical errors which allow for the execution of arbitrary code.
+
+## Potential Mitigations
+- [Requirements] Use a language that is not susceptible to these issues. However, be careful of null byte interaction errors (CWE-626) with lower-level constructs that may be written in a language that is susceptible.
+- [Implementation] Ensure that all string functions used are understood fully as to how they append null characters. Also, be wary of off-by-one errors when appending nulls to the end of strings.
+- [Implementation] If performance constraints permit, special code can be added that validates null-termination of string buffers, this is a rather naive and error-prone solution.
+- [Implementation] Switch to bounded string manipulation functions. Inspect buffer lengths involved in the buffer overrun trace reported with the defect.
+- [Implementation] Add code that fills buffers with nulls (however, the length of buffers still needs to be inspected, to ensure that the non null-terminated string is not written at the physical end of the buffer).
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

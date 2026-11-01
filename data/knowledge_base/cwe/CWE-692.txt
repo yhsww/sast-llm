@@ -1,0 +1,14 @@
+CWE-692: Incomplete Denylist to Cross-Site Scripting
+
+Abstraction: Compound
+
+Applicable Platforms: Not Language-Specific, Web Based, Web Server
+
+## Description
+The product uses a denylist-based protection mechanism to defend against XSS attacks, but the denylist is incomplete, allowing XSS variants to succeed.
+
+## Extended Description
+While XSS might seem simple to prevent, web browsers vary so widely in how they parse web pages, that a denylist cannot keep track of all the variations. The "XSS Cheat Sheet" [REF-714] contains a large number of attacks that are intended to bypass incomplete denylists.
+
+## Common Consequences
+- Confidentiality, Integrity, Availability: Execute Unauthorized Code or Commands

@@ -1,0 +1,20 @@
+CWE-910: Use of Expired File Descriptor
+
+Abstraction: Base
+
+Likelihood of Exploit: Medium
+
+Applicable Platforms: C, C++, Not Language-Specific
+
+## Description
+The product uses or accesses a file descriptor after it has been closed.
+
+## Extended Description
+After a file descriptor for a particular file or device has been released, it can be reused. The code might not write to the original file, since the reused file descriptor might reference a different file or device.
+
+## Common Consequences
+- Confidentiality: Read Files or Directories — The program could read data from the wrong file.
+- Availability: DoS: Crash, Exit, or Restart — Accessing a file descriptor that has been closed can cause a crash.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

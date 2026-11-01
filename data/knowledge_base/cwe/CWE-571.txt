@@ -1,0 +1,17 @@
+CWE-571: Expression is Always True
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product contains an expression that will always evaluate to true.
+
+## Common Consequences
+- Other: Quality Degradation, Varies by Context
+
+## Potential Mitigations
+- [Implementation] Consider refactoring the code, or determine if the code is not including a condition that could cause the expression to become false.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

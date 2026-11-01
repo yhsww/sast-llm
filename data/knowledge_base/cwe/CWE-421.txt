@@ -1,0 +1,14 @@
+CWE-421: Race Condition During Access to Alternate Channel
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product opens an alternate channel to communicate with an authorized user, but the channel is accessible to other actors.
+
+## Extended Description
+This creates a race condition that allows an attacker to access the channel before the authorized user does.
+
+## Common Consequences
+- Access Control: Gain Privileges or Assume Identity, Bypass Protection Mechanism

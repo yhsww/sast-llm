@@ -1,0 +1,27 @@
+CWE-1191: On-Chip Debug and Test Interface With Improper Access Control
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The chip does not implement or does not correctly perform access control to check whether users are authorized to access internal registers and test modes through the physical debug/test interface.
+
+## Extended Description
+A device's internal information may be accessed through a scan chain of interconnected internal registers, usually through a JTAG interface. The JTAG interface provides access to these registers in a serial fashion in the form of a scan chain for the purposes of debugging programs running on a device. Since almost all information contained within a device may be accessed over this interface, device manufacturers typically insert some form of authentication and authorization to prevent unintended use of this sensitive information. This mechanism is implemented in addition to on-chip protections that are already present. If authorization, authentication, or some other form of access control is not implemented or not implemented correctly, a user may be able to bypass on-chip protection mecha
+
+## Common Consequences
+- Confidentiality: Read Application Data
+- Confidentiality: Read Memory
+- Authorization: Execute Unauthorized Code or Commands
+- Integrity: Modify Memory
+- Integrity: Modify Application Data
+- Access Control: Bypass Protection Mechanism
+
+## Potential Mitigations
+- [Architecture and Design] If feasible, the manufacturer should disable the JTAG interface or implement authentication and authorization for the JTAG interface. If authentication logic is added, it should be resistant to timing attacks. Security-sensitive data stored in registers, such as keys, etc. should be cleared when entering debug mode.
+
+## Detection Methods
+- [Dynamic Analysis with Manual Results Interpretation] Authentication and authorization of debug and test interfaces should be part of the architecture and design review process. Withholding of private register documentation from the debug and test interface public specification ("Security by obscurity") should not be considered as sufficient security.
+- [Dynamic Analysis with Manual Results Interpretation] Dynamic tests should be done in the pre-silicon and post-silicon stages to verify that the debug and test interfaces are not open by default.
+- [Fuzzing] Tests that fuzz Debug and Test Interfaces should ensure that no access without appropriate authentication and authorization is possible.

@@ -1,0 +1,11 @@
+CWE-229: Improper Handling of Values
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not properly handle when the expected number of values for parameters, fields, or arguments is not provided in input, or if those values are undefined.
+
+## Common Consequences
+- Integrity: Unexpected State

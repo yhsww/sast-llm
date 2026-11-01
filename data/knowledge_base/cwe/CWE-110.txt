@@ -1,0 +1,18 @@
+CWE-110: Struts: Validator Without Form Field
+
+Abstraction: Variant
+
+Applicable Platforms: Java
+
+## Description
+Validation fields that do not appear in forms they are associated with indicate that the validation logic is out of date.
+
+## Extended Description
+It is easy for developers to forget to update validation logic when they make changes to an ActionForm class. One indication that validation logic is not being properly maintained is inconsistencies between the action form and the validation form. Although J2EE applications are not generally susceptible to memory corruption attacks, if a J2EE application interfaces with native code that does not perform array bounds checking, an attacker may be able to use an input validation mistake in the J2EE application to launch a buffer overflow attack.
+
+## Common Consequences
+- Other: Other — It is critically important that validation logic be maintained and kept in sync with the rest of the application. Unchecked input is the root cause of some of today's worst and most common software se
+
+## Detection Methods
+- [Automated Static Analysis] To find the issue in the implementation, manual checks or automated static analysis could be applied to the XML configuration files.
+- [Manual Static Analysis] To find the issue in the implementation, manual checks or automated static analysis could be applied to the XML configuration files.

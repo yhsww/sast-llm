@@ -1,0 +1,15 @@
+CWE-75: Failure to Sanitize Special Elements into a Different Plane (Special Element Injection)
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not adequately filter user-controlled input for special elements with control implications.
+
+## Common Consequences
+- Integrity, Confidentiality, Availability: Modify Application Data, Execute Unauthorized Code or Commands
+
+## Potential Mitigations
+- [Requirements] Programming languages and supporting technologies might be chosen which are not subject to these issues.
+- [Implementation] Utilize an appropriate mix of allowlist and denylist parsing to filter special element syntax from all input.

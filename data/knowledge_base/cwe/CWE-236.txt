@@ -1,0 +1,11 @@
+CWE-236: Improper Handling of Undefined Parameters
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not handle or incorrectly handles when a particular parameter, field, or argument name is not defined or supported by the product.
+
+## Common Consequences
+- Integrity: Unexpected State

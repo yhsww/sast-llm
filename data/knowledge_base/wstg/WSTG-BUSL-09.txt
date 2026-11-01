@@ -1,0 +1,104 @@
+WSTG-BUSL-09: Upload of Malicious Files
+
+## Summary
+Many application’s business processes allow users to upload data to them. Although input validation is widely understood for text-based input fields, it is more complicated to implement when files are accepted. Although many sites implement simple restrictions based on a list of permitted (or blocked) extensions, this is not sufficient to prevent attackers from uploading legitimate file types that have malicious contents.
+
+Vulnerabilities related to the uploading of malicious files is unique in that these "malicious" files can easily be rejected through including business logic that will scan files during the upload process and reject those perceived as malicious. Additionally, this is different from uploading unexpected files in that while the file type may be accepted the file may still be malicious to the system.
+
+Finally, "malicious" means different things to different systems, for example malicious files that may exploit SQL server vulnerabilities may not be considered as "malicious" in an environment using a NoSQL data store.
+
+The application may allow the upload of malicious files that include exploits or shellcode without submitting them to malicious file scanning. Malicious files could be detected and stopped at various points of the application architecture such as: Intrusion Detection/Prevention System, application server anti-virus software or anti-virus scanning by application as files are uploaded (perhaps offloading the scanning using SCAP).
+
+### Example
+
+A common example of this vulnerability is an application such as a blog or forum that allows users to upload images and other media files. While these are considered safe, if an attacker is able to upload executable code (such as a PHP script), this could allow them to execute operating system commands, read and modify information in the filesystem, access the backend database and fully compromise the server.
+
+## Test Objectives
+- Identify the file upload functionality.
+- Review the project documentation to identify what file types are considered acceptable, and what types would be considered dangerous or malicious.
+    - If documentation is not available then consider what would be appropriate based on the purpose of the application.
+- Determine how the uploaded files are processed.
+- Obtain or create a set of malicious files for testing.
+- Try to upload the malicious files to the application and determine whether it is accepted and processed.
+
+## How to Test
+### Malicious File Types
+
+The simplest checks that an application can do are to determine that only trusted types of files can be uploaded.
+
+#### Web Shells
+
+If the server is configured to execute code, then it may be possible to obtain command execution on the server by uploading a file known as a web shell, which allows you to execute arbitrary code or operating system commands. In order for this attack to be successful, the file needs to be uploaded inside the webroot, and the server must be configured to execute the code.
+
+Uploading this kind of shell onto an internet facing server is dangerous, because it allows anyone who knows (or guesses) the location of the shell to execute code on the server. A number of techniques can be used to protect the shell from unauthorised access, such as:
+
+- Uploading the shell with a randomly generated name.
+- Password protecting the shell.
+- Implementing IP based restrictions on the shell.
+
+**Remember to remove the shell when you are done.**
+
+The example below shows a simple PHP based shell, that executes operating system commands passed to it in a GET parameter, and can only be accessed from a specific IP address:
+
+```php
+<?php
+    if ($_SERVER['REMOTE_HOST'] === "FIXME") { // Set your IP address here
+        if(isset($_REQUEST['cmd'])){
+            $cmd = ($_REQUEST['cmd']);
+            echo "<pre>\n";
+            system($cmd);
+            echo "</pre>";
+        }
+    }
+?>
+```
+
+Once the shell is uploaded (with a random name), you can execute operating system commands by passing them in the `cmd` GET parameter:
+
+`https://example.org/7sna8uuorvcx3x4fx.php?cmd=cat+/etc/passwd`
+
+#### Filter Evasion
+
+The first step is to determine what the filters are allowing or blocking, and where they are implemented. If the restrictions are performed on the client-side using JavaScript, then they can be trivially bypassed with an intercepting proxy.
+
+If the filtering is performed on the server-side, then various techniques can be attempted to bypass it, including:
+
+- Change the value of `Content-Type` as `image/jpeg` in HTTP request.
+- Change the extensions to a less common extension, such as `file.php5`, `file.shtml`, `file.asa`, `file.jsp`, `file.jspx`, `file.aspx`, `file.asp`, `file.phtml`, `file.cshtml`
+- Use double extensions such as `file.jpg.php` or `file.png.php`. For this to work properly, you must first understand how the web server handles files with multiple extensions. For instance, in certain scenario, the web server may only check if `.jpg` or `.png` is part of the file's extension which may allow attackers to bypass file extension filter.
+- Change the file signature or magic byte of the uploaded file.
+- Change the capitalisation of the extension, such as `file.PhP` or `file.AspX`
+- If the request includes multiple filenames, change them to different values.
+- Using special trailing characters such as spaces, dots or null characters such as `file.asp...`, `file.php;jpg`, `file.asp%00.jpg`, `1.jpg%00.php`
+- In badly configured versions of Nginx, uploading a file as `test.jpg/x.php` may allow it to be executed as `x.php`.
+- Upload an `.htaccess` file with the following content: `AddType application/x-httpd-php .png`. This will cause the Apache server to execute `.png` images as if they were `.php` resources.
+
+In some situations, you may need to combine the different filter evasion techniques discussed above in order to successfully bypass server-side filters.**
+
+### Malicious File Contents
+
+Once the file type has been validated, it is important to also ensure that the contents of the file are safe. This is significantly harder to do, as the steps required will vary depending on the types of file that are permitted.
+
+#### Malware
+
+Applications should generally scan uploaded files with anti-malware software to ensure that they do not contain anything malicious. The easiest way to test for this is using the EICAR test file, which is an safe file that is flagged as malicious by all anti-malware software.
+
+Depending on the type of application, it may be necessary to test for other dangerous file types, such as Office documents containing malicious macros. Tools such as the Metasploit Framework and the Social Engineer Toolkit (SET) can be used to generate malicious files for various formats.
+
+When this file is uploaded, it should be detected and quarantined or deleted by the application. Depending on how the application processes the file, it may not be obvious whether this has taken place.
+
+#### Archive Directory Traversal
+
+If the application extracts archives (such as ZIP files), then it may be possible to write to unintended locations using directory traversal. This can be exploited by uploading a malicious ZIP file that contains paths that traverse the file system using sequences such as `..\..\..\..\shell.php`. This technique is discussed further in the snyk advisory.
+
+A test against Archive Directory Traversal should include two parts:
+
+1. A malicious archive that breaks out of the target directory when extracted. This malicious archive should contain two files: a `base` file, extracted into the target directory, and a `traversed` file that attempts to navigate up the directory tree to hit the root folder - adding a file into the `tmp` directory. A malicious path will contain many levels of `../` (*i.e.* `../../../../../../../../tmp/traversed`) to stand a better chance of reaching the root directory. Once the attack is successful, the tester can find `/tmp/traversed` to be created on the webserver through the ZIP slip attack.
+2. Logic that extracts compressed files either using custom code or a library. Archive Directory Traversal vulnerabilities exist when the extraction functionality doesn’t validate file paths in the archive. The example below shows a vulnerable implementation in Java:
+
+```java
+Enumeration<ZipEntry> entries =​ ​zip​.g​etEntries();
+
+while(entries​.h​asMoreElements()){
+    ZipEntry e ​= ​entries.nextElement();
+[...truncated]

@@ -1,0 +1,11 @@
+CWE-791: Incomplete Filtering of Special Elements
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product receives data from an upstream component, but does not completely filter special elements before sending it to a downstream component.
+
+## Common Consequences
+- Integrity: Unexpected State

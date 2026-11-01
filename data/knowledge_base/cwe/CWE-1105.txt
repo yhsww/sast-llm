@@ -1,0 +1,14 @@
+CWE-1105: Insufficient Encapsulation of Machine-Dependent Functionality
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product or code uses machine-dependent functionality, but it does not sufficiently encapsulate or isolate this functionality from the rest of the code.
+
+## Common Consequences
+- Other: Reduce Maintainability — This issue makes it more difficult to port or maintain the product, which indirectly affects security by making it more difficult or time-consuming to find and/or fix vulnerabilities. It also might ma
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

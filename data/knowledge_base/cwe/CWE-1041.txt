@@ -1,0 +1,17 @@
+CWE-1041: Use of Redundant Code
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product has multiple functions, methods, procedures, macros, etc. that contain the same code.
+
+## Common Consequences
+- Other: Reduce Maintainability — This issue makes it more difficult to maintain the product, which indirectly affects security by making it more difficult or time-consuming to find and/or fix vulnerabilities. For example, if there ar
+
+## Potential Mitigations
+- [Implementation] Merge common functionality into a single function and then call that function from across the entire code base.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

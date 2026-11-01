@@ -1,0 +1,11 @@
+CWE-358: Improperly Implemented Security Check for Standard
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not implement or incorrectly implements one or more security-relevant checks as specified by the design of a standardized algorithm, protocol, or technique.
+
+## Common Consequences
+- Access Control: Bypass Protection Mechanism

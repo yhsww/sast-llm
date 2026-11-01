@@ -1,0 +1,20 @@
+CWE-1393: Use of Default Password
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific, ICS/OT
+
+## Description
+The product uses default passwords for potentially critical functionality.
+
+## Extended Description
+It is common practice for products to be designed to use default passwords for authentication. The rationale is to simplify the manufacturing process or the system administrator's task of installation and deployment into an enterprise. However, if admins do not change the defaults, then it makes it easier for attackers to quickly bypass authentication across multiple organizations. There are many lists of default passwords and default-password scanning tools that are easily available from the World Wide Web.
+
+## Common Consequences
+- Authentication: Gain Privileges or Assume Identity
+
+## Potential Mitigations
+- [Requirements] Prohibit use of default, hard-coded, or other values that do not vary for each installation of the product - especially for separate organizations.
+- [Documentation] Ensure that product documentation clearly emphasizes the presence of default passwords and provides steps for the administrator to change them.
+- [Architecture and Design] Force the administrator to change the credential upon installation.
+- [Installation, Operation] The product administrator could change the defaults upon installation or during operation.

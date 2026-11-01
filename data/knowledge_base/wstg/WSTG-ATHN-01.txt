@@ -1,0 +1,1 @@
+WSTG-ATHN-01: Credentials Transported over an Encrypted Channel

@@ -1,0 +1,20 @@
+CWE-785: Use of Path Manipulation Function without Maximum-sized Buffer
+
+Abstraction: Variant
+
+Applicable Platforms: C, C++
+
+## Description
+The product invokes a function for normalizing paths or file names, but it provides an output buffer that is smaller than the maximum possible size, such as PATH_MAX.
+
+## Extended Description
+Passing an inadequately-sized output buffer to a path manipulation function can result in a buffer overflow. Such functions include realpath(), readlink(), PathAppend(), and others.
+
+## Common Consequences
+- Integrity, Confidentiality, Availability: Modify Memory, Execute Unauthorized Code or Commands, DoS: Crash, Exit, or Restart
+
+## Potential Mitigations
+- [Implementation] Always specify output buffers large enough to handle the maximum-size possible result from path manipulation functions.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

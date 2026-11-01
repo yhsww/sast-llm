@@ -1,0 +1,17 @@
+CWE-560: Use of umask() with chmod-style Argument
+
+Abstraction: Variant
+
+Applicable Platforms: C
+
+## Description
+The product calls umask() with an incorrect argument that is specified as if it is an argument to chmod().
+
+## Common Consequences
+- Confidentiality, Integrity, Access Control: Read Files or Directories, Modify Files or Directories, Bypass Protection Mechanism
+
+## Potential Mitigations
+- [Implementation] Use umask() with the correct argument.
+
+## Detection Methods
+- [Automated Static Analysis] If you suspect misuse of umask(), you can use grep to spot call instances of umask().

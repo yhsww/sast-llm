@@ -1,0 +1,14 @@
+CWE-1079: Parent Class without Virtual Destructor Method
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+A parent class contains one or more child classes, but the parent class does not have a virtual destructor method.
+
+## Common Consequences
+- Other: Reduce Reliability — This issue can prevent the product from running reliably due to undefined or unexpected behaviors. If the relevant code is reachable by an attacker, then this reliability problem might introduce a vul
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

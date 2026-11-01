@@ -1,0 +1,17 @@
+CWE-584: Return Inside Finally Block
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The code has a return statement inside a finally block, which will cause any thrown exception in the try block to be discarded.
+
+## Common Consequences
+- Other: Alter Execution Logic
+
+## Potential Mitigations
+- [Implementation] Do not use a return statement inside the finally block. The finally block should have "cleanup" code.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

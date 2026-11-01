@@ -1,0 +1,12 @@
+CWE-610: Externally Controlled Reference to a Resource in Another Sphere
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product uses an externally controlled name or reference that resolves to a resource that is outside of the intended control sphere.
+
+## Common Consequences
+- Confidentiality, Integrity: Read Application Data, Modify Application Data — An adversary could read or modify data, depending on how the resource is intended to be used.
+- Access Control: Gain Privileges or Assume Identity — An adversary that can supply a reference to an unintended resource can potentially access a resource that they do not have privileges for, thus bypassing existing access control mechanisms.

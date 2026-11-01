@@ -1,0 +1,15 @@
+CWE-655: Insufficient Psychological Acceptability
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product has a protection mechanism that is too difficult or inconvenient to use, encouraging non-malicious users to disable or bypass the mechanism, whether by accident or on purpose.
+
+## Common Consequences
+- Access Control: Bypass Protection Mechanism — By bypassing the security mechanism, a user might leave the system in a less secure state than intended by the administrator, making it more susceptible to compromise.
+
+## Potential Mitigations
+- [Testing] Where possible, perform human factors and usability studies to identify where your product's security mechanisms are difficult to use, and why.
+- [Architecture and Design] Make the security mechanism as seamless as possible, while also providing the user with sufficient details when a security decision produces unexpected results.

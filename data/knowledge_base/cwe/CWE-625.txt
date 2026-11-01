@@ -1,0 +1,20 @@
+CWE-625: Permissive Regular Expression
+
+Abstraction: Base
+
+Applicable Platforms: Perl, PHP
+
+## Description
+The product uses a regular expression that does not sufficiently restrict the set of allowed values.
+
+## Extended Description
+This effectively causes the regexp to accept substrings that match the pattern, which produces a partial comparison to the target. In some cases, this can lead to other weaknesses. Common errors include: not identifying the beginning and end of the target string using wildcards instead of acceptable character ranges others
+
+## Common Consequences
+- Access Control: Bypass Protection Mechanism
+
+## Potential Mitigations
+- [Implementation] When applicable, ensure that the regular expression marks beginning and ending string patterns, such as "/^string$/" for Perl.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

@@ -1,0 +1,20 @@
+CWE-294: Authentication Bypass by Capture-replay
+
+Abstraction: Base
+
+Likelihood of Exploit: High
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+A capture-replay flaw exists when the design of the product makes it possible for a malicious user to sniff network traffic and bypass authentication by replaying it to the server in question to the same effect as the original message (or with minor changes).
+
+## Extended Description
+Capture-replay attacks are common and can be difficult to defeat without cryptography. They are a subset of network injection attacks that rely on observing previously-sent valid commands, then changing them slightly if necessary and resending the same commands to the server.
+
+## Common Consequences
+- Access Control: Gain Privileges or Assume Identity — Messages sent with a capture-relay attack allow access to resources which are not otherwise accessible without proper authentication.
+
+## Potential Mitigations
+- [Architecture and Design] Utilize some sequence or time stamping functionality along with a checksum which takes this into account in order to ensure that messages can be parsed only once.
+- [Architecture and Design] Since any attacker who can listen to traffic can see sequence numbers, it is necessary to sign messages with some kind of cryptography to ensure that sequence numbers are not simply doctored along with content.

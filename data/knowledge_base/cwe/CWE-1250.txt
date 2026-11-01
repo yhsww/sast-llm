@@ -1,0 +1,14 @@
+CWE-1250: Improper Preservation of Consistency Between Independent Representations of Shared State
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Cloud Computing, Security Hardware
+
+## Description
+The product has or supports multiple distributed components or sub-systems that are each required to keep their own local copy of shared data - such as state or cache - but the product does not ensure that all local copies remain consistent with each other.
+
+## Extended Description
+In highly distributed environments, or on systems with distinct physical components that operate independently, there is often a need for each component to store and update its own local copy of key data such as state or cache, so that all components have the same "view" of the overall system and operate in a coordinated fashion. For example, users of a social media service or a massively multiplayer online game might be using their own personal computers while also interacting with different physical hosts in a globally distributed service, but all participants must be able to have the same "view" of the world. Alternately, a processor's Memory Management Unit (MMU) might have "shadow" MMUs to distribute its workload, and all shadow MMUs are expected to have the same accessible ranges of 
+
+## Common Consequences
+- Other: Unexpected State — One or more of the components/sub-systems could assume that the state is different than it actually is.

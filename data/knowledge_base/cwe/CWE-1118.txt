@@ -1,0 +1,14 @@
+CWE-1118: Insufficient Documentation of Error Handling Techniques
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The documentation does not sufficiently describe the techniques that are used for error handling, exception processing, or similar mechanisms.
+
+## Extended Description
+Documentation may need to cover error handling techniques at multiple layers, such as module, executable, compilable code unit, or callable.
+
+## Common Consequences
+- Other: Reduce Maintainability

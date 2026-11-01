@@ -1,0 +1,17 @@
+CWE-1246: Improper Write Handling in Limited-write Non-Volatile Memories
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, System on Chip, Memory Hardware, Storage Hardware
+
+## Description
+The product does not implement or incorrectly implements wear leveling operations in limited-write non-volatile memories.
+
+## Extended Description
+Non-volatile memories such as NAND Flash, EEPROM, etc. have individually erasable segments, each of which can be put through a limited number of program/erase or write cycles. For example, the device can only endure a limited number of writes, after which the device becomes unreliable. In order to wear out the cells in a uniform manner, non-volatile memory and storage products based on the above-mentioned technologies implement a technique called wear leveling. Once a set threshold is reached, wear leveling maps writes of a logical block to a different physical block. This prevents a single physical block from prematurely failing due to a high concentration of writes.
+
+## Common Consequences
+- Availability: DoS: Instability — If wear leveling is improperly implemented, attackers may be able to programmatically cause the storage to become unreliable within a much shorter time than would normally be expected.
+
+## Potential Mitigations
+- [Architecture and Design, Implementation, Testing] Include secure wear leveling algorithms and ensure they may not be bypassed.

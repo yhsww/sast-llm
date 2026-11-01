@@ -1,0 +1,11 @@
+CWE-290: Authentication Bypass by Spoofing
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+This attack-focused weakness is caused by incorrectly implemented authentication schemes that are subject to spoofing attacks.
+
+## Common Consequences
+- Access Control: Bypass Protection Mechanism, Gain Privileges or Assume Identity — This weakness can allow an attacker to access resources which are not otherwise accessible without proper authentication.

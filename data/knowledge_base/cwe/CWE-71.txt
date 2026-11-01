@@ -1,0 +1,6 @@
+CWE-71: DEPRECATED: Apple '.DS_Store'
+
+Abstraction: Variant
+
+## Description
+This entry has been deprecated as it represents a specific observed example of a UNIX Hard Link weakness type rather than its own individual weakness type. Please refer to CWE-62.

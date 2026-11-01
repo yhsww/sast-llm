@@ -1,0 +1,24 @@
+CWE-477: Use of Obsolete Function
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The code uses deprecated or obsolete functions, which suggests that the code has not been actively reviewed or maintained.
+
+## Extended Description
+As programming languages evolve, functions occasionally become obsolete due to: Advances in the language Improved understanding of how operations should be performed effectively and securely Changes in the conventions that govern certain operations Functions that are removed are usually replaced by newer counterparts that perform the same task in some different and hopefully improved way.
+
+## Common Consequences
+- Other: Quality Degradation
+
+## Potential Mitigations
+- [Implementation] Refer to the documentation for the obsolete function in order to determine why it is deprecated or obsolete and to learn about alternative ways to achieve the same functionality.
+- [Requirements] Consider seriously the security implications of using an obsolete function. Consider using alternate functions.
+
+## Detection Methods
+- [Automated Static Analysis - Binary or Bytecode] According to SOAR [REF-1479], the following detection techniques may be useful: Highly cost effective: Binary / Bytecode Quality Analysis Cost effective for partial coverage: Bytecode Weakness Analysis - including disassembler + source code weakness analysis
+- [Manual Static Analysis - Binary or Bytecode] According to SOAR [REF-1479], the following detection techniques may be useful: Cost effective for partial coverage: Binary / Bytecode disassembler - then use manual analysis for vulnerabilities & anomalies
+- [Dynamic Analysis with Manual Results Interpretation] According to SOAR [REF-1479], the following detection techniques may be useful: Highly cost effective: Debugger
+- [Manual Static Analysis - Source Code] According to SOAR [REF-1479], the following detection techniques may be useful: Highly cost effective: Manual Source Code Review (not inspections) Cost effective for partial coverage: Focused Manual Spotcheck - Focused manual analysis of source

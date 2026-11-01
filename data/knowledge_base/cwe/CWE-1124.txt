@@ -1,0 +1,11 @@
+CWE-1124: Excessively Deep Nesting
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The code contains a callable or other code grouping in which the nesting / branching is too deep.
+
+## Common Consequences
+- Other: Reduce Maintainability — This issue makes it more difficult to maintain the product, which indirectly affects security by making it more difficult or time-consuming to find and/or fix vulnerabilities. It also might make it ea

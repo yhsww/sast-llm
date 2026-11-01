@@ -1,0 +1,11 @@
+CWE-238: Improper Handling of Incomplete Structural Elements
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not handle or incorrectly handles when a particular structural element is not completely specified.
+
+## Common Consequences
+- Integrity: Unexpected State

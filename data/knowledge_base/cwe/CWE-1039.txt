@@ -1,0 +1,31 @@
+CWE-1039: Inadequate Detection or Handling of Adversarial Input Perturbations in Automated Recognition Mechanism
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific, AI/ML
+
+## Description
+The product uses an automated mechanism such as machine learning to recognize complex data inputs (e.g. image or audio) as a particular concept or category, but it does not properly detect or handle inputs that have been modified or constructed in a way that causes the mechanism to detect a different, incorrect concept.
+
+## Extended Description
+When techniques such as machine learning are used to automatically classify input streams, and those classifications are used for security-critical decisions, then any mistake in classification can introduce a vulnerability that allows attackers to cause the product to make the wrong security decision or disrupt service of the automated mechanism. If the mechanism is not developed or "trained" with enough input data or has not adequately undergone test and evaluation, then attackers may be able to craft malicious inputs that intentionally trigger the incorrect classification. Targeted technologies include, but are not necessarily limited to: automated speech recognition automated image recognition automated cyber defense Chatbot, LLMs, generative AI For example, an attacker might modify ro
+
+## Common Consequences
+- Integrity: Bypass Protection Mechanism — When the automated recognition is used in a protection mechanism, an attacker may be able to craft inputs that are misinterpreted in a way that grants excess privileges.
+- Availability: DoS: Resource Consumption (Other), DoS: Instability — There could be disruption to the service of the automated recognition system, which could cause further downstream failures of the software.
+- Confidentiality: Read Application Data — This weakness could lead to breaches of data privacy through exposing features of the training data, e.g., by using membership inference attacks or prompt injection attacks.
+- Other: Varies by Context — The consequences depend on how the application applies or integrates the affected algorithm.
+
+## Potential Mitigations
+- [Architecture and Design] Algorithmic modifications such as model pruning or compression can help mitigate this weakness. Model pruning ensures that only weights that are most relevant to the task are used in the inference of incoming data and has shown resilience to adversarial perturbed data.
+- [Architecture and Design] Consider implementing adversarial training, a method that introduces adversarial examples into the training data to promote robustness of algorithm at inference time.
+- [Architecture and Design] Consider implementing model hardening to fortify the internal structure of the algorithm, including techniques such as regularization and optimization to desensitize algorithms to minor input perturbations and/or changes.
+- [Implementation] Consider implementing multiple models or using model ensembling techniques to improve robustness of individual model weaknesses against adversarial input perturbations.
+- [Implementation] Incorporate uncertainty estimations into the algorithm that trigger human intervention or secondary/fallback software when reached. This could be when inference predictions and confidence scores are abnormally high/low comparative to expected model performance.
+- [Integration] Reactive defenses such as input sanitization, defensive distillation, and input transformations can all be implemented before input data reaches the algorithm for inference.
+- [Integration] Consider reducing the output granularity of the inference/prediction such that attackers cannot gain additional information due to leakage in order to craft adversarially perturbed data.
+
+## Detection Methods
+- [Dynamic Analysis with Manual Results Interpretation] Use indicators from model performance deviations such as sudden drops in accuracy or unexpected outputs to verify the model.
+- [Dynamic Analysis with Manual Results Interpretation] Use indicators from input data collection mechanisms to verify that inputs are statistically within the distribution of the training and test data.
+- [Architecture or Design Review] Use multiple models or model ensembling techniques to check for consistency of predictions/inferences.

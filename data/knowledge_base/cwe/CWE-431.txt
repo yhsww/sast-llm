@@ -1,0 +1,18 @@
+CWE-431: Missing Handler
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+A handler is not available or implemented.
+
+## Extended Description
+When an exception is thrown and not caught, the process has given up an opportunity to decide if a given failure or event is worth a change in execution.
+
+## Common Consequences
+- Other: Varies by Context
+
+## Potential Mitigations
+- [Implementation] Handle all possible situations (e.g. error condition).
+- [Implementation] If an operation can throw an Exception, implement a handler for that specific exception.

@@ -1,0 +1,22 @@
+CWE-1333: Inefficient Regular Expression Complexity
+
+Abstraction: Base
+
+Likelihood of Exploit: High
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product uses a regular expression with a worst-case computational complexity that is inefficient and possibly exponential.
+
+## Common Consequences
+- Availability: DoS: Resource Consumption (CPU) — Attackers can create crafted inputs that intentionally cause the regular expression to use excessive backtracking in a way that causes the CPU consumption to spike.
+
+## Potential Mitigations
+- [Architecture and Design] Use regular expressions that do not support backtracking, e.g. by removing nested quantifiers.
+- [System Configuration] Set backtracking limits in the configuration of the regular expression implementation, such as PHP's pcre.backtrack_limit. Also consider limits on execution time for the process.
+- [Implementation] Do not use regular expressions with untrusted input. If regular expressions must be used, avoid using backtracking in the expression.
+- [Implementation] Limit the length of the input that the regular expression will process.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

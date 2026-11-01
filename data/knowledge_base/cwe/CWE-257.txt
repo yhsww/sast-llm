@@ -1,0 +1,20 @@
+CWE-257: Storing Passwords in a Recoverable Format
+
+Abstraction: Base
+
+Likelihood of Exploit: High
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The storage of passwords in a recoverable format makes them subject to password reuse attacks by malicious users. In fact, it should be noted that recoverable encrypted passwords provide no significant benefit over plaintext passwords since they are subject not only to reuse by malicious attackers but also by malicious insiders. If a system administrator can recover a password directly, or use a brute force search on the available information, the administrator can use the password on other accounts.
+
+## Common Consequences
+- Confidentiality, Access Control: Gain Privileges or Assume Identity — User's passwords may be revealed.
+- Access Control: Gain Privileges or Assume Identity — Revealed passwords may be reused elsewhere to impersonate the users in question.
+
+## Potential Mitigations
+- [Architecture and Design] Use strong, non-reversible encryption to protect stored passwords.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

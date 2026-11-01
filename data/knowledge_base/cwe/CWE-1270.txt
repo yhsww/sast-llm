@@ -1,0 +1,17 @@
+CWE-1270: Generation of Incorrect Security Tokens
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The product implements a Security Token mechanism to differentiate what actions are allowed or disallowed when a transaction originates from an entity. However, the Security Tokens generated in the system are incorrect.
+
+## Extended Description
+Systems-On-a-Chip (SoC) (Integrated circuits and hardware engines) implement Security Tokens to differentiate and identify actions originated from various agents. These actions could be "read", "write", "program", "reset", "fetch", "compute", etc. Security Tokens are generated and assigned to every agent on the SoC that is either capable of generating an action or receiving an action from another agent. Every agent could be assigned a unique, Security Token based on its trust level or privileges.
+
+## Common Consequences
+- Confidentiality, Integrity, Availability, Access Control: Modify Files or Directories, Execute Unauthorized Code or Commands, Bypass Protection Mechanism, Gain Privileges or Assume Identity, Read Memory, Modify Memory, DoS: Crash, Exit, or Restart — Incorrectly generated Security Tokens could result in the same token used for multiple agents or multiple tokens being used for the same agent. This condition could result in a Denial-of-Service (DoS)
+
+## Potential Mitigations
+- [Architecture and Design, Implementation] Generation of Security Tokens should be reviewed for design inconsistency and common weaknesses. Security-Token definition and programming flow should be tested in pre-silicon and post-silicon testing.

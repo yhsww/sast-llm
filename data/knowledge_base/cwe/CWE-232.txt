@@ -1,0 +1,11 @@
+CWE-232: Improper Handling of Undefined Values
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not handle or incorrectly handles when a value is not defined or supported for the associated parameter, field, or argument name.
+
+## Common Consequences
+- Integrity: Unexpected State

@@ -1,0 +1,21 @@
+CWE-1256: Improper Restriction of Software Interfaces to Hardware Features
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific, Memory Hardware, Power Management Hardware, Clock/Counter Hardware
+
+## Description
+The product provides software-controllable device functionality for capabilities such as power and clock management, but it does not properly limit functionality that can lead to modification of hardware memory or register bits, or the ability to observe physical side channels.
+
+## Extended Description
+It is frequently assumed that physical attacks such as fault injection and side-channel analysis require an attacker to have physical access to the target device. This assumption may be false if the device has improperly secured power management features, or similar features. For mobile devices, minimizing power consumption is critical, but these devices run a wide variety of applications with different performance requirements. Software-controllable mechanisms to dynamically scale device voltage and frequency and monitor power consumption are common features in today's chipsets, but they also enable attackers to mount fault injection and side-channel attacks without having physical access to the device. Fault injection attacks involve strategic manipulation of bits in a device to achieve 
+
+## Common Consequences
+- Integrity: Modify Memory, Modify Application Data, Bypass Protection Mechanism
+
+## Potential Mitigations
+- [Architecture and Design, Implementation] Ensure proper access control mechanisms protect software-controllable features altering physical operating conditions such as clock frequency and voltage.
+
+## Detection Methods
+- [Manual Analysis] Perform a security evaluation of system-level architecture and design with software-aided physical attacks in scope.
+- [Automated Dynamic Analysis] Use custom software to change registers that control clock settings or power settings to try to bypass security locks, or repeatedly write DRAM to try to change adjacent locations. This can be effective in extracting or changing data. The drawback is that it cannot be run before manufacturing, and i

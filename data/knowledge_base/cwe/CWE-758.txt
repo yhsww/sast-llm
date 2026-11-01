@@ -1,0 +1,17 @@
+CWE-758: Reliance on Undefined, Unspecified, or Implementation-Defined Behavior
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product uses an API function, data structure, or other entity in a way that relies on properties that are not always guaranteed to hold for that entity.
+
+## Extended Description
+This can lead to resultant weaknesses when the required properties change, such as when the product is ported to a different platform or if an interaction error (CWE-435) occurs.
+
+## Common Consequences
+- Other: Reduce Maintainability, Unexpected State, Quality Degradation
+
+## Detection Methods
+- [Fuzzing] Fuzz testing (fuzzing) is a powerful technique for generating large numbers of diverse inputs - either randomly or algorithmically - and dynamically invoking the code with those inputs. Even with random inputs, it is often capable of generating unexpected results such as crashes, memory corruption,

@@ -1,0 +1,19 @@
+CWE-588: Attempt to Access Child of a Non-structure Pointer
+
+Abstraction: Variant
+
+Applicable Platforms: C, C++
+
+## Description
+Casting a non-structure type to a structure type and accessing a field can lead to memory access errors or data corruption.
+
+## Common Consequences
+- Integrity: Modify Memory — Adjacent variables in memory may be corrupted by assignments performed on fields after the cast.
+- Availability: DoS: Crash, Exit, or Restart — Execution may end due to a memory access error.
+
+## Potential Mitigations
+- [Requirements] The choice could be made to use a language that is not susceptible to these issues.
+- [Implementation] Review of type casting operations can identify locations where incompatible types are cast.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

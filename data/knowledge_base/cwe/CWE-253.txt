@@ -1,0 +1,24 @@
+CWE-253: Incorrect Check of Function Return Value
+
+Abstraction: Base
+
+Likelihood of Exploit: Low
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The product incorrectly checks a return value from a function, which prevents it from detecting errors or exceptional conditions.
+
+## Extended Description
+Important and common functions will return some value about the success of its actions. This will alert the program whether or not to handle any errors caused by that function.
+
+## Common Consequences
+- Availability, Integrity: Unexpected State, DoS: Crash, Exit, or Restart — An unexpected return value could place the system in a state that could lead to a crash or other unintended behaviors.
+
+## Potential Mitigations
+- [Architecture and Design] Use a language or compiler that uses exceptions and requires the catching of those exceptions.
+- [Implementation] Properly check all functions which return a value.
+- [Implementation] When designing any function make sure you return a value or throw an exception in case of an error.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

@@ -1,0 +1,16 @@
+CWE-64: Windows Shortcut Following (.LNK)
+
+Abstraction: Variant
+
+Likelihood of Exploit: Low
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The product, when opening a file or directory, does not sufficiently handle when the file is a Windows shortcut (.LNK) whose target is outside of the intended control sphere. This could allow an attacker to cause the product to operate on unauthorized files.
+
+## Common Consequences
+- Confidentiality, Integrity: Read Files or Directories, Modify Files or Directories — The shortcut (file with the .lnk extension) can permit an attacker to read/write a file that they originally did not have permissions to access.
+
+## Potential Mitigations
+- [Architecture and Design] Follow the principle of least privilege when assigning access rights to entities in a software system. Denying access to a file can prevent an attacker from replacing that file with a link to a sensitive file. Ensure good compartmentalization in the system to provide protected areas that can be trusted.

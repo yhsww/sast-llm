@@ -1,0 +1,16 @@
+CWE-308: Use of Single-factor Authentication
+
+Abstraction: Base
+
+Likelihood of Exploit: High
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product uses an authentication algorithm that uses a single factor (e.g., a password) in a security context that should require more than one factor.
+
+## Common Consequences
+- Access Control: Bypass Protection Mechanism — If the secret in a single-factor authentication scheme gets compromised, full authentication is possible.
+
+## Potential Mitigations
+- [Architecture and Design] Use multiple independent authentication schemes, which ensures that -- if one of the methods is compromised -- the system itself is still likely safe from compromise. For this reason, if multiple schemes are possible, they should be implemented and required -- especially if they are easy to use.

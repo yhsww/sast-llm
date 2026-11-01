@@ -1,0 +1,14 @@
+CWE-115: Misinterpretation of Input
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product misinterprets an input, whether from an attacker or another product, in a security-relevant fashion.
+
+## Common Consequences
+- Integrity: Unexpected State
+
+## Detection Methods
+- [Fuzzing] Fuzz testing (fuzzing) is a powerful technique for generating large numbers of diverse inputs - either randomly or algorithmically - and dynamically invoking the code with those inputs. Even with random inputs, it is often capable of generating unexpected results such as crashes, memory corruption,

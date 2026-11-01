@@ -1,0 +1,14 @@
+CWE-1056: Invokable Control Element with Variadic Parameters
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+A named-callable or method control element has a signature that supports a variable (variadic) number of parameters or arguments.
+
+## Common Consequences
+- Other: Reduce Reliability — This issue can prevent the product from running reliably. If the relevant code is reachable by an attacker, then this reliability problem might introduce a vulnerability. With variadic arguments, it c
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

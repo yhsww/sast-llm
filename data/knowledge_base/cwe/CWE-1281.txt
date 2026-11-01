@@ -1,0 +1,18 @@
+CWE-1281: Sequence of Processor Instructions Leads to Unexpected Behavior
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific, Processor Hardware
+
+## Description
+Specific combinations of processor instructions lead to undesirable behavior such as locking the processor until a hard reset performed.
+
+## Extended Description
+If the instruction set architecture (ISA) and processor logic are not designed carefully and tested thoroughly, certain combinations of instructions may lead to locking the processor or other unexpected and undesirable behavior. Upon encountering unimplemented instruction opcodes or illegal instruction operands, the processor should throw an exception and carry on without negatively impacting security. However, specific combinations of legal and illegal instructions may cause unexpected behavior with security implications such as allowing unprivileged programs to completely lock the CPU.
+
+## Common Consequences
+- Integrity, Availability: Varies by Context
+
+## Potential Mitigations
+- [Testing] Implement a rigorous testing strategy that incorporates randomization to explore instruction sequences that are unlikely to appear in normal workloads in order to identify halt and catch fire instruction sequences.
+- [Patching and Maintenance] Patch operating system to avoid running Halt and Catch Fire type sequences or to mitigate the damage caused by unexpected behavior. See [REF-1108].

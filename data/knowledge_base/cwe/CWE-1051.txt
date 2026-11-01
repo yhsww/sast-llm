@@ -1,0 +1,11 @@
+CWE-1051: Initialization with Hard-Coded Network Resource Configuration Data
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product initializes data using hard-coded values that act as network resource identifiers.
+
+## Common Consequences
+- Other: Reduce Reliability — This issue can prevent the product from running reliably, e.g. if it runs in an environment does not use the hard-coded network resource identifiers. If the relevant code is reachable by an attacker,

@@ -1,0 +1,17 @@
+CWE-453: Insecure Default Variable Initialization
+
+Abstraction: Variant
+
+Applicable Platforms: PHP, Not Language-Specific
+
+## Description
+The product, by default, initializes an internal variable with an insecure or less secure value than is possible.
+
+## Common Consequences
+- Integrity: Modify Application Data — An attacker could gain access to and modify sensitive data or system information.
+
+## Potential Mitigations
+- [System Configuration] Disable or change default settings when they can be used to abuse the system. Since those default settings are shipped with the product they are likely to be known by a potential attacker who is familiar with the product. For instance, default credentials should be changed or the associated accounts should be disabled.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

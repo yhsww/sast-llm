@@ -1,0 +1,21 @@
+CWE-1291: Public Key Re-Use for Signing both Debug and Production Code
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The same public key is used for signing both debug and production code.
+
+## Extended Description
+A common usage of public-key cryptography is to verify the integrity and authenticity of another entity (for example a firmware binary). If a company wants to ensure that its firmware runs only on its own hardware, before the firmware runs, an encrypted hash of the firmware image will be decrypted with the public key and then verified against the now-computed hash of the firmware image. This means that the public key forms the root of trust, which necessitates that the public key itself must be protected and used properly. During the development phase, debug firmware enables many hardware debug hooks, debug modes, and debug messages for testing. Those debug facilities provide significant, additional views about the firmware's capability and, in some cases, additional capability into the ch
+
+## Common Consequences
+- Confidentiality, Integrity, Availability, Access Control, Accountability, Authentication, Authorization, Non-Repudiation, Other: Read Memory, Modify Memory, Execute Unauthorized Code or Commands, Gain Privileges or Assume Identity, Varies by Context
+
+## Potential Mitigations
+- [Implementation] Use different keys for Production and Debug.
+
+## Detection Methods
+- [Architecture or Design Review] Compare the debug key with the production key to make sure that they are not the same.
+- [Dynamic Analysis with Manual Results Interpretation] Compare the debug key with the production key to make sure that they are not the same.

@@ -1,0 +1,14 @@
+CWE-107: Struts: Unused Validation Form
+
+Abstraction: Variant
+
+Applicable Platforms: Java
+
+## Description
+An unused validation form indicates that validation logic is not up-to-date.
+
+## Common Consequences
+- Other: Quality Degradation
+
+## Potential Mitigations
+- [Implementation] Remove the unused Validation Form from the validation.xml file.

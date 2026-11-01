@@ -1,0 +1,14 @@
+CWE-228: Improper Handling of Syntactically Invalid Structure
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not handle or incorrectly handles input that is not syntactically well-formed with respect to the associated specification.
+
+## Common Consequences
+- Integrity, Availability: Unexpected State, DoS: Crash, Exit, or Restart, DoS: Resource Consumption (CPU) — If an input is syntactically invalid, then processing the input could place the system in an unexpected state that could lead to a crash, consume available system resources or other unintended behavio
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

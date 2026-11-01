@@ -1,0 +1,17 @@
+CWE-607: Public Static Final Field References Mutable Object
+
+Abstraction: Variant
+
+Applicable Platforms: Java
+
+## Description
+A public or protected static final field references a mutable object, which allows the object to be changed by malicious code, or accidentally from another package.
+
+## Common Consequences
+- Integrity: Modify Application Data
+
+## Potential Mitigations
+- [Implementation] Protect mutable objects by making them private. Restrict access to the getter and setter as well.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

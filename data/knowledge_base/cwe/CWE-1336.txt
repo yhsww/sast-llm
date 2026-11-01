@@ -1,0 +1,21 @@
+CWE-1336: Improper Neutralization of Special Elements Used in a Template Engine
+
+Abstraction: Base
+
+Applicable Platforms: Java, PHP, Python, JavaScript, Interpreted, Not Technology-Specific, AI/ML, Client Server
+
+## Description
+The product uses a template engine to insert or process externally-influenced input, but it does not neutralize or incorrectly neutralizes special elements or syntax that can be interpreted as template expressions or other code directives when processed by the engine.
+
+## Extended Description
+Many web applications use template engines that allow developers to insert externally-influenced values into free text or messages in order to generate a full web page, document, message, etc. Such engines include Twig, Jinja2, Pug, Java Server Pages, FreeMarker, Velocity, ColdFusion, Smarty, and many others - including PHP itself. Some CMS (Content Management Systems) also use templates. Template engines often have their own custom command or expression language. If an attacker can influence input into a template before it is processed, then the attacker can invoke arbitrary expressions, i.e. perform injection attacks. For example, in some template languages, an attacker could inject the expression "{{7*7}}" and determine if the output returns "49" instead. The syntax varies depending on 
+
+## Common Consequences
+- Integrity: Execute Unauthorized Code or Commands
+
+## Potential Mitigations
+- [Architecture and Design] Choose a template engine that offers a sandbox or restricted mode, or at least limits the power of any available expressions, function calls, or commands.
+- [Implementation] Use the template engine's sandbox or restricted mode, if available.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

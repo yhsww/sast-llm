@@ -1,0 +1,22 @@
+CWE-486: Comparison of Classes by Name
+
+Abstraction: Variant
+
+Likelihood of Exploit: High
+
+Applicable Platforms: Java
+
+## Description
+The product compares classes by name, which can cause it to use the wrong class when multiple classes can have the same name.
+
+## Extended Description
+If the decision to trust the methods and data of an object is based on the name of a class, it is possible for malicious users to send objects of the same name as trusted classes and thereby gain the trust afforded to known classes and types.
+
+## Common Consequences
+- Integrity, Confidentiality, Availability: Execute Unauthorized Code or Commands — If a product relies solely on the name of an object to determine identity, it may execute the incorrect or unintended code.
+
+## Potential Mitigations
+- [Implementation] Use class equivalency to determine type. Rather than use the class name to determine if an object is of a given type, use the getClass() method, and == operator.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

@@ -1,0 +1,24 @@
+CWE-1429: Missing Security-Relevant Feedback for Unexecuted Operations in Hardware Interface
+
+Abstraction: Base
+
+Applicable Platforms: C, C++, Verilog, Hardware Description Language, Not Language-Specific, Security Hardware, Processor Hardware, Microcontroller Hardware, System on Chip
+
+## Description
+The product has a hardware interface that silently discards operations in situations for which feedback would be security-relevant, such as the timely detection of failures or attacks.
+
+## Extended Description
+While some systems intentionally withhold feedback as a security measure, this approach must be strictly controlled to ensure it does not obscure operational failures that require prompt detection and remediation. Without these essential confirmations, failures go undetected, increasing the risk of data loss, security vulnerabilities, and overall system instability. Even when withholding feedback is an intentional part of a security policy designed, for example, to prevent attackers from gleaning sensitive internal details, the absence of expected feedback becomes a critical weakness when it masks operational failures that require prompt detection and remediation. For instance, certain encryption algorithms always return ciphertext regardless of errors to prevent attackers from gaining ins
+
+## Common Consequences
+- Confidentiality: Read Memory, Read Files or Directories — Critical data may be exposed if operations are unexecuted or discarded silently, allowing attackers to exploit the lack of feedback.
+- Integrity: Modify Memory, Modify Files or Directories — Operations may proceed based on incorrect assumptions, potentially causing data corruption or incorrect system behavior. In integrity-sensitive contexts, failing to signal that an operation did not oc
+- Availability: DoS: Resource Consumption (Memory), DoS: Crash, Exit, or Restart — Unhandled discarded operations can lead to resource exhaustion, triggering system crashes or denial of service. For availability, consistent feedback is crucial. Without proper notification of discard
+
+## Potential Mitigations
+- [Architecture and Design] Incorporate logging and feedback mechanisms during the design phase to ensure proper handling of discarded operations.
+- [Implementation] Developers should ensure that every critical operation includes proper logging or error feedback mechanisms.
+
+## Detection Methods
+- [Automated Static Analysis - Source Code] Scans code for missing error handling or feedback mechanisms.
+- [Manual Static Analysis - Source Code] Experts manually inspect the code for unhandled operations.

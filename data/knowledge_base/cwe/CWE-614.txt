@@ -1,0 +1,17 @@
+CWE-614: Sensitive Cookie in HTTPS Session Without 'Secure' Attribute
+
+Abstraction: Variant
+
+Applicable Platforms: Web Based
+
+## Description
+The Secure attribute for sensitive cookies in HTTPS sessions is not set.
+
+## Common Consequences
+- Confidentiality: Read Application Data — Omitting the secure flag makes it possible for the user agent to send the cookies in plaintext over an HTTP session.
+
+## Potential Mitigations
+- [Implementation] Always set the secure attribute when the cookie should be sent via HTTPS only.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

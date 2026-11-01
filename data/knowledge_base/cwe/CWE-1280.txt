@@ -1,0 +1,17 @@
+CWE-1280: Access Control Check Implemented After Asset is Accessed
+
+Abstraction: Base
+
+Applicable Platforms: Verilog, VHDL, Not Language-Specific, Not Technology-Specific
+
+## Description
+A product's hardware-based access control check occurs after the asset has been accessed.
+
+## Extended Description
+The product implements a hardware-based access control check. The asset should be accessible only after the check is successful. If, however, this operation is not atomic and the asset is accessed before the check is complete, the security of the system may be compromised.
+
+## Common Consequences
+- Access Control, Confidentiality, Integrity: Modify Memory, Read Memory, Modify Application Data, Read Application Data, Gain Privileges or Assume Identity, Bypass Protection Mechanism
+
+## Potential Mitigations
+- [Implementation] Implement the access control check first. Access should only be given to asset if agent is authorized.

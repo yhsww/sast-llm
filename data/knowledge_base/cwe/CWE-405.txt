@@ -1,0 +1,19 @@
+CWE-405: Asymmetric Resource Consumption (Amplification)
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific, Client Server
+
+## Description
+The product does not properly control situations in which an adversary can cause the product to consume or produce excessive resources without requiring the adversary to invest equivalent work or otherwise prove authorization, i.e., the adversary's influence is "asymmetric."
+
+## Extended Description
+This can lead to poor performance due to "amplification" of resource consumption, typically in a non-linear fashion. This situation is worsened if the product allows malicious users or attackers to consume more resources than their access level permits.
+
+## Common Consequences
+- Availability: DoS: Amplification, DoS: Resource Consumption (CPU), DoS: Resource Consumption (Memory), DoS: Resource Consumption (Other) — Sometimes this is a factor in "flood" attacks, but other types of amplification exist.
+
+## Potential Mitigations
+- [Architecture and Design] An application must make resources available to a client commensurate with the client's access level.
+- [Architecture and Design] An application must, at all times, keep track of allocated resources and meter their usage appropriately.
+- [System Configuration] Consider disabling resource-intensive algorithms on the server side, such as Diffie-Hellman key exchange.

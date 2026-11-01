@@ -1,0 +1,17 @@
+CWE-548: Exposure of Information Through Directory Listing
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product inappropriately exposes a directory listing with an index of all the resources located inside of the directory.
+
+## Common Consequences
+- Confidentiality: Read Files or Directories — Exposing the contents of a directory can lead to an attacker gaining access to source code or providing useful information for the attacker to devise exploits, such as creation times of files or any i
+
+## Potential Mitigations
+- [Architecture and Design, System Configuration] Recommendations include restricting access to important directories or files by adopting a need to know requirement for both the document and server root, and turning off features such as Automatic Directory Listings that could expose private files and provide information that could be utilized by an attacker when formulating or conducting an attack.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

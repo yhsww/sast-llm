@@ -1,0 +1,14 @@
+CWE-317: Cleartext Storage of Sensitive Information in GUI
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product stores sensitive information in cleartext within the GUI.
+
+## Extended Description
+An attacker can often obtain data from a GUI, even if hidden, by using an API to directly access GUI objects such as windows and menus. Even if the information is encoded in a way that is not human-readable, certain techniques could determine which encoding is being used, then decode the information.
+
+## Common Consequences
+- Confidentiality: Read Memory, Read Application Data

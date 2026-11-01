@@ -1,0 +1,19 @@
+CWE-1236: Improper Neutralization of Formula Elements in a CSV File
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Other
+
+## Description
+The product saves user-provided information into a Comma-Separated Value (CSV) file, but it does not neutralize or incorrectly neutralizes special elements that could be interpreted as a command when the file is opened by a spreadsheet product.
+
+## Common Consequences
+- Confidentiality: Read Application Data, Execute Unauthorized Code or Commands — Attackers can populate data fields which, when saved to a CSV file, may attempt information exfiltration or other malicious activity when automatically executed by the spreadsheet software. Note that 
+
+## Potential Mitigations
+- [Implementation] When generating CSV output, ensure that formula-sensitive metacharacters are effectively escaped or removed from all data before storage in the resultant CSV. Risky characters include '=' (equal), '+' (plus), '-' (minus), and '@' (at).
+- [Implementation] If a field starts with a formula character, prepend it with a ' (single apostrophe), which prevents Excel from executing the formula.
+- [Architecture and Design] Certain implementations of spreadsheet software might disallow formulas from executing if the file is untrusted, or if the file is not authored by the current user.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

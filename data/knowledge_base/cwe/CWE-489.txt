@@ -1,0 +1,17 @@
+CWE-489: Active Debug Code
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific, ICS/OT
+
+## Description
+The product is released with debugging code still enabled or active.
+
+## Common Consequences
+- Confidentiality, Integrity, Availability, Access Control, Other: Bypass Protection Mechanism, Read Application Data, Gain Privileges or Assume Identity, Varies by Context — Active debug code can create unintended entry points or expose sensitive information. The severity of the exposed debug code will depend on the particular instance. At the least, it will give an attac
+
+## Potential Mitigations
+- [Build and Compilation, Distribution] Remove debug code before deploying the application.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

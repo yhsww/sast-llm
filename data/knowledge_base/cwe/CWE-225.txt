@@ -1,0 +1,6 @@
+CWE-225: DEPRECATED: General Information Management Problems
+
+Abstraction: Base
+
+## Description
+This weakness can be found at CWE-199.

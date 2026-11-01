@@ -1,0 +1,14 @@
+CWE-448: Obsolete Feature in UI
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+A UI function is obsolete and the product does not warn the user.
+
+## Common Consequences
+- Other: Quality Degradation, Varies by Context
+
+## Potential Mitigations
+- [Architecture and Design] Remove the obsolete feature from the UI. Warn the user that the feature is no longer supported.

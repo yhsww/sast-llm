@@ -1,0 +1,17 @@
+CWE-686: Function Call With Incorrect Argument Type
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product calls a function, procedure, or routine, but the caller specifies an argument that is the wrong data type, which may lead to resultant weaknesses.
+
+## Extended Description
+This weakness is most likely to occur in loosely typed languages, or in strongly typed languages in which the types of variable arguments cannot be enforced at compilation time, or where there is implicit casting.
+
+## Common Consequences
+- Other: Quality Degradation
+
+## Detection Methods
+- [Other] Because this function call often produces incorrect behavior, it will usually be detected during testing or normal operation of the product.

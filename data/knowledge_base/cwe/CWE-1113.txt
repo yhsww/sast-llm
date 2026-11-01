@@ -1,0 +1,12 @@
+CWE-1113: Inappropriate Comment Style
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The source code uses comment styles or formats that are inconsistent or do not follow expected standards for the product.
+
+## Common Consequences
+- Other: Reduce Maintainability
+- Other: Increase Analytical Complexity — This issue makes it more difficult to maintain the product due to insufficient legibility, which indirectly affects security by making it more difficult or time-consuming to find and/or fix vulnerabil

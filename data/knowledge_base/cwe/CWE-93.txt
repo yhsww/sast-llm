@@ -1,0 +1,18 @@
+CWE-93: Improper Neutralization of CRLF Sequences ('CRLF Injection')
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product uses CRLF (carriage return line feeds) as a special element, e.g. to separate lines or records, but it does not neutralize or incorrectly neutralizes CRLF sequences from inputs.
+
+## Common Consequences
+- Integrity: Modify Application Data
+
+## Potential Mitigations
+- [Implementation] Avoid using CRLF as a special sequence.
+- [Implementation] Appropriately filter or quote CRLF sequences in user-controlled input.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

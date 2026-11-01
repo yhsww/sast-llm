@@ -1,0 +1,17 @@
+CWE-1259: Improper Restriction of Security Token Assignment
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Processor Hardware, System on Chip
+
+## Description
+The System-On-A-Chip (SoC) implements a Security Token mechanism to differentiate what actions are allowed or disallowed when a transaction originates from an entity. However, the Security Tokens are improperly protected.
+
+## Extended Description
+Systems-On-A-Chip (Integrated circuits and hardware engines) implement Security Tokens to differentiate and identify which actions originated from which agent. These actions may be one of the directives: 'read', 'write', 'program', 'reset', 'fetch', 'compute', etc. Security Tokens are assigned to every agent in the System that is capable of generating an action or receiving an action from another agent. Multiple Security Tokens may be assigned to an agent and may be unique based on the agent's trust level or allowed privileges. Since the Security Tokens are integral for the maintenance of security in an SoC, they need to be protected properly. A common weakness afflicting Security Tokens is improperly restricting the assignment to trusted components.
+
+## Common Consequences
+- Confidentiality, Integrity, Availability, Access Control: Modify Files or Directories, Execute Unauthorized Code or Commands, Bypass Protection Mechanism, Gain Privileges or Assume Identity, Modify Memory, Modify Memory, DoS: Crash, Exit, or Restart — An improperly protected Security Token may be able to be programmed by a malicious agent (i.e., the Security Token is mutable) to spoof the action as if it originated from a trusted agent.
+
+## Potential Mitigations
+- [Architecture and Design, Implementation] Security Token assignment review checks for design inconsistency and common weaknesses. Security-Token definition and programming flow is tested in both pre-silicon and post-silicon testing.

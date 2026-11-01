@@ -1,0 +1,17 @@
+CWE-684: Incorrect Provision of Specified Functionality
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The code does not function according to its published specifications, potentially leading to incorrect usage.
+
+## Extended Description
+When providing functionality to an external party, it is important that the product behaves in accordance with the details specified. When requirements of nuances are not documented, the functionality may produce unintended behaviors for the caller, possibly leading to an exploitable state.
+
+## Common Consequences
+- Other: Quality Degradation
+
+## Potential Mitigations
+- [Implementation] Ensure that your code strictly conforms to specifications.

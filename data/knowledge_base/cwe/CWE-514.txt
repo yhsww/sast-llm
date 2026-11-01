@@ -1,0 +1,17 @@
+CWE-514: Covert Channel
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+A covert channel is a path that can be used to transfer information in a way not intended by the system's designers.
+
+## Extended Description
+Typically the system has not given authorization for the transmission and has no knowledge of its occurrence.
+
+## Common Consequences
+- Confidentiality, Access Control: Read Application Data, Bypass Protection Mechanism
+
+## Detection Methods
+- [Architecture or Design Review] According to SOAR [REF-1479], the following detection techniques may be useful: Cost effective for partial coverage: Inspection (IEEE 1028 standard) (can apply to requirements, design, source code, etc.)

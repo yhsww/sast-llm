@@ -1,0 +1,17 @@
+CWE-491: Public cloneable() Method Without Final ('Object Hijack')
+
+Abstraction: Variant
+
+Applicable Platforms: Java
+
+## Description
+A class has a cloneable() method that is not declared final, which allows an object to be created without calling the constructor. This can cause the object to be in an unexpected state.
+
+## Common Consequences
+- Integrity, Other: Unexpected State, Varies by Context
+
+## Potential Mitigations
+- [Implementation] Make the cloneable() method final.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

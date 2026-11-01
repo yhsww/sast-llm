@@ -1,0 +1,33 @@
+CWE-1420: Exposure of Sensitive Information during Transient Execution
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+A processor event or prediction may allow incorrect operations (or correct operations with incorrect data) to execute transiently, potentially exposing data over a covert channel.
+
+## Extended Description
+When operations execute but do not commit to the processor's architectural state, this is commonly referred to as transient execution. This behavior can occur when the processor mis-predicts an outcome (such as a branch target), or when a processor event (such as an exception or microcode assist, etc.) is handled after younger operations have already executed. Operations that execute transiently may exhibit observable discrepancies (CWE-203) in covert channels [REF-1400] such as data caches. Observable discrepancies of this kind can be detected and analyzed using timing or power analysis techniques, which may allow an attacker to infer information about the operations that executed transiently. For example, the attacker may be able to infer confidential data that was accessed or used by th
+
+## Common Consequences
+- Confidentiality: Read Memory
+
+## Potential Mitigations
+- [Architecture and Design] The hardware designer can attempt to prevent transient execution from causing observable discrepancies in specific covert channels.
+- [Requirements] Processor designers may expose instructions or other architectural features that allow software to mitigate the effects of transient execution, but without disabling predictors. These features may also help to limit opportunities for data exposure.
+- [Requirements] Processor designers may expose registers (for example, control registers or model-specific registers) that allow privileged and/or user software to disable specific predictors or other hardware features that can cause confidential data to be exposed during transient execution.
+- [Requirements] Processor designers, system software vendors, or other agents may choose to restrict the ability of unprivileged software to access to high-resolution timers that are commonly used to monitor covert channels.
+- [Build and Compilation] Isolate sandboxes or managed runtimes in separate address spaces (separate processes). For examples, see [REF-1421].
+- [Build and Compilation] Include serialization instructions (for example, LFENCE) that prevent processor events or mis-predictions prior to the serialization instruction from causing transient execution after the serialization instruction. For some weaknesses, a serialization instruction can also prevent a processor event or a mis-prediction from occurring after the serialization instruction (for example, CVE-2018-3639 can allow a processor to predict that a load will not depend on an older store; a serialization instruction between the store and the load may allow the store to update memory and prevent the prediction from happening at all).
+- [Build and Compilation] Use control-flow integrity (CFI) techniques to constrain the behavior of instructions that redirect the instruction pointer, such as indirect branch instructions.
+- [Build and Compilation] If the weakness is exposed by a single instruction (or a small set of instructions), then the compiler (or JIT, etc.) can be configured to prevent the affected instruction(s) from being generated, and instead generate an alternate sequence of instructions that is not affected by the weakness. One prominent example of this mitigation is retpoline ([REF-1414]).
+- [Build and Compilation] Use software techniques that can mitigate the consequences of transient execution. For example, address masking can be used in some circumstances to prevent out-of-bounds transient reads.
+- [Build and Compilation] Use software techniques (including the use of serialization instructions) that are intended to reduce the number of instructions that can be executed transiently after a processor event or misprediction.
+[...truncated]
+
+## Detection Methods
+- [Manual Analysis] This weakness can be detected in hardware by manually inspecting processor specifications. Features that exhibit this weakness may include microarchitectural predictors, access control checks that occur out-of-order, or any other features that can allow operations to execute without committing to ar
+- [Fuzzing] Academic researchers have demonstrated that this weakness can be detected in hardware using software fuzzing tools that treat the underlying hardware as a black box ([REF-1428]).
+- [Fuzzing] Academic researchers have demonstrated that this weakness can be detected in software using software fuzzing tools ([REF-1429]).
+- [Automated Static Analysis] A variety of automated static analysis tools can identify potentially exploitable code sequences in software. These tools may perform the analysis on source code, on binary code, or on an intermediate code representation (for example, during compilation).

@@ -1,0 +1,11 @@
+CWE-47: Path Equivalence: ' filename' (Leading Space)
+
+Abstraction: Variant
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product accepts path input in the form of leading space (' filedir') without appropriate validation, which can lead to ambiguous path resolution and allow an attacker to traverse the file system to unintended locations or access arbitrary files.
+
+## Common Consequences
+- Confidentiality, Integrity: Read Files or Directories, Modify Files or Directories

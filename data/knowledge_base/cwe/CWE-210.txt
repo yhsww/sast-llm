@@ -1,0 +1,15 @@
+CWE-210: Self-generated Error Message Containing Sensitive Information
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product identifies an error condition and creates its own diagnostic or error messages that contain sensitive information.
+
+## Common Consequences
+- Confidentiality: Read Application Data
+
+## Potential Mitigations
+- [Implementation, Build and Compilation] Debugging information should not make its way into a production release.
+- [Implementation, Build and Compilation] Debugging information should not make its way into a production release.

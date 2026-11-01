@@ -1,0 +1,23 @@
+CWE-1300: Improper Protection of Physical Side Channels
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The device does not contain sufficient protection mechanisms to prevent physical side channels from exposing sensitive information due to patterns in physically observable phenomena such as variations in power consumption, electromagnetic emissions (EME), or acoustic emissions.
+
+## Extended Description
+An adversary could monitor and measure physical phenomena to detect patterns and make inferences, even if it is not possible to extract the information in the digital domain. Physical side channels have been well-studied for decades in the context of breaking implementations of cryptographic algorithms or other attacks against security features. These side channels may be easily observed by an adversary with physical access to the device, or using a tool that is in close proximity. If the adversary can monitor hardware operation and correlate its data processing with power, EME, and acoustic measurements, the adversary might be able to recover of secret keys and data.
+
+## Common Consequences
+- Confidentiality: Read Memory, Read Application Data
+
+## Potential Mitigations
+- [Architecture and Design] Apply blinding or masking techniques to implementations of cryptographic algorithms.
+- [Implementation] Add shielding or tamper-resistant protections to the device to increase the difficulty of obtaining measurements of the side-channel.
+
+## Detection Methods
+- [Manual Analysis] Perform a set of leakage detection tests such as the procedure outlined in the Test Vector Leakage Assessment (TVLA) test requirements for AES [REF-1230]. TVLA is the basis for the ISO standard 17825 [REF-1229]. A separate methodology is provided by [REF-1228]. Note that sole reliance on this method
+- [Manual Analysis] Post-silicon, perform full side-channel attacks (penetration testing) covering as many known leakage models as possible against test code.
+- [Manual Analysis] Pre-silicon - while the aforementioned TVLA methods can be performed post-silicon, models of device power consumption or other physical emanations can be built from information present at various stages of the hardware design process before fabrication. TVLA or known side-channel attacks can be appl

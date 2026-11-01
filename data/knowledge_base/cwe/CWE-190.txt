@@ -1,0 +1,32 @@
+CWE-190: Integer Overflow or Wraparound
+
+Abstraction: Base
+
+Likelihood of Exploit: Medium
+
+Applicable Platforms: Not Language-Specific, C, Not Technology-Specific
+
+## Description
+The product performs a calculation that can produce an integer overflow or wraparound when the logic assumes that the resulting value will always be larger than the original value. This occurs when an integer value is incremented to a value that is too large to store in the associated representation. When this occurs, the value may become a very small or negative number.
+
+## Common Consequences
+- Availability: DoS: Crash, Exit, or Restart, DoS: Resource Consumption (Memory), DoS: Instability — This weakness can generally lead to undefined behavior and therefore crashes. When the calculated result is used for resource allocation, this weakness can cause too many (or too few) resources to be 
+- Integrity: Modify Memory — If the value in question is important to data (as opposed to flow), simple data corruption has occurred. Also, if the overflow/wraparound results in other conditions such as buffer overflows, further 
+- Confidentiality, Availability, Access Control: Execute Unauthorized Code or Commands, Bypass Protection Mechanism — This weakness can sometimes trigger buffer overflows, which can be used to execute arbitrary code. This is usually outside the scope of the product's implicit security policy.
+- Availability, Other: Alter Execution Logic, DoS: Crash, Exit, or Restart, DoS: Resource Consumption (CPU) — If the overflow/wraparound occurs in a loop index variable, this could cause the loop to terminate at the wrong time - too early, too late, or not at all (i.e., infinite loops). With too many iteratio
+- Access Control: Bypass Protection Mechanism — If integer values are used in security-critical decisions, such as calculating quotas or allocation limits, integer overflows can be used to cause an incorrect security decision.
+
+## Potential Mitigations
+- [Requirements] Ensure that all protocols are strictly defined, such that all out-of-bounds behavior can be identified simply, and require strict conformance to the protocol.
+- [Requirements] Use a language that does not allow this weakness to occur or provides constructs that make this weakness easier to avoid. If possible, choose a language or compiler that performs automatic bounds checking.
+- [Architecture and Design] Use a vetted library or framework that does not allow this weakness to occur or provides constructs that make this weakness easier to avoid [REF-1482]. Use libraries or frameworks that make it easier to handle numbers without unexpected consequences. Examples include safe integer handling packages such as SafeInt (C++) or IntegerLib (C or C++). [REF-106]
+- [Implementation] Perform input validation on any numeric input by ensuring that it is within the expected range. Enforce that the input meets both the minimum and maximum requirements for the expected range. Use unsigned integers where possible. This makes it easier to perform validation for integer overflows. When signed integers are required, ensure that the range check includes minimum values as well as maximum values.
+- [Implementation] Understand the programming language's underlying representation and how it interacts with numeric calculation (CWE-681). Pay close attention to byte size discrepancies, precision, signed/unsigned distinctions, truncation, conversion and casting between types, "not-a-number" calculations, and how the language handles numbers that are too large or too small for its underlying representation. [REF-7] Also be careful to account for 32-bit, 64-bit, and other potential differences that may affect the numeric representation.
+- [Architecture and Design] For any security checks that are performed on the client side, ensure that these checks are duplicated on the server side, in order to avoid CWE-602. Attackers can bypass the client-side checks by modifying values after the checks have been performed, or by changing the client to remove the client-side checks entirely. Then, these modified values would be submitted to the server.
+- [Implementation] Examine compiler warnings closely and eliminate problems with potential security implications, such as signed / unsigned mismatch in memory operations, or use of uninitialized variables. Even if the weakness is rarely exploitable, a single failure may lead to the compromise of the entire system.
+
+## Detection Methods
+- [Automated Static Analysis] This weakness can often be detected using automated static analysis tools. Many modern tools use data flow analysis or constraint-based techniques to minimize the number of false positives.
+- [Black Box] Sometimes, evidence of this weakness can be detected using dynamic tools and techniques that interact with the product using large test suites with many diverse inputs, such as fuzz testing (fuzzing), robustness testing, and fault injection. The product's operation may slow down, but it should not b
+- [Manual Analysis] This weakness can be detected using tools and techniques that require manual (human) analysis, such as penetration testing, threat modeling, and interactive tools that allow the tester to record and modify an active session. Specifically, manual static analysis is useful for evaluating the correctne
+- [Automated Static Analysis - Binary or Bytecode] According to SOAR [REF-1479], the following detection techniques may be useful: Highly cost effective: Bytecode Weakness Analysis - including disassembler + source code weakness analysis Binary Weakness Analysis - including disassembler + source code weakness analysis

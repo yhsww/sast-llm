@@ -1,0 +1,21 @@
+CWE-441: Unintended Proxy or Intermediary ('Confused Deputy')
+
+Abstraction: Class
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The product receives a request, message, or directive from an upstream component, but the product does not sufficiently preserve the original source of the request before forwarding the request to an external actor that is outside of the product's control sphere. This causes the product to appear to be the source of the request, leading it to act as a proxy or other intermediary between the upstream component and the external actor.
+
+## Extended Description
+If an attacker cannot directly contact a target, but the product has access to the target, then the attacker can send a request to the product and have it be forwarded to the target. The request would appear to be coming from the product's system, not the attacker's system. As a result, the attacker can bypass access controls (such as firewalls) or hide the source of malicious requests, since the requests would not be coming directly from the attacker. Since proxy functionality and message-forwarding often serve a legitimate purpose, this issue only becomes a vulnerability when: The product runs with different privileges or on a different system, or otherwise has different levels of access than the upstream component; The attacker is prevented from making the request directly to the target
+
+## Common Consequences
+- Non-Repudiation, Access Control: Gain Privileges or Assume Identity, Hide Activities, Execute Unauthorized Code or Commands
+
+## Potential Mitigations
+- [Architecture and Design] Enforce the use of strong mutual authentication mechanism between the two parties.
+- [Architecture and Design] Whenever a product is an intermediary or proxy for transactions between two other components, the proxy core should not drop the identity of the initiator of the transaction. The immutability of the identity of the initiator must be maintained and should be forwarded all the way to the target.
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

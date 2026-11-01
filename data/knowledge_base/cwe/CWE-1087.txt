@@ -1,0 +1,14 @@
+CWE-1087: Class with Virtual Method without a Virtual Destructor
+
+Abstraction: Base
+
+Applicable Platforms: Object-Oriented
+
+## Description
+A class contains a virtual method, but the method does not have an associated virtual destructor.
+
+## Common Consequences
+- Other: Reduce Reliability — This issue can prevent the product from running reliably, e.g. due to undefined behavior. If the relevant code is reachable by an attacker, then this reliability problem might introduce a vulnerabilit
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

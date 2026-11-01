@@ -1,0 +1,19 @@
+CWE-243: Creation of chroot Jail Without Changing Working Directory
+
+Abstraction: Variant
+
+Likelihood of Exploit: High
+
+Applicable Platforms: C, C++
+
+## Description
+The product uses the chroot() system call to create a jail, but does not change the working directory afterward. This does not prevent access to files outside of the jail.
+
+## Extended Description
+Improper use of chroot() may allow attackers to escape from the chroot jail. The chroot() function call does not change the process's current working directory, so relative paths may still refer to file system resources outside of the chroot jail after chroot() has been called.
+
+## Common Consequences
+- Confidentiality: Read Files or Directories
+
+## Detection Methods
+- [Automated Static Analysis] Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then sea

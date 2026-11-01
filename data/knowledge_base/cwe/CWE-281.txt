@@ -1,0 +1,11 @@
+CWE-281: Improper Preservation of Permissions
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific
+
+## Description
+The product does not preserve permissions or incorrectly preserves permissions when copying, restoring, or sharing objects, which can cause them to have less restrictive permissions than intended.
+
+## Common Consequences
+- Confidentiality, Integrity: Read Application Data, Modify Application Data

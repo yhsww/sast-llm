@@ -1,0 +1,17 @@
+CWE-1268: Policy Privileges are not Assigned Consistently Between Control and Data Agents
+
+Abstraction: Base
+
+Applicable Platforms: Not Language-Specific, Not Technology-Specific
+
+## Description
+The product's hardware-enforced access control for a particular resource improperly accounts for privilege discrepancies between control and write policies.
+
+## Extended Description
+Integrated circuits and hardware engines may provide access to resources (device-configuration, encryption keys, etc.) belonging to trusted firmware or software modules (commonly set by a BIOS or a bootloader). These accesses are typically controlled and limited by the hardware. Hardware design access control is sometimes implemented using a policy. A policy defines which entity or agent may or may not be allowed to perform an action. When a system implements multiple levels of policies, a control policy may allow direct access to a resource as well as changes to the policies themselves. Resources that include agents in their control policy but not in their write policy could unintentionally allow an untrusted agent to insert itself in the write policy register. Inclusion in the write poli
+
+## Common Consequences
+- Confidentiality, Integrity, Availability, Access Control: Modify Memory, Read Memory, DoS: Crash, Exit, or Restart, Execute Unauthorized Code or Commands, Gain Privileges or Assume Identity, Bypass Protection Mechanism, Read Files or Directories, Reduce Reliability
+
+## Potential Mitigations
+- [Architecture and Design, Implementation] Access-control-policy definition and programming flow must be sufficiently tested in pre-silicon and post-silicon testing.

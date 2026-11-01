@@ -1,0 +1,20 @@
+CWE-480: Use of Incorrect Operator
+
+Abstraction: Base
+
+Likelihood of Exploit: Low
+
+Applicable Platforms: C, C++, Perl, Not Language-Specific
+
+## Description
+The product accidentally uses the wrong operator, which changes the logic in security-relevant ways.
+
+## Extended Description
+These types of errors are generally the result of a typo by the programmer.
+
+## Common Consequences
+- Other: Alter Execution Logic — This weakness can cause unintended logic to be executed and other unexpected application behavior.
+
+## Detection Methods
+- [Automated Static Analysis] This weakness can be found easily using static analysis. However in some cases an operator might appear to be incorrect, but is actually correct and reflects unusual logic within the program.
+- [Manual Static Analysis] This weakness can be found easily using static analysis. However in some cases an operator might appear to be incorrect, but is actually correct and reflects unusual logic within the program.
