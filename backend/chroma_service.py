@@ -43,7 +43,7 @@ _DOMAIN_RULES = (
      {"CWE": (), "WSTG": ()}),
     (r"regular expression|\bregex\b|\bregexp\b|backtracking|redos",
      "inefficient regular expression complexity catastrophic backtracking ReDoS denial of service",
-     {"CWE": ("CWE-1333",), "WSTG": ("WSTG-BUSL-07",)}),
+     {"CWE": ("CWE-1333", "CWE-400"), "WSTG": ()}),
     (r"template",
      "template injection server-side client-side template engine",
      {"CWE": ("CWE-1336",), "WSTG": ("WSTG-INPV-18", "WSTG-CLNT-15")}),
@@ -88,7 +88,8 @@ def _wstg_allowlist(query_text: str) -> set[str] | None:
         query,
         flags=re.IGNORECASE,
     ):
-        return {"WSTG-BUSL-07"}
+        # CWE is the more precise taxonomy for ReDoS; avoid unrelated WSTG fillers.
+        return set()
     if re.search(
         r"private key|\bsecret key\b|\brevoke\b|\bcompromised\b",
         query,
@@ -150,7 +151,8 @@ def _rank_candidates(rows, source: str, query_text: str, anchors: set[str]):
         semantic_score = 1.0 / (1.0 + max(float(distance or 0.0), 0.0))
         title_tokens = _tokens(title)
         overlap = len(query_tokens & title_tokens) / len(title_tokens) if title_tokens else 0.0
-        anchor_bonus = 0.35 if doc_id in anchors else 0.0
+        # Explicit taxonomy matches should outrank semantically similar but unrelated documents.
+        anchor_bonus = 0.75 if doc_id in anchors else 0.0
         title_bonus = 0.15 if query_tokens & title_tokens else 0.0
         score = 0.65 * semantic_score + 0.20 * overlap + anchor_bonus + title_bonus
         ranked.append((
