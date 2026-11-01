@@ -1,0 +1,34 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S1523",
+        "arquivo": "juice-shop:routes/b2bOrder.ts",
+        "linha": 23,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S1523",
+        "categoria": "Security Hotspot"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-94",
+        "owasp_top_10": "A03:2021-Injection",
+        "wstg": "WSTG-INPV-18",
+        "justificativa": "A regra typescript:S1523 aponta para execução dinâmica de código (como eval, Function constructor ou safe-eval/vm) processando dados não confiáveis. Em routes/b2bOrder.ts do OWASP Juice Shop, a rota B2B Order utiliza a biblioteca safe-eval para avaliar uma string enviada pelo cliente via JSON/XML sem o isolamento apropriado de sandbox, permitindo a quebra de sandbox e execução de código remoto (RCE/Code Injection)."
+      },
+      "descricao_tecnica": "O endpoint manipula dados fornecidos pelo usuário no corpo da requisição e os repassa diretamente para funções de avaliação dinâmica de código em Node.js (safe-eval ou vm). Embora o objetivo do código seja executar cálculos ou avaliar ordens, a sandbox implementada não previne o acesso a propriedades do protótipo e do contexto global de execução do Node.js, possibilitando Remote Code Execution (RCE).",
+      "pre_condicoes_para_verificacao": [
+        "Aplicação OWASP Juice Shop em execução.",
+        "Ferramenta de requisição HTTP (ex.: cURL, Postman ou Burp Suite).",
+        "Acesso ao endpoint POST /b2b/v2/orders."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Enviar uma requisição HTTP POST para /b2b/v2/orders contendo payload de quebra de sandbox via Function constructor ou prototype access no campo de pedido (orderLineItems ou similar).",
+          "resultado_esperado_verdadeiro_positivo": "A aplicação executa o código arbitrário no contexto do servidor (por exemplo, retornando o output de comandos do sistema ou alterando o comportamento do processo Node.js), confirmando a execução arbitrária de código.",
+          "resultado_esperado_falso_positivo": "A requisição é estritamente validada por parser estático/schema, rejeitando expressões dinâmicas com erro 400 ou sem executar avaliação dinâmica arbitrária."
+        }
+      ]
+    }
+  ]
+}
