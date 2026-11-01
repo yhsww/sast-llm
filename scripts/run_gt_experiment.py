@@ -54,14 +54,37 @@ def build_retrieval_query(issue) -> str:
     return " ".join(cleaned)
 
 
+def _redact_secrets(message: str) -> str:
+    """Avoid writing provider credentials or authorization tokens to logs."""
+    message = re.sub(
+        r"(?i)(sk-ant-[A-Za-z0-9_-]{8,}|sk-(?:proj-)?[A-Za-z0-9_-]{8,}|AIza[0-9A-Za-z_-]{20,})",
+        "[REDACTED_API_KEY]",
+        message,
+    )
+    message = re.sub(r"(?i)Bearer\\s+[^\\s,;]+", "Bearer [REDACTED]", message)
+    message = re.sub(
+        r"(?i)(api[_-]?key|authorization|token)\\s*[:=]\\s*[^&\\s,;]+",
+        r"\\1=[REDACTED]",
+        message,
+    )
+    return re.sub(r"\\s+", " ", message).strip()
+
+
 def concise_error(exc):
     message = str(exc).lower()
-    if any(term in message for term in ("exceeded_current_quota_error", "insufficient balance", "quota exceeded", "resource_exhausted")):
-        return "API quota or balance exceeded."
-    if "rate_limit" in message or "rate limit" in message:
+    if any(term in message for term in (
+        "exceeded_current_quota_error", "insufficient balance", "quota exceeded",
+        "resource_exhausted", "billing", "credit balance",
+    )):
+        return "API quota, credits, or balance exceeded."
+    if "rate_limit" in message or "rate limit" in message or "429" in message:
         return "API rate limit reached."
-    if any(term in message for term in ("authentication", "invalid api key", "unauthorized", "401")):
-        return "API authentication failed."
+    if any(term in message for term in (
+        "authentication", "invalid api key", "unauthorized", "401", "api key not valid",
+    )):
+        return "API authentication failed; check the provider key and account."
+    if any(term in message for term in ("model_not_found", "model not found", "unknown model")):
+        return "Model not found or unavailable to this account; check the model ID."
     if "timeout" in message or "timed out" in message:
         return "Request timed out."
     if any(term in message for term in ("503", "service unavailable", "overloaded")):
@@ -69,14 +92,19 @@ def concise_error(exc):
     if isinstance(exc, FileNotFoundError):
         return "Required file not found."
     if isinstance(exc, json.JSONDecodeError):
-        return "Invalid JSON."
+        return "Invalid JSON returned by the model or input file."
     if isinstance(exc, ValueError):
-        return "Invalid data or unexpected model output."
-    return f"{type(exc).__name__}: operation failed."
+        return f"Invalid data or unexpected model output: {_redact_secrets(str(exc))}"
+    detail = _redact_secrets(str(exc))
+    return f"{type(exc).__name__}: {detail[:240] or 'operation failed.'}"
 
 
 def save_error(path, exc):
-    path.write_text(f"Error type: {type(exc).__name__}\nError message: {exc}\n", encoding="utf-8")
+    detail = _redact_secrets(str(exc))
+    path.write_text(
+        f"Error type: {type(exc).__name__}\\nError message: {detail}\\n",
+        encoding="utf-8",
+    )
 
 
 def run_provider(provider, reports, execute):
