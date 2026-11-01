@@ -49,7 +49,7 @@ Do not invent findings. Generate one test case per finding, in the same order.""
 
 def _build_user_content(
     issues: list[SonarIssue],
-    user_context: str,
+    user_context: str = "",
 ) -> str:
     findings_payload = [
         {
@@ -66,18 +66,36 @@ def _build_user_content(
         for i, issue in enumerate(issues)
     ]
 
-    content = (
-        "SAST Findings:\n"
-        + json.dumps(findings_payload, indent=2, ensure_ascii=False)
+    user_content = (
+        f"SAST Findings:\n"
+        f"{json.dumps(findings_payload, indent=2, ensure_ascii=False)}"
     )
 
     if user_context.strip():
-        content += (
-            "\n\nAdditional context / focus area:\n"
-            + user_context.strip()
+        user_content += (
+            f"\n\nAdditional context / focus area:\n"
+            f"{user_context.strip()}"
         )
 
-    return content
+    return user_content
+
+
+def _extract_json(text: str) -> SecurityTestReport:
+    text = text.strip()
+
+    if text.startswith("```"):
+        lines = text.splitlines()
+
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+
+        text = "\n".join(lines).strip()
+
+    data = json.loads(text)
+    return SecurityTestReport.model_validate(data)
 
 
 def _generate_openai(user_content: str) -> SecurityTestReport:
@@ -100,8 +118,10 @@ def _generate_openai(user_content: str) -> SecurityTestReport:
 
     choice = response.choices[0]
 
-    if choice.finish_reason == "refusal":
-        raise ValueError(f"LLM refused: {choice.message.refusal}")
+    if choice.message.refusal:
+        raise ValueError(
+            f"OpenAI refused the request: {choice.message.refusal}"
+        )
 
     if choice.message.parsed is None:
         raise ValueError("OpenAI did not return a structured response.")
@@ -128,8 +148,8 @@ def _generate_kimi(user_content: str) -> SecurityTestReport:
             {"role": "system", "content": _SYSTEM_PROMPT},
             {"role": "user", "content": user_content},
         ],
-        temperature=0,
         response_format={"type": "json_object"},
+        temperature=0,
     )
 
     content = response.choices[0].message.content
@@ -165,7 +185,7 @@ def _generate_gemini(user_content: str) -> SecurityTestReport:
     if not response.text:
         raise ValueError("Gemini returned an empty response.")
 
-    return SecurityTestReport.model_validate_json(response.text)
+    return _extract_json(content)
 
 
 
@@ -204,9 +224,15 @@ def _generate_claude(
 def generate_test_cases(
     issues: list[SonarIssue],
     user_context: str = "",
+    provider: str | None = None,
 ) -> SecurityTestReport:
     user_content = _build_user_content(issues, user_context)
-    provider = settings.llm_provider.strip().lower()
+
+    selected_provider = (
+        provider.strip().lower()
+        if provider
+        else settings.llm_provider.strip().lower()
+    )
 
     generators = {
         "openai": _generate_openai,
@@ -215,9 +241,16 @@ def generate_test_cases(
         "claude": _generate_claude,
     }
 
-    if provider not in generators:
+    if selected_provider not in generators:
+        raise ValueError(
+            "Invalid provider. Choose: openai, gemini, kimi, or claude."
+        )
+
+    report = generators[selected_provider](user_content)
+
+    if len(report.test_cases) != len(issues):
         raise ValueError(
             "Invalid provider. Use: openai, gemini, kimi, or claude."
         )
 
-    return generators[provider](user_content)
+    return report
