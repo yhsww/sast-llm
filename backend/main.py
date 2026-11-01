@@ -1,10 +1,14 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+
 from .schemas import AnalyzeRequest, AnalyzeResponse, ErrorResponse
 from .chroma_service import query_knowledge
 from .openai_service import generate_test_cases
 
-app = FastAPI(title="SAST Security Test Case Generator — RAG + Code Context", version="3.0.0")
+app = FastAPI(
+    title="SAST Security Test Case Generator — RAG + Code Context",
+    version="3.0.0",
+)
 
 
 @app.get("/health")
@@ -24,19 +28,17 @@ def analyze(body: AnalyzeRequest):
             ).model_dump(),
         )
 
-    # RAG: retrieve relevant CWE + WSTG docs per finding
     retrieved_per_finding = [
-        query_knowledge(f"{issue.rule} {issue.message} {' '.join(issue.tags)}")
+        query_knowledge(
+            f"{issue.rule} {issue.message} {' '.join(issue.tags)}"
+        )
         for issue in issues
     ]
 
-<<<<<<< HEAD
-    # LLM: generate test cases grounded in retrieved context + code snippets (not vectorized)
     llm_report = generate_test_cases(
-        issues, body.message, retrieved_per_finding, body.code_snippets
+        issues,
+        body.message,
+        retrieved_per_finding,
+        body.code_snippets,
     )
-=======
-    # LLM: generate test cases grounded in retrieved context
-    llm_report = generate_test_cases(issues, body.message, retrieved_per_finding)
->>>>>>> branch-2-rag-cwe-wstg
     return AnalyzeResponse(test_cases=llm_report.test_cases)
