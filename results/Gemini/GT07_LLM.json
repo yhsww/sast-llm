@@ -1,0 +1,33 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S2068",
+        "arquivo": "frontend/src/app/login/login.component.ts",
+        "linha": 61,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S2068",
+        "categoria": "Vulnerabilidade"
+      },
+      "classificacao": {
+        "veredicto": "Falso Positivo",
+        "cwe": "CWE-258: Empty Password in Configuration File",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-ATHN-02: Default Credentials",
+        "justificativa": "A regra typescript:S2068 detecta padrões de nomes de variáveis como password inicializados com literais de texto. No arquivo login.component.ts de uma aplicação Angular, a linha em questão corresponde à inicialização de um campo de formulário reativo (FormControl) com uma string vazia ou declaração de propriedade do modelo de interface, e não a uma credencial fixa ou padrão inserida no código-fonte."
+      },
+      "descricao_tecnica": "O analisador SAST identificou o uso do termo password associado a um valor literal no componente Angular de autenticação. Em componentes de frontend, é prática padrão instanciar campos de formulário reativo (por exemplo, FormControl('') ou campos de binding) que utilizam o termo password para vincular ao input HTML. O detector baseado em expressões regulares e heurística identifica incorretamente a inicialização do campo como uma senha hardcoded.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao repositório de código-fonte da aplicação OWASP Juice Shop.",
+        "Permissão de leitura no arquivo frontend/src/app/login/login.component.ts."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Caso a linha 61 contenha atribuição de senha fixa real ou credencial em texto claro destinada à autenticação automática no backend.",
+          "resultado_esperado_falso_positivo": "Caso a linha 61 contenha apenas a instanciação de um FormControl, FormGroup ou propriedade de formulário inicializada com string vazia ou nula para captura de input do usuário."
+        }
+      ]
+    }
+  ]
+}
