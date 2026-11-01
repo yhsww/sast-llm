@@ -96,7 +96,7 @@ CLAUDE_MODEL=claude-sonnet-4-5
 
 Os nomes e valores padrão podem variar entre branches. O arquivo `.env.example` e `backend/config.py` da branch selecionada são a referência final. Use modelos disponíveis para sua conta.
 
-Na `main`, também é possível selecionar o provedor pelo argumento `--provider` do `run_experiment.py`. Na branch 1, selecione o provedor alterando `LLM_PROVIDER` no `.env`. Na branch 2, o executor experimental percorre os provedores configurados.
+Na `main`, o provedor é selecionado interativamente ao executar `query.py` ou `run_experiment.py`. Na branch 1, selecione o provedor alterando `LLM_PROVIDER` no `.env`. Na branch 2, o executor experimental percorre os provedores configurados.
 
 ### 2.2 Provider in `branch-3-rag-code-context`
 
@@ -136,7 +136,7 @@ Também é possível iniciar pelo ponto de entrada compatível:
 python run_experiment.py
 ```
 
-Os arquivos de saída usam nomes estáveis, como `sample_LLM.json`, em `results/GPT4.1/`, `results/Gemini/`, `results/Kimi/` ou `results/Claude/`. Uma nova execução para o mesmo relatório e provedor substitui o arquivo anterior. O conteúdo JSON não inclui data ou hora de execução. Erros são registrados em um arquivo `*_ERROR.txt separado do relatório de sucesso.
+Os arquivos de saída usam nomes estáveis, como `sample_LLM.json`, em `results/GPT4.1/`, `results/Gemini/`, `results/Kimi/` ou `results/Claude/`. Uma nova execução para o mesmo relatório e provedor substitui o arquivo anterior. O conteúdo JSON não inclui data ou hora de execução. Erros são registrados em um arquivo `*_ERROR.txt`, separado do relatório de sucesso.
 
 Configure as chaves e os identificadores de modelo no arquivo `.env` antes de executar. A seleção feita no terminal determina o provedor usado naquela execução.
 
