@@ -1,48 +1,122 @@
-"""CLI: load a SonarQube JSON report, run RAG + LLM, print test cases with retrieved context."""
+"""CLI: load a SonarQube JSON report, run RAG + LLM, and save test cases."""
 import json
+import re
 import sys
+from datetime import datetime
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent))
+ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
 
+from backend.config import settings
 from backend.schemas import SonarReport, SecurityTestCase
-from backend.retrieved_doc import RetrievedDoc
 from backend.chroma_service import query_knowledge
 from backend.openai_service import generate_test_cases
 
+_REPORT_PATH = ROOT / "data" / "sast_reports" / "sample.json"
 
-_REPORT_PATH = Path("data/sast_reports/sample.json")
+_PROVIDER_FOLDERS = {
+    "openai": "GPT5.5",
+    "gemini": "Gemini",
+    "kimi": "Kimi",
+    "claude": "Claude",
+}
+
+
+def _save_result(report_path: Path, output: dict) -> Path:
+    provider = settings.llm_provider.strip().lower()
+
+    folder = _PROVIDER_FOLDERS.get(
+        provider,
+        re.sub(r"[^a-zA-Z0-9._-]+", "-", provider),
+    )
+
+    output_dir = ROOT / "results" / folder
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    output_path = output_dir / f"{report_path.stem}_LLM.json"
+
+    if output_path.exists():
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_path = (
+            output_dir /
+            f"{report_path.stem}_LLM_{timestamp}.json"
+        )
+
+    payload = json.dumps(
+        output,
+        indent=2,
+        ensure_ascii=False,
+    ) + "\n"
+
+    temporary_path = output_path.with_suffix(
+        output_path.suffix + ".tmp"
+    )
+    temporary_path.write_text(payload, encoding="utf-8")
+    temporary_path.replace(output_path)
+
+    return output_path
 
 
 def main() -> None:
-    report = SonarReport.model_validate_json(_REPORT_PATH.read_text(encoding="utf-8"))
-    print(f"Loaded {len(report.issues)} finding(s) from {_REPORT_PATH}.")
+    report_path = _REPORT_PATH
 
-    user_context = input("Optional focus/context (Enter to skip): ").strip()
+    if not report_path.is_file():
+        print(f"Report not found: {report_path}")
+        sys.exit(1)
+
+    report = SonarReport.model_validate_json(
+        report_path.read_text(encoding="utf-8")
+    )
+    print(f"Loaded {len(report.issues)} finding(s) from {report_path}.")
+
+    user_context = input(
+        "Optional focus/context (Enter to skip): "
+    ).strip()
 
     print("\nQuerying knowledge base (CWE + WSTG)...")
+
     retrieved_per_finding = [
-        query_knowledge(f"{issue.rule} {issue.message} {' '.join(issue.tags)}")
+        query_knowledge(
+            f"{issue.rule} {issue.message} {' '.join(issue.tags)}"
+        )
         for issue in report.issues
     ]
 
-    for i, docs in enumerate(retrieved_per_finding):
-        ids = [d.id for d in docs]
-        print(f"  Finding {i+1}: retrieved {ids}")
-
-    print("\nGenerating test cases...\n")
-    llm_report = generate_test_cases(report.issues, user_context, retrieved_per_finding)
-
-    test_cases: list[SecurityTestCase] = []
-    for llm_tc, docs in zip(llm_report.test_cases, retrieved_per_finding):
-        test_cases.append(
-            SecurityTestCase(
-                **llm_tc.model_dump(),
-            )
+    for index, docs in enumerate(retrieved_per_finding, start=1):
+        print(
+            f"  Finding {index}: "
+            f"retrieved {[doc.id for doc in docs]}"
         )
 
-    output = {"test_cases": [tc.model_dump() for tc in test_cases]}
-    print(json.dumps(output, indent=2, ensure_ascii=False))
+    print("\nGenerating test cases...\n")
+
+    generated = generate_test_cases(
+        report.issues,
+        user_context,
+        retrieved_per_finding,
+    )
+
+    test_cases = [
+        SecurityTestCase(**case.model_dump())
+        for case in generated.test_cases
+    ]
+
+    output = {
+        "test_cases": [
+            case.model_dump(mode="json")
+            for case in test_cases
+        ]
+    }
+
+    print(json.dumps(
+        output,
+        indent=2,
+        ensure_ascii=False,
+    ))
+
+    saved_path = _save_result(report_path, output)
+    print(f"\n[SAVED] Result written to: {saved_path.resolve()}")
 
 
 if __name__ == "__main__":
