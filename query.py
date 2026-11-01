@@ -2,7 +2,6 @@
 import json
 import re
 import sys
-from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -35,13 +34,6 @@ def _save_result(report_path: Path, output: dict) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     output_path = output_dir / f"{report_path.stem}_LLM.json"
-
-    if output_path.exists():
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_path = (
-            output_dir /
-            f"{report_path.stem}_LLM_{timestamp}.json"
-        )
 
     payload = json.dumps(
         output,
@@ -120,4 +112,23 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as exc:
+        provider = settings.llm_provider.strip().lower()
+        folder = _PROVIDER_FOLDERS.get(
+            provider,
+            re.sub(r"[^a-zA-Z0-9._-]+", "-", provider),
+        )
+        error_dir = ROOT / "results" / folder
+        error_dir.mkdir(parents=True, exist_ok=True)
+        error_path = error_dir / f"{_REPORT_PATH.stem}_ERROR.txt"
+        error_path.write_text(
+            f"Report: {_REPORT_PATH.name}\\n"
+            f"Provider: {provider}\\n"
+            f"Error: {type(exc).__name__}: {exc}\\n",
+            encoding="utf-8",
+        )
+        print(f"[ERROR] {type(exc).__name__}: {exc}", file=sys.stderr)
+        print(f"[ERROR FILE] {error_path.relative_to(ROOT)}", file=sys.stderr)
+        raise SystemExit(1)
