@@ -247,13 +247,13 @@ def extract_source_snippets(
             start_line = 1
             end_line = min(len(lines), 120)
 
-        excerpt = "\\n".join(
+        excerpt = "\n".join(
             f"{n:>5}: {lines[n - 1]}"
             for n in range(start_line, end_line + 1)
         )
         snippets.append(
             f"Source: {candidate.relative_to(root).as_posix()} "
-            f"(lines {start_line}-{end_line})\\n{excerpt}"
+            f"(lines {start_line}-{end_line})\n{excerpt}"
         )
 
     return snippets
@@ -576,7 +576,7 @@ def main() -> None:
             f"| output=results/{provider_folder}"
         )
 
-        for path, report, retrieved, snippets in prepared:
+        for item_index, (path, report, retrieved, snippets) in enumerate(prepared):
             out = out_dir / f"{path.stem}_LLM.json"
             err = out_dir / f"{path.stem}_ERROR.txt"
 
@@ -669,9 +669,7 @@ def main() -> None:
                     "quota exceeded",
                 ))
                 if args.execute and quota_failure:
-                    remaining = len(prepared) - prepared.index(
-                        (path, report, retrieved, snippets)
-                    ) - 1
+                    remaining = len(prepared) - item_index - 1
                     if remaining:
                         print(
                             f"[WARN] {provider}: quota/billing failure detected; "
