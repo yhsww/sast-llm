@@ -124,9 +124,9 @@ if __name__ == "__main__":
         error_dir.mkdir(parents=True, exist_ok=True)
         error_path = error_dir / f"{_REPORT_PATH.stem}_ERROR.txt"
         error_path.write_text(
-            f"Report: {_REPORT_PATH.name}\\n"
-            f"Provider: {provider}\\n"
-            f"Error: {type(exc).__name__}: {exc}\\n",
+            f"Report: {_REPORT_PATH.name}\n"
+            f"Provider: {provider}\n"
+            f"Error: {type(exc).__name__}: {exc}\n",
             encoding="utf-8",
         )
         print(f"[ERROR] {type(exc).__name__}: {exc}", file=sys.stderr)
