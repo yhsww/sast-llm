@@ -1,0 +1,39 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "6829619d-3476-446f-8922-d2cb10e8a2c7",
+        "arquivo": "juice-shop:server.ts",
+        "linha": 182,
+        "severidade_sast": "MINOR",
+        "regra": "typescript:S5122",
+        "categoria": "SECURITY_HOTSPOT"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-942: Permissive Cross-domain Policy with Untrusted Domains",
+        "owasp_top_10": "A05:2021 - Security Misconfiguration",
+        "wstg": "WSTG-CONF-07: Testing Cross Origin Resource Sharing",
+        "justificativa": "O alerta typescript:S5122 indica a configuracao de politica de Cross-Origin Resource Sharing (CORS). Se configurado com origens excessivamente permissivas (como wildcard '*' ou reflexao incondicional de cabeçalho Origin) com envio de credenciais ou em rotas sensiveis, pode permitir que dominios de terceiros acessem recursos confidenciais da aplicacao em nome de usuarios autenticados."
+      },
+      "descricao_tecnica": "A analise estatica identificou o uso de configuracao de CORS na linha 182 do arquivo server.ts. E necessario inspecionar se a politica implementada permite origens arbitrarias ('*' ou reflexao nao validada do cabecalho Origin) e se expoem dados confidenciais ou aceitam credenciais via Access-Control-Allow-Credentials, expondo a aplicacao a requisicoes cross-origin nao autorizadas.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao codigo-fonte do arquivo server.ts na linha 182.",
+        "Instancia da aplicacao Juice Shop em execucao para teste dinamico de cabeçalhos HTTP.",
+        "Ferramenta de envio de requisicoes HTTP (como cURL, Postman ou Burp Suite)."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Inspecionar o codigo-fonte no arquivo server.ts na linha 182 para verificar como o middleware de CORS foi configurado (ex.: cors(), cors({ origin: '*' }) ou lista explicita de origens permitidas).",
+          "resultado_esperado_verdadeiro_positivo": "A configuracao utiliza '*' (wildcard) para permitir qualquer origem, ou reflete diretamente o cabecalho Origin da requisicao sem validacao prévia de lista branca.",
+          "resultado_esperado_falso_positivo": "O middleware esta configurado com uma lista restrita de dominios confiaveis ou a aplicacao intencionalmente expoem apenas endpoints puramente publicos sem dados sensiveis ou autenticacao."
+        },
+        {
+          "passo": "Passo 02: Realizar uma requisicao HTTP OPTIONS ou GET para a aplicacao enviando o cabecalho 'Origin: https://malicious-site.example.com'.",
+          "resultado_esperado_verdadeiro_positivo": "A resposta contem 'Access-Control-Allow-Origin: *' ou reflete 'Access-Control-Allow-Origin: https://malicious-site.example.com' permitindo o consumo de respostas sensiveis por origens arbitrarias.",
+          "resultado_esperado_falso_positivo": "A resposta nao contem o cabecalho Access-Control-Allow-Origin para dominios nao autorizados, ou rejeita explicitamente a conexao cross-origin com codigo HTTP de erro."
+        }
+      ]
+    }
+  ]
+}

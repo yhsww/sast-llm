@@ -1,0 +1,34 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "74de4cdb-5256-48b1-97af-c47eaa500ecc",
+        "arquivo": "routes/userProfile.ts",
+        "linha": 87,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S7790",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-1336",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-18",
+        "justificativa": "A regra typescript:S7790 sinaliza a compilacao ou avaliacao dinamica de templates a partir de strings concatenadas ou interpoladas com entrada de usuario sem sanitizacao adequada. No Juice Shop, o endpoint de perfil de usuario compila templates Pug diretamente com dados controlados pelo usuario, viabilizando Server-Side Template Injection (SSTI) e potencialmente Execucao Remota de Codigo (RCE)."
+      },
+      "descricao_tecnica": "Identificado uso de template engine de renderizacao dinamica em routes/userProfile.ts onde dados de entrada nao confiaveis sao interpolados diretamente na definicao do template antes da compilacao/renderizacao. Isso permite a injecao de sintaxe especifica do mecanismo de templates (como Pug/Jade), permitindo avaliar expressoes arbitrarias de JavaScript no contexto do servidor Node.js.",
+      "pre_condicoes_para_verificacao": [
+        "Ambiente OWASP Juice Shop em execucao",
+        "Acesso a uma conta autenticada de usuario para manipular os campos do perfil",
+        "Ferramenta para interceptacao de requisicoes HTTP (Burp Suite, OWASP ZAP ou Postman/cURL)"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Autenticar na aplicacao e enviar uma requisicao de atualizacao de perfil (username) contendo uma expressao de template como payload (ex.: #{7*7} ou #{root.process.mainModule.require('child_process').execSync('id')}).",
+          "resultado_esperado_verdadeiro_positivo": "A resposta renderizada do perfil exibe o resultado da expressao avaliada (ex.: 49 ou a saida do comando executado), confirmando a execucao dinamica da carga util no servidor.",
+          "resultado_esperado_falso_positivo": "A carga util e tratada como texto literal (#{7*7}), sanitizada/escapada antes da renderizacao, ou o template e compilado de forma estatica sem permitir interpolacao de codigo arbitrario."
+        }
+      ]
+    }
+  ]
+}

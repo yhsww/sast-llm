@@ -1,0 +1,38 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "8a61c8f6-3bef-4b6e-9787-a9479df9ef26",
+        "arquivo": "frontend/src/app/login/login.component.ts",
+        "linha": 61,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S2068",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "A DEFINIR (REQUER ANALISE DE CODIGO FONTE / PROVAVEL FALSO POSITIVO)",
+        "cwe": "CWE-798: Use of Hard-coded Credentials",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-ATHN-02 - Testing for Credential Stuffing / WSTG-CRYP-04 - Testing for Weak Cryptography",
+        "justificativa": "A regra typescript:S2068 sinaliza atribuicoes literais a variaveis com nomes como password ou passwd. Em componentes de login de frontend Angular, frequentemente inicializam-se campos de formulario reativos ou modelos de dados com strings vazias ou valores padrao de teste, o que pode gerar falsos positivos se nao for uma credencial real embutida no codigo de producao."
+      },
+      "descricao_tecnica": "A analise SAST identificou um potencial uso de senha fixa ou credencial estatica (hard-coded) na linha 61 do componente de login (login.component.ts). O uso de credenciais embutidas diretamente no codigo-fonte de uma aplicacao frontend permite que qualquer usuario com acesso ao pacote distribuido (bundle JavaScript) extraia credenciais administrativas, de servico ou de acesso a sistemas terceiros.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao repositorio de codigo-fonte da aplicacao juice-shop.",
+        "Ambiente de desenvolvimento local configurado ou permissao para inspecionar os bundles de frontend gerados no build de producao."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Inspecionar a linha 61 do arquivo login.component.ts e seu contexto sintatico",
+          "resultado_esperado_verdadeiro_positivo": "Constatar a atribuicao de uma senha ou segredo em texto claro utilizado para autenticacao automatica ou contornar fluxo de login.",
+          "resultado_esperado_falso_positivo": "Constatar que a linha contem apenas a declaracao de propriedade de formulario (ex: passwordControl = new FormControl('')) ou mock de campo sem segredo real."
+        },
+        {
+          "passo": "Passo 02: Validar presenca no artefato compilado de producao",
+          "resultado_esperado_verdadeiro_positivo": "O segredo em texto claro e empacotado no build final acessivel publicamente no navegador.",
+          "resultado_esperado_falso_positivo": "O identificador refere-se apenas a modelos de binding da interface do usuario sem conter segredo hard-coded."
+        }
+      ]
+    }
+  ]
+}

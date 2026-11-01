@@ -1,0 +1,39 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "101f6c6f-b415-47a0-961c-e577bac36edb",
+        "arquivo": "frontend/src/app/about/about.component.ts",
+        "linha": 119,
+        "severidade_sast": "CRITICAL",
+        "regra": "typescript:S6268",
+        "categoria": "SECURITY_HOTSPOT"
+      },
+      "classificacao": {
+        "veredicto": "A revisar / Potencial Verdadeiro Positivo",
+        "cwe": "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')",
+        "owasp_top_10": "A03:2021-Injection",
+        "wstg": "WSTG-CLNT-01: Testing for DOM-Based Cross Site Scripting",
+        "justificativa": "O uso de metodos como bypassSecurityTrust* do DomSanitizer desativa a protecao automatica contra XSS fornecida nativamente pelo Angular. Se dados controlados por usuarios alcancarem essa chamada sem sanitizacao previa, a aplicacao ficara vulneravel a Cross-Site Scripting."
+      },
+      "descricao_tecnica": "A regra typescript:S6268 identifica o uso explicitamente inseguro de metodos da classe DomSanitizer (ex: bypassSecurityTrustHtml, bypassSecurityTrustScript). No arquivo about.component.ts na linha 119, a sanitizacao nativa do Angular foi desabilitada, permitindo a injecao de conteudo HTML/JavaScript nao tratado diretamente no DOM.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao codigo-fonte do componente about.component.ts e seu respectivo template HTML.",
+        "Ambiente de desenvolvimento local do OWASP Juice Shop em execucao.",
+        "Navegador com Developer Tools habilitado."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Analisar o fluxo de dados na linha 119 do arquivo about.component.ts para identificar a origem do valor passado ao metodo bypassSecurityTrust*.",
+          "resultado_esperado_verdadeiro_positivo": "O dado passado deriva de fonte externa, API nao confiavel, URL, parametro de requisicao ou entrada controlavel pelo usuario.",
+          "resultado_esperado_falso_positivo": "O dado e uma constante estatica totalmente definida no codigo ou sanitizado rigorosamente antes da chamada."
+        },
+        {
+          "passo": "Passo 02: Inspecionar o template correspondente (about.component.html) para identificar como a propriedade sanitizada e renderizada na interface.",
+          "resultado_esperado_verdadeiro_positivo": "A propriedade e vinculada a atributos perigosos como [innerHTML] sem codificacao adicional, permitindo execucao de scripts se contiver tags maliciosas.",
+          "resultado_esperado_falso_positivo": "A propriedade nao e inserida no DOM como HTML executavel ou nao recebe dados variaveis."
+        }
+      ]
+    }
+  ]
+}

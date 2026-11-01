@@ -50,10 +50,8 @@ The JSON must match this structure exactly:
 Do not invent findings. Generate one test case per finding, in the same order."""
 
 
-def _build_user_content(
-    issues: list[SonarIssue],
-    user_context: str,
-) -> str:
+
+def _build_user_content(issues: list[SonarIssue]) -> str:
     findings_payload = [
         {
             "index": i + 1,
@@ -69,18 +67,10 @@ def _build_user_content(
         for i, issue in enumerate(issues)
     ]
 
-    content = (
+    return (
         "SAST Findings:\n"
         + json.dumps(findings_payload, indent=2, ensure_ascii=False)
     )
-
-    if user_context.strip():
-        content += (
-            "\n\nAdditional context / focus area:\n"
-            + user_context.strip()
-        )
-
-    return content
 
 
 def _generate_openai(user_content: str) -> SecurityTestReport:
@@ -166,43 +156,50 @@ def _generate_gemini(user_content: str) -> SecurityTestReport:
 
 
 def _generate_claude(user_content: str) -> SecurityTestReport:
+    
     if not settings.anthropic_api_key:
-        raise ValueError("ANTHROPIC_API_KEY não configurada.")
+        raise ValueError("ANTHROPIC_API_KEY is not configured.")
+
     if not settings.claude_model:
-        raise ValueError("CLAUDE_MODEL não configurado.")
+        raise ValueError("CLAUDE_MODEL is not configured.")
 
     client = Anthropic(api_key=settings.anthropic_api_key)
 
     response = client.messages.create(
         model=settings.claude_model,
         max_tokens=8192,
-        temperature=0,
         system=_SYSTEM_PROMPT,
         messages=[
-            {"role": "user", "content": user_content}
+            {
+                "role": "user",
+                "content": user_content,
+            }
         ],
     )
 
     text_blocks = [
         block.text
         for block in response.content
-        if block.type == "text"
+        if getattr(block, "type", None) == "text"
     ]
 
     if not text_blocks:
-        raise ValueError("Claude não retornou uma resposta textual.")
+        raise ValueError("Claude returned no text content.")
 
-    return SecurityTestReport.model_validate_json(
-        "\n".join(text_blocks)
-    )
+    return SecurityTestReport.model_validate_json(text_blocks[0])
 
 
 def generate_test_cases(
     issues: list[SonarIssue],
-    user_context: str = "",
+    provider: str | None = None,
 ) -> SecurityTestReport:
-    user_content = _build_user_content(issues, user_context)
-    provider = settings.llm_provider.strip().lower()
+    user_content = _build_user_content(issues)
+
+    provider = (
+        provider.strip().lower()
+        if provider
+        else settings.llm_provider.strip().lower()
+    )
 
     generators = {
         "openai": _generate_openai,
@@ -217,3 +214,4 @@ def generate_test_cases(
         )
 
     return generators[provider](user_content)
+

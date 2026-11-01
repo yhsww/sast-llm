@@ -1,0 +1,92 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "AX1a-sql-injection-001",
+        "arquivo": "com.example.app:src/main/java/com/example/app/repository/UserRepository.java",
+        "linha": 47,
+        "severidade_sast": "CRITICAL",
+        "regra": "java:S3649",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-89: Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-05 (Testing for SQL Injection)",
+        "justificativa": "A regra aponta a concatenacao ou interpolacao direta de dados controlados pelo usuario em consultas SQL sem o devido uso de parametros parametrizados (PreparedStatement) ou ORM seguro."
+      },
+      "descricao_tecnica": "Identificada a construcao dinamica de comandos SQL a partir de entradas de usuario nao sanitizadas no repositorio UserRepository.java, permitindo a manipulacao da estrutura da consulta SQL original por um atacante.",
+      "pre_condicoes_para_verificacao": [
+        "Ambiente de desenvolvimento/testes ativo com o servico da aplicacao em execucao.",
+        "Acesso a base de dados de testes para inspecao de queries geradas ou logs de execucao.",
+        "Ferramenta para envio de requisicoes HTTP (ex: cURL, Postman ou Burp Suite)."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Enviar payload de teste com aspas simples (' OR '1'='1) no parametro correspondente do endpoint consumido por UserRepository.java.",
+          "resultado_esperado_verdadeiro_positivo": "A consulta interpreta o payload como codigo SQL, retornando multiplos registros nao autorizados ou lancando erro de sintaxe SQL da base de dados.",
+          "resultado_esperado_falso_positivo": "A aplicacao trata a entrada como valor literal, parametrizando a consulta ou retornando erro de validacao sem afetar a sintaxe SQL."
+        }
+      ]
+    },
+    {
+      "identificacao": {
+        "id_sonarqube": "AX1b-xss-001",
+        "arquivo": "com.example.app:src/main/java/com/example/app/controller/CommentController.java",
+        "linha": 83,
+        "severidade_sast": "CRITICAL",
+        "regra": "java:S5131",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-01 (Testing for Reflected Cross Site Scripting) / WSTG-INPV-02 (Testing for Stored Cross Site Scripting)",
+        "justificativa": "A regra indica que dados fornecidos pelo usuario sao refletidos ou inseridos na resposta HTTP/HTML sem sanitizacao previa ou codificacao contextual adequada."
+      },
+      "descricao_tecnica": "No CommentController.java linha 83, entradas controladas pelo usuario sao renderizadas diretamente na resposta HTTP sem a aplicacao de codificacao de contexto (contextual output encoding), possibilitando a execucao de scripts maliciosos no navegador de usuarios.",
+      "pre_condicoes_para_verificacao": [
+        "Aplicacao em execucao com acesso web/API ao CommentController.",
+        "Navegador web ou proxy de interceptacao configurado para inspecao do corpo da resposta HTTP."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Submeter um payload basico de XSS (<script>alert(1)</script> ou <img src=x onerror=alert(1)>) no endpoint de comentarios.",
+          "resultado_esperado_verdadeiro_positivo": "O payload e retornado sem escape de caracteres HTML no corpo da resposta, sendo executado no navegador da vitima.",
+          "resultado_esperado_falso_positivo": "Os caracteres especiais sao devidamente escapados (ex: &lt;script&gt;) ou sanitizados antes da exibicao, impedindo a interpretacao e execucao do script."
+        }
+      ]
+    },
+    {
+      "identificacao": {
+        "id_sonarqube": "AX1c-hardcoded-cred-001",
+        "arquivo": "com.example.app:src/main/java/com/example/app/config/DatabaseConfig.java",
+        "linha": 22,
+        "severidade_sast": "BLOCKER",
+        "regra": "java:S2068",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-798: Use of Hard-coded Credentials",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-CONF-04 (Review Old, Backup and Unreferenced Files for Sensitive Information)",
+        "justificativa": "Credencial de banco de dados definida estaticamente no codigo-fonte, expondo segredos a qualquer individuo com acesso de leitura ao repositorio."
+      },
+      "descricao_tecnica": "Presenca de senha ou credencial de acesso ao banco de dados definida de forma explicita (hardcoded) em DatabaseConfig.java linha 22, violando praticas de gerenciamento seguro de segredos e configuracao externa.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao codigo-fonte no arquivo DatabaseConfig.java.",
+        "Acesso a configuracao do ambiente para verificar se o valor e utilizado em producao/desenvolvimento."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Inspecionar o codigo na linha 22 do arquivo DatabaseConfig.java para confirmar se a string contem uma credencial estatica.",
+          "resultado_esperado_verdadeiro_positivo": "Uma senha real ou de acesso a recursos e declarada explicitamente como literal de texto no codigo fonte.",
+          "resultado_esperado_falso_positivo": "A string e apenas um placeholder demonstrativo, nome de chave de propriedade ou lida de variavel de ambiente dinamica/cofre de senhas."
+        }
+      ]
+    }
+  ]
+}

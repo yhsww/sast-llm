@@ -1,0 +1,38 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "6d4ecb57-73d4-482f-ae9c-2728da3971bb",
+        "arquivo": "lib/insecurity.ts",
+        "linha": 23,
+        "severidade_sast": "BLOCKER",
+        "regra": "secrets:S6706",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-798: Use of Hard-coded Credentials",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-CRYP-04",
+        "justificativa": "A chave privada criptografica esta declarada em texto claro diretamente no codigo-fonte, permitindo que qualquer pessoa com acesso ao repositorio ou artefatos gerados forje assinaturas, assine tokens atau decifre comunicacoes protegidas por esta chave."
+      },
+      "descricao_tecnica": "A regra secrets:S6706 identificou a exposicao de uma chave privada codificada estaticamente no arquivo lib/insecurity.ts na linha 23. A presenca de credenciais e chaves criptograficas no repositorio viola o principio de separacao entre codigo e segredos, expondo o sistema a riscos graves caso o codigo vaze ou esteja acessivel a usuarios nao autorizados.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao repositorio de codigo-fonte do projeto.",
+        "Permissao para inspecionar o arquivo lib/insecurity.ts."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Abrir o arquivo lib/insecurity.ts e inspecionar a linha 23 e o contexto ao redor para verificar se o valor atribuido corresponde a uma chave privada criptografica.",
+          "resultado_esperado_verdadeiro_positivo": "Uma chave privada valida ou utilizavel para operacoes criptograficas/assinatura esta definida diretamente no codigo em formato de texto claro.",
+          "resultado_esperado_falso_positivo": "A cadeia de caracteres detectada e apenas uma variavel de template, mock de teste unitario sem aplicabilidade real, ou valor dummy inofensivo."
+        },
+        {
+          "passo": "Passo 02: Verificar onde a constante ou variavel definida na linha 23 e consumida na aplicacao (ex.: geracao de tokens JWT ou assinatura digital).",
+          "resultado_esperado_verdadeiro_positivo": "A chave e utilizada em fluxos ativos de autenticacao ou criptografia da aplicacao sem passar por variaveis de ambiente ou cofre de senhas.",
+          "resultado_esperado_falso_positivo": "O valor nao e utilizado em operacoes ativas ou e sobrescrito obrigatoriamente por configuracao de ambiente antes da execucao."
+        }
+      ]
+    }
+  ]
+}

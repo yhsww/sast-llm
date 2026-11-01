@@ -1,0 +1,45 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "87daf531-960b-43e8-a596-ca1b9293b5af",
+        "arquivo": "frontend/src/app/change-password/change-password.component.ts",
+        "linha": 92,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S5852",
+        "categoria": "Denial of Service (ReDoS)"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-1333",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-18",
+        "justificativa": "A expressao regular empregada para validacao no formulario de alteracao de senha apresenta suscetibilidade a retrocesso catastrofico (catastrophic backtracking) diante de entradas desfavoraveis controladas pelo usuario, podendo travar a thread de execucao no navegador do cliente (Client-side ReDoS)."
+      },
+      "descricao_tecnica": "A regra typescript:S5852 identifica expressoes regulares com complexidade polinomial ou superlinear que processam entradas do usuario. No arquivo change-password.component.ts, a expressao de validacao de complexidade de senha pode ser explorada por meio de uma string desenhada para forcar excessivas combinacoes de backtracking, causando congelamento temporario ou permanente da interface do usuario e consumo excessivo de CPU no navegador.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao codigo-fonte do frontend Angular do OWASP Juice Shop.",
+        "Ambiente de execucao do frontend em funcionamento ou acesso a uma ferramenta/REPL de analise de expressoes regulares (ex: safe-regex, regex101)."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Inspecionar o padrao regex presente na linha 92 de frontend/src/app/change-password/change-password.component.ts.",
+          "resultado_esperado_verdadeiro_positivo": "O padrao contem quantificadores aninhados ou sobreposicao de padroes repetitivos (como (a+)+ ou combinacoes com .* suscetiveis a backtracking catastrófico).",
+          "resultado_esperado_falso_positivo": "A expressao regular e linear, utiliza lookaheads estritos sem sobreposicao de quantificadores ou possui tamanho de entrada previamente limitado de forma rigida."
+        },
+        {
+          "passo": "Passo 02: Inserir uma payload de teste contendo multiplos caracteres repetidos seguidos de caractere invalido de encerramento no campo de nova senha.",
+          "resultado_esperado_verdadeiro_positivo": "A thread de execucao do navegador sofre congelamento perceptivel de interface e a CPU tem pico de processamento prolongado.",
+          "resultado_esperado_falso_positivo": "A validacao rejeita ou aceita a string instantaneamente sem degradacao mensuravel de desempenho."
+        }
+      ]
+    }
+  ],
+  "_metadata": {
+    "provider": "gemini",
+    "model": "gemini-3.8-flash",
+    "source_report": "GT05.json",
+    "branch": "branch-1-direct-llm",
+    "generated_at": "2026-11-01T08:57:02"
+  }
+}

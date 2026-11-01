@@ -1,0 +1,34 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "208dea17-f27a-4e83-b216-484334328793",
+        "arquivo": "juice-shop:routes/b2bOrder.ts",
+        "linha": 23,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S1523",
+        "categoria": "Code Injection"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-95",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-11",
+        "justificativa": "A regra typescript:S1523 identifica o uso de funcoes de execucao dinamica de codigo como eval ou new Function. No contexto da rota de pedidos B2B, a entrada de dados enviada pelo cliente e processada diretamente por um interpretador dinamico sem a devida sanitizacao ou sandbox seguro, permitindo a execucao remota de comandos e codigo JavaScript no servidor."
+      },
+      "descricao_tecnica": "O endpoint responsavel pelo processamento de pedidos B2B avalia expressoes ou estruturas de dados dinamicamente a partir do payload fornecido pelo usuario. Sem a higienizacao ou restricao de contexto adequada, essa operacao permite que agentes maliciosos executem codigo arbitrario no ambiente Node.js, configurando uma vulnerabilidade critica de Remote Code Execution (RCE).",
+      "pre_condicoes_para_verificacao": [
+        "Aplicacao OWASP Juice Shop em execucao em ambiente de testes",
+        "Acesso de rede ao endpoint responsavel pelos pedidos B2B (/b2b/order)",
+        "Ferramenta para envio de requisicoes HTTP personalizadas (ex. cURL, Postman ou Burp Suite)"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Enviar uma requisicao POST contendo uma carga util com expressao JavaScript controlada no payload do pedido B2B, visando avaliar a execucao arbitraria de codigo no servidor.",
+          "resultado_esperado_verdadeiro_positivo": "A carga util e avaliada dinamicamente e executada no servidor, comprovando a possibilidade de execucao de codigo arbitrario.",
+          "resultado_esperado_falso_positivo": "A requisicao e rejeitada por validacao de esquema, o input e estritamente tratado como dado literal sem execucao dinamica, ou ocorre erro seguro de parsing."
+        }
+      ]
+    }
+  ]
+}
