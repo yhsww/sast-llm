@@ -1,0 +1,38 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "87daf531-960b-43e8-a596-ca1b9293b5af",
+        "arquivo": "juice-shop:frontend/src/app/change-password/change-password.component.ts",
+        "linha": 92,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S5852",
+        "categoria": "SECURITY_HOTSPOT"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-1333: Inefficient Regular Expression Complexity",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-01: Testing for Input Validation",
+        "justificativa": "A expressao regular empregada para validacao pode apresentar complexidade super-linear ou exponencial com backtracking excessivo (Regular Expression Denial of Service - ReDoS). Como esta no frontend, pode congelar a thread principal da interface do usuario, causando travamento do navegador do cliente."
+      },
+      "descricao_tecnica": "A regra typescript:S5852 detectou um padrao Regex suscetivel a backtracking catastrofico na validacao de campos de senha no componente change-password. Dependendo do padrao da expressao regular (como grupos aninhados ou quantificadores ambiguos repetidos), entradas manipuladas com comprimento elevado ou caracteres especificos fora do padrao exigem tempo computacional excessivo, travando a aplicacao.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao codigo-fonte do componente change-password.component.ts na linha 92",
+        "Instancia local do frontend Juice Shop em execucao ou ambiente de execucao Node.js/navegador para teste de avaliacao de Regex"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Analise estatica da expressao regular",
+          "resultado_esperado_verdadeiro_positivo": "A expressao regular contem quantificadores aninhados ou sobreposicao de padroes (ex.: (a+)+ ou .*.*) que causam backtracking quadratico ou exponencial ao processar entradas nao coincidentes.",
+          "resultado_esperado_falso_positivo": "A expressao regular e linear, utiliza quantificadores possessivos/atomicos seguros ou possui limitacao estrita de comprimento de entrada antes da avaliacao do regex."
+        },
+        {
+          "passo": "Passo 02: Teste de estresse com carga util de ReDoS",
+          "resultado_esperado_verdadeiro_positivo": "Ao submeter uma string longa especialmente construida (ex.: sequencias longas seguidas de caractere delimitador ausente), o navegador congela ou consome 100% de CPU por tempo excessivo.",
+          "resultado_esperado_falso_positivo": "A avaliacao da expressao regular conclui em poucos milissegundos sem elevacao significativa de tempo de processamento ou a entrada e truncada preventivamente."
+        }
+      ]
+    }
+  ]
+}

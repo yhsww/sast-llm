@@ -184,7 +184,6 @@ def _generate_kimi(
     return _extract_json(content)
 
 
-
 def _generate_claude(
     user_content: str,
 ) -> SecurityTestReport:
