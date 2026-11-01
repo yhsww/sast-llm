@@ -1,9 +1,9 @@
-<<<<<<< HEAD
-"""CLI: runs the branch-1-direct-llm for experiment."""
+"""Direct-LLM experiment runner.
 
-=======
-"""CLI: load a SonarQube JSON report, generate test cases, and save them under results."""
->>>>>>> 59e16a21a05780e982c7de7a1fab607f58f9a7c1
+Loads each JSON report from data/sast_reports, sends findings directly to
+the selected provider (without RAG or pasted source-code context), and writes
+one result per report/provider under results/<provider-folder>/.
+"""
 import json
 import re
 import sys
@@ -17,61 +17,6 @@ from backend.config import settings
 from backend.schemas import SonarReport
 from backend.openai_service import generate_test_cases
 
-_DEFAULT_REPORT = ROOT / "data" / "sast_reports" / "sample.json"
-
-
-def _model_name() -> str:
-    provider = settings.llm_provider.strip().lower()
-
-    names = {
-        "openai": settings.openai_chat_model,
-        "gemini": settings.gemini_model,
-        "kimi": settings.kimi_model,
-        "claude": settings.claude_model,
-    }
-
-    if provider not in names:
-        raise ValueError(f"Unsupported LLM provider: {provider}")
-
-    return names[provider]
-
-
-def _save_result(report_path: Path, result) -> Path:
-    model_name = _model_name()
-    folder = re.sub(
-        r"[^a-zA-Z0-9._-]+",
-        "-",
-        model_name,
-    ).strip("-") or "LLM"
-
-    output_dir = ROOT / "results" / folder
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    output_path = output_dir / f"{report_path.stem}_LLM.json"
-
-    if output_path.exists():
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_path = (
-            output_dir /
-            f"{report_path.stem}_LLM_{timestamp}.json"
-        )
-
-    payload = json.dumps(
-        result.model_dump(mode="json"),
-        indent=2,
-        ensure_ascii=False,
-    ) + "\n"
-
-    temporary_path = output_path.with_suffix(
-        output_path.suffix + ".tmp"
-    )
-    temporary_path.write_text(payload, encoding="utf-8")
-    temporary_path.replace(output_path)
-
-    return output_path
-
-
-<<<<<<< HEAD
 REPORTS_DIR = ROOT / "data" / "sast_reports"
 RESULTS_DIR = ROOT / "results"
 
@@ -82,171 +27,129 @@ PROVIDER_FOLDERS = {
     "claude": "Claude",
 }
 
-
-def choose_providers() -> list[str]:
-    """Allows the user to select one or all LLM providers."""
-    print("\nSelect an LLM provider:")
-    print("  1. OpenAI / GPT-5.5")
-    print("  2. Google Gemini")
-    print("  3. Kimi")
-    print("  4. Anthropic Claude")
-    print("  5. All LLMs")
-
-    options = {
-        "1": "openai",
-        "2": "gemini",
-        "3": "kimi",
-        "4": "claude",
-    }
-
-    while True:
-        choice = input("Option [5]: ").strip() or "5"
-
-        if choice == "5":
-            return list(PROVIDER_FOLDERS)
-
-        if choice in options:
-            return [options[choice]]
-
-        print("Invalid option. Enter a number from 1 to 5.")
+PROVIDER_LABELS = {
+    "openai": "OpenAI",
+    "gemini": "Google Gemini",
+    "kimi": "Kimi (Moonshot)",
+    "claude": "Anthropic Claude",
+}
 
 
 def model_for(provider: str) -> str:
-    """Returns the model configured for the provider."""
     models = {
         "openai": settings.openai_chat_model,
         "gemini": settings.gemini_model,
         "kimi": settings.kimi_model,
         "claude": settings.claude_model,
     }
-    return models[provider]
+    return str(models[provider])
 
 
 def discover_reports() -> list[Path]:
-    """Locates JSON reports in the input directory."""
+    """Return report JSON files in a stable order."""
     if not REPORTS_DIR.is_dir():
-        raise SystemExit(
-            f"Reports directory not found: {REPORTS_DIR}"
-        )
+        raise SystemExit(f"Reports directory not found: {REPORTS_DIR}")
 
     reports = list(REPORTS_DIR.glob("*.json"))
 
-    # Sorts GT01, GT02, ..., GT08 before other reports.
     def sort_key(path: Path):
         match = re.fullmatch(r"GT(\d+)", path.stem, re.IGNORECASE)
         if match:
-            return (0, int(match.group(1)), path.name.lower())
-        return (1, 0, path.name.lower())
+            return (0, int(match.group(1)), path.name.casefold())
+        return (1, 0, path.name.casefold())
 
     reports.sort(key=sort_key)
-
     if not reports:
-        raise SystemExit(
-            f"No JSON reports found in: {REPORTS_DIR}"
-        )
-
+        raise SystemExit(f"No JSON reports found in: {REPORTS_DIR}")
     return reports
 
 
+def choose_providers() -> list[str]:
+    providers = list(PROVIDER_FOLDERS)
+    print("\nSelect LLM provider:")
+    for index, provider in enumerate(providers, start=1):
+        print(
+            f"  {index}. {PROVIDER_LABELS[provider]} "
+            f"({model_for(provider)})"
+        )
+    print("  5. All providers")
+
+    while True:
+        choice = input("Option [5 = all]: ").strip() or "5"
+        if choice == "5" or choice.casefold() == "all":
+            return providers
+        if choice.isdigit() and 1 <= int(choice) <= len(providers):
+            return [providers[int(choice) - 1]]
+        provider_match = next(
+            (provider for provider in providers
+             if provider.casefold() == choice.casefold()),
+            None,
+        )
+        if provider_match:
+            return [provider_match]
+        print("Invalid option. Choose 1-5 or enter a provider name.")
+
+
 def output_path_for(report_path: Path, provider: str) -> Path:
-    """Defines a deterministic output filename for each report and LLM."""
     output_dir = RESULTS_DIR / PROVIDER_FOLDERS[provider]
     output_dir.mkdir(parents=True, exist_ok=True)
-
     return output_dir / f"{report_path.stem}_LLM.json"
 
 
 def save_result(result, output_path: Path) -> Path:
-    """Saves only the result content generated by the LLM."""
-    payload = result.model_dump(mode="json")
-
-    temp_path = output_path.with_suffix(".json.tmp")
-
-    try:
-        temp_path.write_text(
-            json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
-            encoding="utf-8",
+    """Write atomically and never overwrite a previous result."""
+    if output_path.exists():
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        output_path = output_path.with_name(
+            f"{output_path.stem}_{timestamp}{output_path.suffix}"
         )
-        temp_path.replace(output_path)
-    finally:
-        if temp_path.exists():
-            temp_path.unlink()
 
+    payload = json.dumps(
+        result.model_dump(mode="json"),
+        indent=2,
+        ensure_ascii=False,
+    ) + "\n"
+    temporary_path = output_path.with_suffix(output_path.suffix + ".tmp")
+    try:
+        temporary_path.write_text(payload, encoding="utf-8")
+        temporary_path.replace(output_path)
+    finally:
+        if temporary_path.exists():
+            temporary_path.unlink()
     return output_path
 
 
 def process_report(report_path: Path, provider: str) -> bool:
-    """Runs an LLM for an individual report."""
     output_path = output_path_for(report_path, provider)
-    error_path = output_path.with_name(
-        f"{report_path.stem}_ERROR.txt"
-    )
-
-    # Avoids making additional API calls for existing results.
-    if output_path.is_file():
-        print(f"[SKIP] Result already exists: {output_path}")
-        return True
+    error_path = output_path.with_name(f"{report_path.stem}_ERROR.txt")
 
     print(f"\nReport: {report_path.name}")
-    print(f"LLM: {provider} ({model_for(provider)})")
+    print(f"Provider/model: {provider} / {model_for(provider)}")
 
     try:
         report = SonarReport.model_validate_json(
             report_path.read_text(encoding="utf-8")
         )
-=======
-def main() -> None:
-    report_path = Path(
-        input(
-            f"SonarQube report path [{_DEFAULT_REPORT}]: "
-        ).strip() or str(_DEFAULT_REPORT)
-    )
+        print(f"Findings loaded: {len(report.issues)}")
 
-    if not report_path.is_absolute():
-        report_path = (Path.cwd() / report_path).resolve()
-
-    if not report_path.is_file():
-        print(f"File not found: {report_path}")
-        sys.exit(1)
-
-    report = SonarReport.model_validate_json(
-        report_path.read_text(encoding="utf-8")
-    )
-    print(f"Loaded {len(report.issues)} finding(s) from {report_path}.")
-
-    user_context = input(
-        "Optional focus/context (Enter to skip): "
-    ).strip()
->>>>>>> 59e16a21a05780e982c7de7a1fab607f58f9a7c1
-
-        print(f"SAST findings loaded: {len(report.issues)}")
-
-<<<<<<< HEAD
-        result = generate_test_cases(
-            report.issues,
-            provider=provider,
-        )
-
+        # Branch 1 is direct LLM: no RAG, extra context, or code snippet prompt.
+        result = generate_test_cases(report.issues, provider=provider)
         saved_path = save_result(result, output_path)
 
-        # Removes an old error file if the current execution succeeds.
         if error_path.exists():
             error_path.unlink()
-
-        print(f"[SAVED] {saved_path}")
+        print(f"[SAVED] {saved_path.relative_to(ROOT)}")
         return True
-
     except Exception as exc:
-        error_message = (
+        error_path.write_text(
             f"Report: {report_path.name}\n"
             f"Provider: {provider}\n"
-            f"Error: {type(exc).__name__}: {exc}\n"
+            f"Model: {model_for(provider)}\n"
+            f"Error: {type(exc).__name__}: {exc}\n",
+            encoding="utf-8",
         )
-
-        error_path.write_text(error_message, encoding="utf-8")
-        print(f"[ERROR] {provider} / {report_path.name}: {exc}")
-        print(f"[ERROR FILE] {error_path}")
-
+        print(f"[ERROR] {type(exc).__name__}: {exc}")
+        print(f"[ERROR FILE] {error_path.relative_to(ROOT)}")
         return False
 
 
@@ -255,40 +158,28 @@ def main() -> None:
     providers = choose_providers()
 
     print(f"\nReports found: {len(reports)}")
-    print(f"Selected LLMs: {len(providers)}")
+    print(f"Selected providers: {', '.join(providers)}")
+    print("Mode: direct LLM (no RAG and no additional context prompt)")
 
-    total = len(reports) * len(providers)
     succeeded = 0
     failed = 0
-
     for provider in providers:
-        print(f"\n{'=' * 60}")
-        print(f"PROVIDER: {provider} ({model_for(provider)})")
-        print(f"{'=' * 60}")
-
+        print(f"\n{'=' * 64}\n{PROVIDER_LABELS[provider]}: {model_for(provider)}")
+        print("=" * 64)
         for report_path in reports:
             if process_report(report_path, provider):
                 succeeded += 1
             else:
                 failed += 1
 
-    print(f"\n{'=' * 60}")
+    print(f"\n{'=' * 64}")
     print("EXECUTION SUMMARY")
-    print(f"Total combinations: {total}")
-    print(f"Completed or already existing: {succeeded}")
+    print(f"Reports: {len(reports)}")
+    print(f"Providers: {len(providers)}")
+    print(f"Successful: {succeeded}")
     print(f"Failed: {failed}")
-    print(f"Results: {RESULTS_DIR}")
-    print(f"{'=' * 60}")
-=======
-    print(json.dumps(
-        result.model_dump(mode="json"),
-        indent=2,
-        ensure_ascii=False,
-    ))
-
-    saved_path = _save_result(report_path, result)
-    print(f"\n[SAVED] Result written to: {saved_path.resolve()}")
->>>>>>> 59e16a21a05780e982c7de7a1fab607f58f9a7c1
+    print(f"Results directory: {RESULTS_DIR}")
+    print("=" * 64)
 
 
 if __name__ == "__main__":
