@@ -111,7 +111,7 @@ def run_provider(provider, reports, execute):
         gt = report_path.stem
         output_path = output_dir / f"{gt}_LLM.json"
         error_path = output_dir / f"{gt}_ERROR.txt"
-        if output_path.exists():
+        if execute and output_path.exists():
             print(f"[SKIP] {gt}: result already exists.")
             totals["skip"] += 1
             continue
@@ -121,10 +121,13 @@ def run_provider(provider, reports, execute):
             report = SonarReport.model_validate(data)
             retrieval_queries = [build_retrieval_query(issue) for issue in report.issues]
             retrieved = [query_knowledge(query) for query in retrieval_queries]
-            retrieved_ids = [[doc.id for doc in docs] for docs in retrieved]
+            retrieved_summary = [
+                [{"id": doc.id, "source": doc.source, "title": doc.title} for doc in docs]
+                for docs in retrieved
+            ]
             print(
                 f"[INFO] {gt}: {len(report.issues)} finding(s); "
-                f"RAG queries={retrieval_queries}; documents={retrieved_ids}"
+                f"RAG queries={retrieval_queries}; documents={retrieved_summary}"
             )
 
             if not execute:
