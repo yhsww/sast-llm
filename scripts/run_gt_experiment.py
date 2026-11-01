@@ -72,7 +72,13 @@ def model_for(name: str) -> str:
 
 
 def output_folder_for(name: str) -> str:
-    """Return the folder assigned to a provider."""
+    """Return a result folder that identifies the actual model."""
+    if name == "GPT":
+        model = model_for(name).strip()
+        if model.lower().startswith("gpt-"):
+            return "GPT" + model[4:]
+        safe_model = re.sub(r"[^A-Za-z0-9.]+", "", model)
+        return f"GPT-{safe_model}" if safe_model else "GPT"
     return PROVIDERS[name]["folder"]
 
 
@@ -168,14 +174,33 @@ def extract_source_snippets(
     source_root: Path,
     radius: int = 15,
 ) -> list[str | None]:
-    """Extract nearby source lines using Sonar component paths and issue line numbers."""
+    """Extract source context using component paths, with a safe basename fallback."""
     snippets: list[str | None] = []
     root = source_root.resolve()
+
+    # Index source files once. Sonar component paths often include a project prefix
+    # (for example, "juice-shop:routes/file.ts") that is not a directory under root.
+    source_files = [
+        path for path in root.rglob("*")
+        if path.is_file() and path.suffix.lower() in {
+            ".java", ".js", ".jsx", ".ts", ".tsx", ".py", ".php",
+            ".cs", ".go", ".rb", ".html", ".xml", ".sql",
+        }
+    ] if root.is_dir() else []
+
+    by_relative_path = {
+        path.relative_to(root).as_posix().casefold(): path
+        for path in source_files
+    }
+    by_basename: dict[str, list[Path]] = {}
+    for path in source_files:
+        by_basename.setdefault(path.name.casefold(), []).append(path)
 
     for issue in report.issues:
         component = issue.component or ""
         relative = component.split(":", 1)[1] if ":" in component else component
         relative = relative.replace("\\", "/").lstrip("/")
+        relative = relative.removeprefix("./")
         candidate = (root / relative).resolve()
 
         try:
@@ -184,41 +209,54 @@ def extract_source_snippets(
             snippets.append(None)
             continue
 
-        line_number = issue.line or (
-            issue.textRange.startLine if issue.textRange else None
-        )
+        if not candidate.is_file():
+            candidate = by_relative_path.get(relative.casefold())
+        if not candidate:
+            matches = by_basename.get(Path(relative).name.casefold(), [])
+            # Prefer a path ending in the full component-relative path; otherwise
+            # use a deterministic first match when only a basename is available.
+            matching_suffix = [
+                path for path in matches
+                if path.as_posix().casefold().endswith(relative.casefold())
+            ]
+            candidate = sorted(matching_suffix or matches, key=lambda p: p.as_posix())[0] if matches else None
 
-        if not candidate.is_file() or not line_number:
+        if not candidate:
             snippets.append(None)
             continue
 
         try:
-            lines = candidate.read_text(
-                encoding="utf-8",
-                errors="replace"
-            ).splitlines()
+            lines = candidate.read_text(encoding="utf-8", errors="replace").splitlines()
         except OSError:
             snippets.append(None)
             continue
 
-        if line_number < 1 or line_number > len(lines):
+        if not lines:
             snippets.append(None)
             continue
 
-        start = max(1, line_number - radius)
-        end = min(len(lines), line_number + radius)
-
-        snippet = "\n".join(
-            f"{n:>5}: {lines[n - 1]}"
-            for n in range(start, end + 1)
+        line_number = issue.line or (
+            issue.textRange.startLine if issue.textRange else None
         )
+        if line_number and 1 <= line_number <= len(lines):
+            start_line = max(1, line_number - radius)
+            end_line = min(len(lines), line_number + radius)
+        else:
+            # Keep the file as context even when the scanner line does not map
+            # to this checkout (for example, line numbers from another revision).
+            start_line = 1
+            end_line = min(len(lines), 120)
 
+        excerpt = "\\n".join(
+            f"{n:>5}: {lines[n - 1]}"
+            for n in range(start_line, end_line + 1)
+        )
         snippets.append(
-            f"Source: {candidate.name} (lines {start}-{end})\n{snippet}"
+            f"Source: {candidate.relative_to(root).as_posix()} "
+            f"(lines {start_line}-{end_line})\\n{excerpt}"
         )
 
     return snippets
-
 
 def parse_response(text: str) -> SecurityTestReport:
     """Parse a provider response as a SecurityTestReport."""
@@ -419,7 +457,12 @@ def main() -> None:
     )
     parser.add_argument(
         "--report",
-        help="Run one report, e.g. GT01. Default: all GT*.json files.",
+        help="Run one report from --reports-dir, e.g. GT01.",
+    )
+    parser.add_argument(
+        "--input-file",
+        type=Path,
+        help="Run one SonarQube JSON report directly, e.g. sample.json.",
     )
     parser.add_argument(
         "--reports-dir",
@@ -444,7 +487,15 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    reports = discover_reports(args.reports_dir, args.report)
+    if args.input_file:
+        input_path = args.input_file
+        if not input_path.is_absolute():
+            input_path = (Path.cwd() / input_path).resolve()
+        if not input_path.is_file():
+            raise SystemExit(f"[ERROR] Input report not found: {input_path}")
+        reports = [input_path]
+    else:
+        reports = discover_reports(args.reports_dir, args.report)
     provider_names = (
         list(PROVIDERS)
         if args.provider == "all"
@@ -590,18 +641,44 @@ def main() -> None:
                 summary["ok"] += 1
 
             except Exception as exc:
+                message = str(exc)
                 print(
                     f"[ERROR] {provider}/{path.name}: "
-                    f"{type(exc).__name__}: {exc}"
+                    f"{type(exc).__name__}: {message}"
                 )
                 summary["error"] += 1
 
                 if args.execute:
                     err.write_text(
                         f"Error type: {type(exc).__name__}\n"
-                        f"Error message: {exc}\n",
+                        f"Error message: {message}\n",
                         encoding="utf-8",
                     )
+
+                # Do not make the same doomed request for every report when
+                # the provider reports exhausted credits/quota or a suspended
+                # account. Record the first failure and skip the remaining cases.
+                lowered = message.casefold()
+                quota_failure = any(token in lowered for token in (
+                    "insufficient balance",
+                    "credit balance is too low",
+                    "insufficient_quota",
+                    "exceeded_current_quota",
+                    "account is suspended",
+                    "billing hard limit",
+                    "quota exceeded",
+                ))
+                if args.execute and quota_failure:
+                    remaining = len(prepared) - prepared.index(
+                        (path, report, retrieved, snippets)
+                    ) - 1
+                    if remaining:
+                        print(
+                            f"[WARN] {provider}: quota/billing failure detected; "
+                            f"skipping {remaining} remaining report(s) for this provider."
+                        )
+                        summary["skip"] += remaining
+                    break
 
         for key in totals:
             totals[key] += summary[key]
