@@ -7,7 +7,6 @@ one result per report/provider under results/<provider-folder>/.
 import json
 import re
 import sys
-from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -97,13 +96,7 @@ def output_path_for(report_path: Path, provider: str) -> Path:
 
 
 def save_result(result, output_path: Path) -> Path:
-    """Write atomically and never overwrite a previous result."""
-    if output_path.exists():
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-        output_path = output_path.with_name(
-            f"{output_path.stem}_{timestamp}{output_path.suffix}"
-        )
-
+    """Write atomically to the stable report filename, replacing prior output."""
     payload = json.dumps(
         result.model_dump(mode="json"),
         indent=2,
