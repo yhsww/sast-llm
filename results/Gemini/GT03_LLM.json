@@ -1,0 +1,33 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S6268",
+        "arquivo": "juice-shop:frontend/src/app/about/about.component.ts",
+        "linha": 119,
+        "severidade_sast": "CRITICAL",
+        "regra": "typescript:S6268",
+        "categoria": "Vulnerabilidade"
+      },
+      "classificacao": {
+        "veredicto": "A Confirmar",
+        "cwe": "CWE-83",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-CLNT-15",
+        "justificativa": "O uso de métodos do DomSanitizer do Angular que ignoram a sanitização automática pode expor a aplicação a ataques de Cross-Site Scripting (XSS) ou Client-Side Template Injection (CSTI) caso a entrada manipulada provenha de fontes controladas pelo usuário ou de origens não confiáveis."
+      },
+      "descricao_tecnica": "A regra typescript:S6268 identifica o desarmamento intencional dos mecanismos nativos de segurança do Angular (como bypassSecurityTrustHtml, bypassSecurityTrustResourceUrl ou similares). Na linha indicada de about.component.ts, o desenvolvedor instruiu explicitamente o framework a confiar no conteúdo renderizado, suprimindo o mecanismo padrão de sanitização de HTML/URLs.",
+      "pre_condicoes_para_verificacao": [
+        "Ambiente de desenvolvimento ou staging do OWASP Juice Shop em execução com o frontend Angular ativo.",
+        "Acesso ao código-fonte completo de about.component.ts para rastreamento da origem da variável tratada pelo sanitizador."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A variável submetida ao método de bypass recebe valores dinâmicos originados de parâmetros de URL, requisições HTTP externas ou entradas de usuário sem higienização prévia, permitindo a injeção e interpretação de marcações HTML perigosas ou atributos executáveis no DOM.",
+          "resultado_esperado_falso_positivo": "O conteúdo passado para o método de bypass consiste exclusivamente em strings literais estáticas, constantes codificadas ou dados estritamente validados/controlados pela própria aplicação sem possibilidade de interferência externa."
+        }
+      ]
+    }
+  ]
+}
