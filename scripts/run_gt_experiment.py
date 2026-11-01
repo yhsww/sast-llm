@@ -430,7 +430,7 @@ def main() -> None:
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Overwrite existing result JSON files.",
+        help="Accepted for compatibility; existing result JSON files are always overwritten.",
     )
 
     args = parser.parse_args()
