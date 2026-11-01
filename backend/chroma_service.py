@@ -24,19 +24,35 @@ _STOP_WORDS = {
     "a", "as", "ao", "aos", "com", "da", "das", "de", "do", "dos",
     "e", "em", "for", "here", "is", "make", "me", "na", "nas", "no",
     "nos", "o", "os", "para", "por", "que", "safe", "this", "to", "um",
-    "uma", "used", "when", "where",
+    "uma", "used", "when", "where", "ensure", "using",
 }
 
-_QUERY_EXPANSIONS = (
-    (r"\bcors\b|cross.origin resource sharing", "origin policy allow origin credentials preflight"),
-    (r"\b(password|credential)s?\b", "secret hardcoded embedded credential authentication"),
-    (r"private key|\bsecret key\b", "cryptographic key compromised revoke rotate invalidate"),
-    (r"\brevoke\b|\bcompromised\b", "invalidate rotate replace exposed credential"),
-    (r"regular expression|\bregex\b|\bregexp\b", "catastrophic backtracking ReDoS denial of service"),
-    (r"template", "template injection server-side client-side"),
-    (r"saniti[sz]|\bxss\b|cross.site scripting", "cross-site scripting HTML JavaScript escaping sanitizer bypass"),
-    (r"\beval\b|dynamic code|code execution|code injection", "CWE-94 dynamic code injection unsafe execution"),
-    (r"\bangular\b", "Angular DomSanitizer bypass security trust HTML XSS"),
+# Focused terminology expansion and trusted taxonomy anchors for common SAST findings.
+_DOMAIN_RULES = (
+    (r"\bcors\b|cross.origin resource sharing",
+     "origin validation permissive cross-domain policy allow origin credentials preflight",
+     {"CWE": ("CWE-942", "CWE-1385"), "WSTG": ("WSTG-CLNT-07", "WSTG-CONF-08")}),
+    (r"private key|\bsecret key\b",
+     "cryptographic key exposure hardcoded key key management revoke rotate invalidate",
+     {"CWE": ("CWE-321", "CWE-324", "CWE-798"), "WSTG": ("WSTG-CRYP-04", "WSTG-CONF-04")}),
+    (r"\b(password|credential)s?\b",
+     "secret hardcoded password embedded credential authentication credential rotation",
+     {"CWE": ("CWE-259", "CWE-522", "CWE-798"), "WSTG": ("WSTG-ATHN-02", "WSTG-ATHN-07")}),
+    (r"\brevoke\b|\bcompromised\b",
+     "compromised exposed secret invalidate rotate replace revoke credential",
+     {"CWE": ("CWE-321", "CWE-798"), "WSTG": ("WSTG-ATHN-07", "WSTG-CONF-04")}),
+    (r"regular expression|\bregex\b|\bregexp\b|backtracking|redos",
+     "inefficient regular expression complexity catastrophic backtracking ReDoS denial of service",
+     {"CWE": ("CWE-1333",), "WSTG": ()}),
+    (r"template",
+     "template injection server-side client-side template engine",
+     {"CWE": ("CWE-1336",), "WSTG": ("WSTG-INPV-18", "WSTG-CLNT-15")}),
+    (r"saniti[sz]|\bxss\b|cross.site scripting|angular",
+     "cross-site scripting HTML JavaScript escaping sanitizer bypass DomSanitizer",
+     {"CWE": ("CWE-79", "CWE-80", "CWE-83"), "WSTG": ("WSTG-CLNT-02", "WSTG-CLNT-15")}),
+    (r"\beval\b|dynamic code|code execution|code injection",
+     "dynamic code injection unsafe execution eval injection",
+     {"CWE": ("CWE-94", "CWE-95"), "WSTG": ("WSTG-INPV-11", "WSTG-CLNT-02")}),
 )
 
 
@@ -52,46 +68,88 @@ def _tokens(text: str) -> set[str]:
     return {word for word in words if len(word) > 2 and word not in _STOP_WORDS}
 
 
-def _expand_query(query_text: str) -> str:
+def _query_profile(query_text: str) -> tuple[str, dict[str, set[str]]]:
     query = _normalize(query_text)
-    additions = [
-        expansion for pattern, expansion in _QUERY_EXPANSIONS
-        if re.search(pattern, query, flags=re.IGNORECASE)
-    ]
-    return f"{query} {' '.join(additions)}".strip()
+    anchors: dict[str, set[str]] = {"CWE": set(), "WSTG": set()}
+    additions = []
+    for pattern, expansion, source_ids in _DOMAIN_RULES:
+        if re.search(pattern, query, flags=re.IGNORECASE):
+            additions.append(expansion)
+            for source, ids in source_ids.items():
+                anchors[source].update(ids)
+    return f"{query} {' '.join(additions)}".strip(), anchors
 
 
-def _rank_candidates(hits: dict, source: str, query_text: str) -> list[tuple[float, RetrievedDoc]]:
+def _candidate_rows(collection, query: str, source: str, candidate_k: int, anchors: set[str]):
+    hits = collection.query(
+        query_texts=[query],
+        n_results=candidate_k,
+        include=["documents", "metadatas", "distances"],
+    )
+    rows = {}
     ids = (hits.get("ids") or [[]])[0]
-    if not ids:
-        return []
-
     documents = (hits.get("documents") or [[]])[0]
     metadatas = (hits.get("metadatas") or [[]])[0]
     distances = (hits.get("distances") or [[]])[0]
+    for i, doc_id in enumerate(ids):
+        rows[doc_id] = {
+            "id": doc_id,
+            "document": documents[i] or "",
+            "metadata": metadatas[i] or {},
+            "distance": distances[i] if i < len(distances) else 1.0,
+        }
+
+    # Add taxonomy anchors even when semantic search omitted the most relevant item.
+    existing = set(rows)
+    wanted = sorted(anchors - existing)
+    if wanted:
+        exact = collection.get(
+            ids=wanted,
+            include=["documents", "metadatas"],
+        )
+        exact_ids = exact.get("ids") or []
+        exact_docs = exact.get("documents") or []
+        exact_meta = exact.get("metadatas") or []
+        for i, doc_id in enumerate(exact_ids):
+            rows[doc_id] = {
+                "id": doc_id,
+                "document": exact_docs[i] or "",
+                "metadata": exact_meta[i] or {},
+                "distance": 0.45,
+            }
+    return rows.values()
+
+
+def _rank_candidates(rows, source: str, query_text: str, anchors: set[str]):
     query_tokens = _tokens(query_text)
     ranked = []
-
-    for i, doc_id in enumerate(ids):
-        metadata = metadatas[i] or {}
+    for row in rows:
+        doc_id = row["id"]
+        metadata = row["metadata"]
         title = metadata.get("title") or doc_id
-        content = documents[i] or ""
-        distance = distances[i] if i < len(distances) and distances[i] is not None else 1.0
-        semantic_score = 1.0 / (1.0 + max(float(distance), 0.0))
+        content = row["document"]
+        distance = row["distance"]
+        semantic_score = 1.0 / (1.0 + max(float(distance or 0.0), 0.0))
         title_tokens = _tokens(title)
         overlap = len(query_tokens & title_tokens) / len(title_tokens) if title_tokens else 0.0
-        score = 0.8 * semantic_score + 0.2 * overlap
-        ranked.append((score, RetrievedDoc(id=doc_id, source=source, title=title, content=content)))
-
+        anchor_bonus = 0.35 if doc_id in anchors else 0.0
+        title_bonus = 0.15 if query_tokens & title_tokens else 0.0
+        score = 0.65 * semantic_score + 0.20 * overlap + anchor_bonus + title_bonus
+        ranked.append((
+            score,
+            RetrievedDoc(
+                id=doc_id,
+                source=source,
+                title=title,
+                content=content,
+            ),
+        ))
     return ranked
 
 
 def query_knowledge(query_text: str) -> list[RetrievedDoc]:
-    """Retrieve CWE/WSTG candidates, expand security terminology, and rerank.
-
-    This function uses the local Chroma index only; it does not call an LLM API.
-    """
-    query = _expand_query(query_text)
+    """Retrieve and rerank CWE/WSTG context using local Chroma; no LLM API calls."""
+    query, anchors = _query_profile(query_text)
     results: list[RetrievedDoc] = []
 
     for collection, source, configured_k in (
@@ -103,13 +161,15 @@ def query_knowledge(query_text: str) -> list[RetrievedDoc]:
             continue
 
         final_k = min(max(int(configured_k), 1), count)
-        candidate_k = min(max(final_k * 4, 8), count)
-        hits = collection.query(
-            query_texts=[query],
-            n_results=candidate_k,
-            include=["documents", "metadatas", "distances"],
+        candidate_k = min(max(final_k * 6, 12), count)
+        rows = _candidate_rows(
+            collection,
+            query,
+            source,
+            candidate_k,
+            anchors[source],
         )
-        ranked = _rank_candidates(hits, source, query)
+        ranked = _rank_candidates(rows, source, query, anchors[source])
         ranked.sort(key=lambda item: item[0], reverse=True)
         results.extend(doc for _, doc in ranked[:final_k])
 
