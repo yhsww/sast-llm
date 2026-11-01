@@ -1,0 +1,76 @@
+name: Validate all SAST experiment branches
+
+on:
+  push:
+    branches:
+      - main
+      - branch-1-direct-llm
+      - branch-2-rag-cwe-wstg
+      - branch-3-rag-code-context
+  pull_request:
+    branches:
+      - main
+      - branch-1-direct-llm
+      - branch-2-rag-cwe-wstg
+      - branch-3-rag-code-context
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    name: Smoke tests — ${{ matrix.branch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        branch:
+          - main
+          - branch-1-direct-llm
+          - branch-2-rag-cwe-wstg
+          - branch-3-rag-code-context
+    steps:
+      - name: Check out branch under test
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pytest
+
+      - name: Compile Python modules
+        run: python -m compileall -q backend query.py
+
+      - name: Compile branch-specific entry points
+        if: matrix.branch == 'main' || matrix.branch == 'branch-1-direct-llm'
+        run: python -m compileall -q run_experiment.py
+
+      - name: Compile RAG scripts
+        if: matrix.branch == 'branch-2-rag-cwe-wstg' || matrix.branch == 'branch-3-rag-code-context'
+        run: python -m compileall -q scripts
+
+      - name: Run smoke tests
+        run: python -m pytest -q
+
+      - name: Validate main inputs without API calls
+        if: matrix.branch == 'main'
+        run: python query.py --all-reports --simulate
+
+      - name: Validate direct-LLM inputs without API calls
+        if: matrix.branch == 'branch-1-direct-llm'
+        run: python query.py --simulate
+
+      - name: Dry-run CWE/WSTG experiment
+        if: matrix.branch == 'branch-2-rag-cwe-wstg'
+        run: python -m scripts.run_gt_experiment
+
+      - name: Dry-run CWE/WSTG plus code context
+        if: matrix.branch == 'branch-3-rag-code-context'
+        run: python query.py --input-file data/sast_reports/sample.json
