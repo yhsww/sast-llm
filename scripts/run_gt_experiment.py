@@ -68,19 +68,7 @@ PROVIDERS = {
 
 def model_for(name: str) -> str:
     cfg = PROVIDERS[name]
-
-    # Use the configured OpenAI model when available.
-    configured = (
-        getattr(settings, "openai_chat_model", None)
-        if name == "GPT"
-        else None
-    )
-
-    return (
-        os.getenv(cfg["model_env"])
-        or configured
-        or cfg["model"]
-    ).strip()
+    return (os.getenv(cfg["model_env"]) or cfg["model"]).strip()
 
 
 def output_folder_for(name: str) -> str:
@@ -98,13 +86,35 @@ def api_key_for(name: str) -> str:
     return os.getenv(PROVIDERS[name]["api_env"], "").strip()
 
 
+def _source_excerpt(path: Path, line_number: int | None, radius: int = 15) -> str | None:
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return None
+
+    if not lines:
+        return None
+
+    if line_number is not None and 1 <= line_number <= len(lines):
+        start = max(1, line_number - radius)
+        end = min(len(lines), line_number + radius)
+    else:
+        # Some sample reports use line numbers from a larger fixture; retain
+        # the matching file as context rather than silently dropping it.
+        start = 1
+        end = min(len(lines), 120)
+
+    excerpt = "\\n".join(f"{n:>5}: {lines[n - 1]}" for n in range(start, end + 1))
+    return f"Source: {path.name} (lines {start}-{end})\\n{excerpt}"
+
+
 def load_snippets(
     report_path: Path,
     raw: dict[str, Any],
     report: SonarReport,
     snippets_dir: Path,
 ) -> list[str | None]:
-    """Load code snippets from the report or an optional separate JSON file."""
+    """Load explicit snippets, or match sample source files by component basename."""
     value: Any = raw.get("code_snippets")
     snippet_path = snippets_dir / f"{report_path.stem}.json"
 
@@ -118,32 +128,15 @@ def load_snippets(
         value = value["code_snippets"]
 
     if isinstance(value, list):
-        values = [
-            v if isinstance(v, str) and v.strip() else None
-            for v in value
-        ]
+        values = [v if isinstance(v, str) and v.strip() else None for v in value]
         return (values + [None] * len(report.issues))[:len(report.issues)]
 
     if isinstance(value, dict):
         snippets = []
-
         for index, issue in enumerate(report.issues, start=1):
-            keys = [
-                str(index),
-                issue.key or "",
-                issue.component or "",
-                issue.rule,
-            ]
-
-            item = next(
-                (value[k] for k in keys if k and k in value),
-                None
-            )
-
-            snippets.append(
-                item if isinstance(item, str) and item.strip() else None
-            )
-
+            keys = [str(index), issue.key or "", issue.component or "", issue.rule]
+            item = next((value[k] for k in keys if k and k in value), None)
+            snippets.append(item if isinstance(item, str) and item.strip() else None)
         return snippets
 
     if value is not None:
@@ -151,7 +144,26 @@ def load_snippets(
             f"Unsupported snippet format in {snippet_path}; use a list or object."
         )
 
-    return [None] * len(report.issues)
+    files_by_name: dict[str, Path] = {}
+    if snippets_dir.is_dir():
+        for candidate in sorted(snippets_dir.rglob("*")):
+            if candidate.is_file() and candidate.suffix.lower() in {
+                ".java", ".js", ".ts", ".py", ".php", ".cs", ".go"
+            }:
+                files_by_name.setdefault(candidate.name.casefold(), candidate)
+
+    snippets: list[str | None] = []
+    for issue in report.issues:
+        component = (issue.component or "").split(":", 1)[-1].replace("\\\\", "/")
+        source_path = files_by_name.get(Path(component).name.casefold())
+        line_number = issue.line or (
+            issue.textRange.startLine if issue.textRange else None
+        )
+        snippets.append(
+            _source_excerpt(source_path, line_number) if source_path else None
+        )
+
+    return snippets
 
 
 def extract_source_snippets(
@@ -430,21 +442,10 @@ def main() -> None:
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Accepted for compatibility; existing result JSON files are always overwritten.",
+        help="Overwrite existing result JSON files. By default, existing results are preserved.",
     )
 
     args = parser.parse_args()
-
-    # ChromaDB's embedding setup may require the OpenAI API key even
-    # when the generation provider is Gemini, Kimi, or Claude.
-    if not (
-        getattr(settings, "openai_api_key", "")
-        or os.getenv("OPENAI_API_KEY")
-    ):
-        raise SystemExit(
-            "[ERROR] OPENAI_API_KEY is required by this branch's "
-            "ChromaDB embedding configuration."
-        )
 
     reports = discover_reports(args.reports_dir, args.report)
     provider_names = (
@@ -531,6 +532,22 @@ def main() -> None:
             out = out_dir / f"{path.stem}_LLM.json"
             err = out_dir / f"{path.stem}_ERROR.txt"
 
+            if args.execute and out.is_file() and not args.force:
+                print(
+                    f"[SKIP] Preserving existing result {out.relative_to(ROOT)} "
+                    "(use --force to overwrite)."
+                )
+                summary["skip"] += 1
+                continue
+
+            if args.execute and not api_key_for(provider):
+                print(
+                    f"[SKIP] {provider}: {PROVIDERS[provider]['api_env']} is not configured; "
+                    "no API call or error file created."
+                )
+                summary["skip"] += 1
+                continue
+
             try:
                 user_content = build_user_content(
                     report.issues,
@@ -605,7 +622,7 @@ def main() -> None:
     if not args.execute:
         print(
             "Dry run only. Add --execute to generate results. "
-            "ChromaDB retrieval may still call OpenAI embeddings."
+            "ChromaDB uses local embeddings; the first run may initialize the local model."
         )
 
 
