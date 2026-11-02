@@ -1,0 +1,127 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "Não informado",
+        "arquivo": "com.example.app:src/main/java/com/example/app/repository/UserRepository.java",
+        "linha": 47,
+        "severidade_sast": "CRITICAL",
+        "regra": "java:S3649",
+        "categoria": "Injeção de SQL"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro positivo no trecho; alcance por entrada externa pendente de verificação",
+        "cwe": "CWE-89",
+        "owasp_top_10": "A03:2021 — Injection",
+        "wstg": "WSTG-INPV-05 — Testing for SQL Injection",
+        "justificativa": "findByUsername concatena username em um literal SQL e executa a consulta sem vinculação de parâmetros, nas linhas 20–21 do trecho. Isso permite alterar a expressão SQL caso o argumento contenha entrada não confiável. Os chamadores não foram fornecidos, portanto o controle externo e eventuais restrições anteriores precisam ser verificados. CWE-566 pressupõe controle de chave e falha de autorização, não demonstrados aqui; CWE-564 é específico de Hibernate, enquanto o código usa JdbcTemplate. As referências específicas de SQL Server e Access só se aplicam se o SGBD correspondente for identificado."
+      },
+      "descricao_tecnica": "O argumento username é inserido diretamente em SELECT * FROM users WHERE username = '...'. O overload de queryForObject utilizado recebe a consulta já concatenada, sem parâmetros vinculados. Uma entrada com aspas e operadores pode modificar a condição WHERE. Retornos múltiplos podem gerar exceção em queryForObject, portanto ausência de registros na resposta não descarta injeção. findById demonstra vinculação de parâmetros, mas não protege findByUsername. O trecho também contém concatenação em searchByRole; isso é contexto adicional, não um novo achado. A linha 47 do relatório corresponde às linhas 20–21 do trecho fornecido e precisa ser reconciliada com a revisão analisada.",
+      "pre_condicoes_para_verificacao": [
+        "Ambiente autorizado com banco isolado, registros exclusivamente sintéticos e usuário de banco com privilégios mínimos.",
+        "Acesso aos chamadores de findByUsername e à revisão de código analisada pelo SonarQube.",
+        "Possibilidade de observar consultas e resultados em teste, sem registrar dados pessoais ou credenciais.",
+        "SGBD e driver identificados para evitar pressupostos sobre sintaxe e comportamento."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 — Reconciliar a linha 47 com as linhas 20–21 do trecho e rastrear os chamadores de findByUsername até a origem de username, verificando validações e transformações.",
+          "resultado_esperado_verdadeiro_positivo": "Entrada não confiável consegue alcançar a concatenação SQL sem restrição eficaz que impeça alteração da sintaxe.",
+          "resultado_esperado_falso_positivo": "O fluxo reportado não existe na revisão analisada ou o argumento é comprovadamente restrito a valores internos não controláveis externamente. Registrar essa evidência; apenas haver uma validação não comprova sua eficácia."
+        },
+        {
+          "passo": "Passo 02 — Em teste de integração com um único usuário sintético chamado triage_user, comparar as entradas triage_user, triage_user' AND '1'='1 e triage_user' AND '1'='2. Usar apenas consultas de leitura e observar também o SQL executado.",
+          "resultado_esperado_verdadeiro_positivo": "A entrada verdadeira encontra o usuário e a falsa não encontra, porque os operadores fornecidos passam a integrar a condição SQL. O rastreamento confirma a alteração estrutural da consulta.",
+          "resultado_esperado_falso_positivo": "As entradas especiais são rejeitadas antes da consulta ou tratadas integralmente como valores literais por parâmetros vinculados. A diferença de resposta, isoladamente, não deve ser usada como prova."
+        },
+        {
+          "passo": "Passo 03 — Validar a correção substituindo a concatenação por WHERE username = ? com vinculação de username e repetir o teste, incluindo um nome sintético com apóstrofo.",
+          "resultado_esperado_verdadeiro_positivo": "Antes da correção, a estrutura SQL dependia da entrada; depois, a consulta mantém estrutura constante e aceita apóstrofos como dados, sem interpretar os operadores enviados.",
+          "resultado_esperado_falso_positivo": "A versão efetivamente analisada já utiliza vinculação de parâmetros ou o fluxo reportado é inexistente, sem alteração de semântica causada pelos valores de teste."
+        }
+      ]
+    },
+    {
+      "identificacao": {
+        "id_sonarqube": "Não informado",
+        "arquivo": "com.example.app:src/main/java/com/example/app/controller/CommentController.java",
+        "linha": 83,
+        "severidade_sast": "CRITICAL",
+        "regra": "java:S5131",
+        "categoria": "Cross-site scripting (XSS)"
+      },
+      "classificacao": {
+        "veredicto": "Concatenação insegura confirmada no trecho; execução de XSS pendente de verificação",
+        "cwe": "CWE-79",
+        "owasp_top_10": "A03:2021 — Injection",
+        "wstg": "WSTG-INPV-01 — Testing for Reflected Cross Site Scripting; WSTG-INPV-02 — Testing for Stored Cross Site Scripting, se houver renderização posterior",
+        "justificativa": "addReply insere diretamente authorName e content recebidos por @RequestParam em uma string com marcação HTML, nas linhas 37–40. É necessário verificar o Content-Type efetivo e como a resposta é consumida para confirmar execução no navegador. createReply sugere persistência, mas não comprova XSS armazenado. A atribuição de filter ao Model também não comprova XSS sem examinar o template. CWE-80 e CWE-83 são variantes relacionadas; CWE-79 expressa melhor o problema geral. WSTG-INPV-18 trata de SSTI, não demonstrada neste código."
+      },
+      "descricao_tecnica": "POST /comments/{id}/reply devolve uma string com os parâmetros originais em contextos de texto HTML dentro de span e p, sem codificação de saída visível. Mesmo que createReply normalize o objeto persistido, o retorno concatena os argumentos originais, salvo rejeição ou interrupção do fluxo. A exploração depende de interpretação como HTML, diretamente pelo navegador ou por inserção insegura no DOM pelo cliente. O trecho não informa negociação de conteúdo, filtros de resposta, CSP ou código cliente. GET /comments atribui activeFilter ao modelo, mas a segurança depende do template comments/list. A linha 83 reportada deve ser reconciliada com as linhas 37–40 do trecho.",
+      "pre_condicoes_para_verificacao": [
+        "Aplicação de homologação autorizada, conta de teste e comentário sintético para receber respostas.",
+        "Sessão e token CSRF de teste, caso exigidos, sem desativar controles para simular a exposição normal.",
+        "Acesso aos cabeçalhos HTTP, ao código cliente e ao template comments/list.",
+        "Navegador com ferramentas de desenvolvimento e mecanismo de restauração dos dados de teste."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 — Reconciliar a localização do achado e enviar uma resposta comum ao comentário sintético. Inspecionar Content-Type, corpo, CSP e eventual inserção da resposta no DOM.",
+          "resultado_esperado_verdadeiro_positivo": "Os parâmetros chegam ao retorno concatenado e a resposta é interpretada como HTML, diretamente ou por um consumidor que usa um mecanismo como innerHTML.",
+          "resultado_esperado_falso_positivo": "O caminho efetivo codifica a saída ou mantém o conteúdo como texto em todos os consumidores relevantes, sem interpretação HTML. Content-Type textual isoladamente não basta se o cliente posteriormente inserir a resposta como HTML."
+        },
+        {
+          "passo": "Passo 02 — Testar authorName e content separadamente, mantendo o outro campo benigno. Enviar primeiro <b data-triage=\"xss\">teste</b> e depois <svg onload=\"this.setAttribute('data-triage-executed','yes')\"></svg>, com codificação de transporte adequada. Usar somente a página de teste, sem acesso a cookies ou destinos externos.",
+          "resultado_esperado_verdadeiro_positivo": "A marcação cria elementos no DOM e o segundo marcador recebe data-triage-executed=\"yes\", demonstrando execução no contexto da aplicação.",
+          "resultado_esperado_falso_positivo": "Os valores aparecem como texto codificado ou são sanitizados sem atributos executáveis. Se apenas a CSP bloquear o evento, registrar a mitigação e a concatenação insegura remanescente, sem concluir falso positivo automaticamente."
+        },
+        {
+          "passo": "Passo 03 — Se createReply persistir os dados, abrir a visualização posterior do comentário em outra sessão de teste. Examinar também o template de activeFilter antes de testar sua reflexão. Ao terminar, restaurar os dados sintéticos.",
+          "resultado_esperado_verdadeiro_positivo": "A execução do marcador em uma leitura posterior confirma a modalidade armazenada. Execução apenas na resposta imediata confirma somente esse caminho; activeFilter só é afetado se o template o renderizar de forma insegura.",
+          "resultado_esperado_falso_positivo": "As visualizações posteriores e o template aplicam codificação contextual ou sanitização adequada. Isso descarta esses caminhos específicos, mas não invalida uma execução já demonstrada no retorno de addReply."
+        }
+      ]
+    },
+    {
+      "identificacao": {
+        "id_sonarqube": "Não informado",
+        "arquivo": "com.example.app:src/main/java/com/example/app/config/DatabaseConfig.java",
+        "linha": 22,
+        "severidade_sast": "BLOCKER",
+        "regra": "java:S2068",
+        "categoria": "Credencial de banco de dados embutida no código"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro positivo no trecho; validade e uso em implantação pendentes de verificação",
+        "cwe": "CWE-798",
+        "owasp_top_10": "A07:2021 — Identification and Authentication Failures",
+        "wstg": "Sem correspondência direta nas referências fornecidas; WSTG-ATHN-04 e WSTG-ATHN-07 oferecem apenas contexto de autenticação",
+        "justificativa": "DB_PASSWORD contém um literal e é passado a HikariConfig.setPassword nas linhas 19 e 28, evidenciando uma credencial de saída embutida no código. Nomes de host, banco e usuário sugerem produção, mas não comprovam implantação, validade da senha ou privilégios administrativos. CWE-798 é mais preciso que CWE-555, que trata de senha em arquivo de configuração; CWE-549 trata de mascaramento em interface e não se aplica. Não é necessário autenticar no host informado para confirmar o padrão inseguro."
+      },
+      "descricao_tecnica": "A configuração cria um DataSource com senha definida como constante Java. Quem tiver acesso ao fonte ou ao artefato compilado pode recuperar o literal; compilar ou empacotar a aplicação não o protege. O uso efetivo depende da ativação dessa configuração e de eventuais substituições no ambiente, não apresentadas. A linha 22 reportada aponta para o método dataSource, enquanto a declaração e o uso do segredo estão nas linhas 19 e 28 do trecho. A verificação deve evitar reproduzir o valor em relatórios, logs e comandos.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso autorizado ao fonte, à configuração de implantação e ao artefato correspondente à revisão analisada.",
+        "Ambiente isolado com credenciais sintéticas e possibilidade de inspecionar ou interceptar a configuração do DataSource sem conexão ao host indicado.",
+        "Responsável pelo segredo disponível para confirmar sua finalidade e coordenar rotação, se aplicável.",
+        "Tratamento restrito das evidências, com mascaramento de valores sensíveis."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 — Rastrear DB_PASSWORD até setPassword e verificar se DatabaseConfig integra o build e pode ser ativada em algum perfil implantável, sem tentar autenticar no banco indicado.",
+          "resultado_esperado_verdadeiro_positivo": "O literal é uma credencial destinada ao DataSource e o caminho de configuração é utilizável pela aplicação. Não é necessário demonstrar que a senha ainda funciona.",
+          "resultado_esperado_falso_positivo": "Há evidência de que o arquivo é exclusivamente uma fixture não implantável e o literal é um marcador sintético sem função de autenticação real. Uma senha apenas expirada não torna falso o histórico de exposição."
+        },
+        {
+          "passo": "Passo 02 — Inspecionar localmente o artefato autorizado para verificar se a constante está recuperável, registrando apenas sua presença e localização, nunca o valor.",
+          "resultado_esperado_verdadeiro_positivo": "A credencial está recuperável no fonte ou no bytecode distribuído, confirmando exposição a quem obtiver esses materiais.",
+          "resultado_esperado_falso_positivo": "O artefato relevante não contém o literal porque esse código não integra a distribuição. Essa evidência limita o alcance, mas não elimina o problema no fonte se a credencial for real."
+        },
+        {
+          "passo": "Passo 03 — Em teste isolado, substituir a origem por um provedor externo de segredos e validar com credencial sintética e DataSource controlado. Confirmar ausência do literal no novo artefato e planejar com o responsável a revogação ou rotação do segredo exposto.",
+          "resultado_esperado_verdadeiro_positivo": "A configuração original dependia do literal; a versão corrigida obtém o segredo externamente, não o inclui no artefato e não o registra. O responsável avalia a exposição histórica e executa a rotação pelos procedimentos aprovados.",
+          "resultado_esperado_falso_positivo": "A versão analisada já obtém a credencial exclusivamente de uma fonte externa e o suposto segredo é comprovadamente um dado sintético sem uso real. A conclusão deve ser sustentada por evidências da revisão e da implantação."
+        }
+      ]
+    }
+  ]
+}

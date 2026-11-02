@@ -2,6 +2,7 @@
   "test_cases": [
     {
       "identificacao": {
+<<<<<<< HEAD
         "id_sonarqube": "typescript:S6268",
         "arquivo": "frontend/src/app/about/about.component.ts",
         "linha": 119,
@@ -22,10 +23,33 @@
         "Ter acesso ao fluxo funcional ou API que cria/retorna feedbacks consumidos pela página About.",
         "Ter um navegador com DevTools habilitado para inspecionar DOM, console e requisições de rede.",
         "Usar payloads inofensivos de prova de conceito que apenas definam uma variável global ou exibam um marcador controlado, sem exfiltrar dados."
+=======
+        "id_sonarqube": "101f6c6f-b415-47a0-961c-e577bac36edb",
+        "arquivo": "juice-shop:frontend/src/app/about/about.component.ts",
+        "linha": 119,
+        "severidade_sast": "CRITICAL",
+        "regra": "typescript:S6268",
+        "categoria": "SECURITY_HOTSPOT"
+      },
+      "classificacao": {
+        "veredicto": "Necessita revisão manual",
+        "cwe": "CWE-79 - Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-CLNT-01 - Testing for DOM-Based Cross Site Scripting",
+        "justificativa": "A regra typescript:S6268 sinaliza o uso de APIs do Angular que desabilitam a sanitização nativa, como bypassSecurityTrustHtml, bypassSecurityTrustUrl, bypassSecurityTrustResourceUrl, bypassSecurityTrustScript ou bypassSecurityTrustStyle. O alerta será verdadeiro positivo se o valor marcado como confiável puder ser controlado por usuário, API externa, parâmetros de URL, conteúdo administrativo não validado ou outra fonte não confiável e for renderizado no DOM. Seráfalso positivo se o valor for estritamente estático, gerado internamente, validado por lista de permissões ou sanitizado de forma robusta antes do bypass."
+      },
+      "descricao_tecnica": "No arquivo frontend/src/app/about/about.component.ts, linha 119, há umhotspot crítico indicando possível desativação da sanitização built-in do Angular. Em Angular, o DomSanitizer normalmente remove ou neutraliza conteúdo perigoso antes de inserir HTML, URLs, estilosou recursos no DOM. O uso de métodos bypassSecurityTrust* força o framework a confiar no conteúdo e pode permitir XSS caso a entrada venha de fonte não confiável ou seja manipulável. A verificação deve confirmar a origem do dado, o contexto de renderização e se existem controles compensatórios antes da chamada de bypass.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte do componente frontend/src/app/about/about.component.ts e arquivosrelacionados.",
+        "Ambiente local ou de teste da aplicação em execução, com build do frontend equivalente aocódigo analisado.",
+        "Capacidade de identificar a chamada ao DomSanitizer na linha 119 e rastrear a origem do valor usado no bypass.",
+        "Se houver fonte de dados controlável, acesso para alterar essa fonte em ambiente de teste, sem impactar produção."
+>>>>>>> 11365f4b26fbf33a1f3825a1ef0bf67e81058804
       ],
       "passos_de_verificacao": [
         {
           "passo": "Passo 01",
+<<<<<<< HEAD
           "resultado_esperado_verdadeiro_positivo": "Confirmar que feedbacks[i].comment vem de umafonte controlável pelo usuário, como formulário/API de feedback, banco de dados ou resposta interceptável, e chega ao componente about.component.ts sem uma allowlist de HTML segura.",
           "resultado_esperado_falso_positivo": "O campo comment não é controlável por usuários nãoconfiáveis, ou há sanitização/normalização robusta no backend antes de o dado ser retornado para ofrontend, com remoção de tags, atributos de evento e URIs perigosas."
         },
@@ -43,6 +67,30 @@
           "passo": "Passo 04",
           "resultado_esperado_verdadeiro_positivo": "A inspeção do DOM nas ferramentas de desenvolvedor mostra o payload preservado como HTML ativo dentro da legenda/galeria, com atributos de evento ou outra sintaxe perigosa mantida, comprovando que a sanitização do Angular foi efetivamente contornada.",
           "resultado_esperado_falso_positivo": "A inspeção do DOM mostra que o conteúdo foi codificado ou que atributos como onerror/onload e href=\"javascript:\" foram removidos antes da renderização, apesar da chamada a bypassSecurityTrustHtml."
+=======
+          "resultado_esperado_verdadeiro_positivo": "A linha 119 contém uso de bypassSecurityTrust* sobre valor proveniente direta ou indiretamente de usuário, rota, query string, fragmento de URL,localStorage/sessionStorage, resposta de API, CMS, conteúdo administrativo ou qualquer fonte externa não confiável.",
+          "resultado_esperado_falso_positivo": "A chamada de bypassSecurityTrust* usa somente valor hardcoded, constante local, recurso empacotado da aplicação ou conteúdo previamente sanitizado/validado por lista de permissões, sem influência de usuário ou sistemas externos não confiáveis."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "O rastreamento de fluxo de dados mostra que existe pelo menos um caminho em que dados não confiáveis chegam ao bypass sem sanitização efetiva, codificação contextual ou allowlist adequada.",
+          "resultado_esperado_falso_positivo": "O rastreamento de fluxo de dados mostra que todos os caminhos até a chamada aplicam sanitização adequada, validação por allowlist estrita ou construção segura do valor antes de entregá-lo ao DomSanitizer."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Ao executar a aplicação e controlar a fonte identificada, um payload compatível com o contexto chega ao DOM como conteúdo confiável e executa JavaScript, dispara evento, carrega recurso arbitrário ou cria elemento perigoso sem bloqueio da sanitização do Angular.",
+          "resultado_esperado_falso_positivo": "Ao executar a aplicação e tentar fornecer payloadscompatíveis com o contexto, como '<img src=x onerror=alert(document.domain)>', 'javascript:alert(document.domain)' ou SVG/HTML com manipuladores de evento, o conteúdo é rejeitado, codificado, removido ou não existe forma prática de controlar o valor renderizado."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "A inspeção via DevTools mostra que a entrada controlada foi inserida no DOM sem neutralização, preservando atributos perigosos, URLs executáveis, iframes, objetos ou outra marcação ativa capaz de causar XSS ou carregamento de conteúdo não confiável.",
+          "resultado_esperado_falso_positivo": "A inspeção via DevTools mostra que o DOM final nãocontém atributos/event handlers perigosos, URLs javascript:, scripts, iframes ou marcação ativa inserida a partir de entrada não confiável."
+        },
+        {
+          "passo": "Passo 05",
+          "resultado_esperado_verdadeiro_positivo": "Não há justificativa técnica suficiente para desabilitar a sanitização, o bypass é aplicado de forma ampla ou genérica, ou a segurança depende apenas da suposição de que a entrada será confiável.",
+          "resultado_esperado_falso_positivo": "Há justificativa documentada e verificável para o bypass, com escopo mínimo, fonte confiável, validação/sanitização anterior, testes cobrindo payloads maliciosos e ausência de alternativa segura nativa do Angular."
+>>>>>>> 11365f4b26fbf33a1f3825a1ef0bf67e81058804
         }
       ]
     }
