@@ -111,12 +111,13 @@ def run_provider(provider, reports, execute):
     key, name = provider["key"], provider["name"]
     model = getattr(settings, provider["model_attr"], None)
     api_key = getattr(settings, provider["api_key_attr"], None)
-    output_dir = ROOT / "results" / name
+    output_folder = "GPT5.5" if key == "openai" else name
+    output_dir = ROOT / "results" / output_folder
 
     print(f"\n{'=' * 50}")
     print(f"LLM: {name}")
     print(f"Model: {model or 'not configured'}")
-    print(f"Output: results/{name}")
+    print(f"Output: results/{output_folder}")
     print(f"Mode: {'LIVE EXECUTION' if execute else 'SIMULATION'}")
     print("=" * 50)
 
