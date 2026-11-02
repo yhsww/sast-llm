@@ -196,6 +196,21 @@ Para outro relatório, substitua o caminho de entrada. Para escolher outro prove
 
 Os trechos de código podem ser lidos de `data/code_snippets/` ou extraídos do código-fonte usando `--source-root <pasta>`, conforme os argumentos apresentados por `python query.py --help`.
 
+## Modelos padrão configurados
+
+As quatro branches foram atualizadas para usar estes IDs de modelo como padrão, tanto em `backend/config.py` quanto nos arquivos `.env.example`:
+
+| Provedor | ID configurado |
+|---|---|
+| OpenAI | `gpt-6.1-sol` (GPT-6.1 Sol) |
+| Kimi | `k3.1-pro` (Kimi K3.1 Pro) |
+| Google | `gemini-3.8-pro` (Gemini 3.8 Pro, conforme solicitado) |
+| Anthropic | `claude-sonnet-5` (Claude Sonnet 5) |
+
+**Atenção ao Gemini:** a documentação oficial consultada lista `gemini-3.8-flash`, mas não confirma o ID `gemini-3.8-pro`. Por isso, esse valor foi configurado conforme solicitado, mas precisa ser confirmado na conta/API Google antes de considerar o provedor validado. Se a API retornar erro de modelo inexistente, use um ID disponível na documentação da sua conta.
+
+Os valores definidos em variáveis do ambiente ou no arquivo local `.env` prevalecem sobre os padrões do código. Depois de atualizar a branch, confira e ajuste o `.env` existente para não continuar usando IDs antigos. Não coloque chaves reais no Git.
+
 ## 6. Testes e critérios de validação
 
 Na raiz do repositório, em cada branch, execute:
