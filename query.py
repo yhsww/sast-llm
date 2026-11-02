@@ -186,14 +186,14 @@ def run_simulation(reports: list[Path]) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Generate SAST security test cases with a selected LLM.")
-    parser.add_argument("--report", help="Report filename or path (default: data/sast_reports/sample.json).")
-    parser.add_argument("--all-reports", action="store_true", help="Process every JSON report in data/sast_reports.")
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument("--allreports", "--all-reports", dest="all_reports", action="store_true",
+                           help="Process every JSON report in data/sast_reports.")
+    selection.add_argument("--only", "--report", dest="report", metavar="ARQUIVO.json",
+                           help="Process one report, e.g. --only sample.json.")
     parser.add_argument("--provider", choices=[*PROVIDER_FOLDERS, "all"], help="Select one provider without prompting, or 'all'.")
     parser.add_argument("--simulate", action="store_true", help="Validate reports without calling APIs or writing result files.")
     args = parser.parse_args(argv)
-
-    if args.all_reports and args.report:
-        parser.error("--report and --all-reports cannot be used together.")
 
     reports = discover_reports(args.report, args.all_reports)
     print(f"Reports found: {len(reports)}")
