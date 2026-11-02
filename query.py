@@ -1,8 +1,10 @@
-"""Entry point for Branch 3: RAG with CWE/WSTG and code context.
+"""CLI entry point for Branch 3: RAG + CWE/WSTG + source-code context.
 
-Use --execute to call the selected LLM. Without it, the script performs a dry run.
-Code snippets are loaded from data/code_snippets/<report>.json or can be extracted
-from source files with --source-root.
+Examples:
+    python query.py --help
+    python query.py --provider GPT --only GT01.json
+    python query.py --provider Gemini --allreports
+    python query.py --provider all --allreports --execute
 """
 from pathlib import Path
 import sys
@@ -14,4 +16,4 @@ from scripts.run_gt_experiment import main
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
