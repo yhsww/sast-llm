@@ -26,7 +26,7 @@ class Settings(BaseSettings):
         default=None,
         validation_alias=AliasChoices("GOOGLE_API_KEY", "GEMINI_API_KEY"),
     )
-    gemini_model: str = "gemini-3.8-pro"
+    gemini_model: str = "gemini-3.8-flash"
 
     kimi_api_key: str | None = None
     kimi_model: str = "kimi-k3.1-pro"
