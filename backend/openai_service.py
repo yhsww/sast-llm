@@ -1,4 +1,5 @@
 import json
+import time
 
 from openai import OpenAI
 from google import genai
@@ -138,16 +139,39 @@ def _generate_gemini(
 
     client = genai.Client(api_key=settings.google_api_key)
 
-    response = client.models.generate_content(
-        model=settings.gemini_model,
-        contents=user_content,
-        config={
-            "system_instruction": _SYSTEM_PROMPT,
-            "response_mime_type": "application/json",
-            "response_schema": SecurityTestReport,
-            "temperature": 0,
-        },
-    )
+    # Retry temporary Gemini service overloads (e.g. HTTP 503) instead of
+    # immediately marking the report as failed. Other errors are raised as-is.
+    response = None
+    for attempt in range(4):
+        try:
+            response = client.models.generate_content(
+                model=settings.gemini_model,
+                contents=user_content,
+                config={
+                    "system_instruction": _SYSTEM_PROMPT,
+                    "response_mime_type": "application/json",
+                    "response_schema": SecurityTestReport,
+                    "temperature": 0,
+                },
+            )
+            break
+        except Exception as exc:
+            status_code = (
+                getattr(exc, "code", None)
+                or getattr(exc, "status_code", None)
+                or getattr(getattr(exc, "response", None), "status_code", None)
+            )
+            if status_code != 503 or attempt == 3:
+                raise
+            wait_seconds = 2 ** (attempt + 1)
+            print(
+                f"[RETRY] Gemini returned HTTP 503; "
+                f"attempt {attempt + 1}/4 failed. Retrying in {wait_seconds}s..."
+            )
+            time.sleep(wait_seconds)
+
+    if response is None:
+        raise RuntimeError("Gemini did not return a response after retries.")
 
     if not response.text:
         raise ValueError("Gemini returned an empty response.")
