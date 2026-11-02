@@ -7,42 +7,42 @@
         "linha": 44,
         "severidade_sast": "BLOCKER",
         "regra": "typescript:S6437",
-        "categoria": "Credencial hardcoded / senha comprometida"
+        "categoria": "VULNERABILITY"
       },
       "classificacao": {
-        "veredicto": "A verificar",
-        "cwe": "CWE-798 - Use of Hard-coded Credentials",
-        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
-        "wstg": "WSTG-ATHN-02 - Testing for Default Credentials",
-        "justificativa": "O alerta indica a presença de uma senha comprometida em texto claro no código-fonte. Se o valor na linha indicada for uma credencial real, reutilizável ou utilizada pela aplicação em ambiente executável, trata-se de verdadeiro positivo, pois expõe segredo sensível e exige revogação/rotação. Pode ser falso positivo apenas se o valor for comprovadamente fictício, não funcional, usado exclusivamente em teste/demonstração e ausente de qualquer ambiente produtivo."
+        "veredicto": "Inconclusivo — requer verificação",
+        "cwe": "CWE-798 — Use of Hard-coded Credentials",
+        "owasp_top_10": "A07:2021 — Identification and Authentication Failures",
+        "wstg": "WSTG-ATHN-07 — Testing for Weak Password Policy",
+        "justificativa": "O alerta indica uma possível senha comprometida incorporada ao código. Sem o trecho de código e seu contexto de uso, não é possível confirmar que o literal seja uma credencial real ou que esteja ativo. A classificação CWE-798 é aplicável caso o valor seja efetivamente utilizado como credencial fixa; a referência WSTG orienta a verificação da aceitação de senhas comprometidas, mas não cobre integralmente a exposição de segredos no código."
       },
-      "descricao_tecnica": "A regra typescript:S6437 reporta uma senha comprometida ou sensível hardcoded no arquivo lib/insecurity.ts, linha 44. A verificação deve confirmar se há um literal de senha/credencial no código, se ele é utilizado por fluxos de autenticação, inicialização de usuários,configuração de serviços ou outras rotinas executadas, e se o segredo precisa ser revogado e substituído por mecanismo seguro de configuração, como variável de ambiente, cofre de segredos ou secretmanager.",
+      "descricao_tecnica": "A regra typescript:S6437 sinalizou uma possível senha exposta na linha 44 de lib/insecurity.ts. Caso o valor esteja incorporado ao código e seja utilizado para autenticação, a leitura do repositório ou de artefatos distribuídos pode permitir acesso indevido ao recurso associado. É necessário examinar a declaração, rastrear seu uso e verificar sua relação com contas e ambientes reais. A mensagem do scanner, isoladamente, não comprova validade, privilégios ou alcance da credencial.",
       "pre_condicoes_para_verificacao": [
-        "Acesso de leitura ao repositório ou ao arquivo juice-shop:lib/insecurity.ts na versão analisada pelo SonarQube.",
-        "Acesso ao resultado completo do SonarQube para confirmar a linha 44 e o trecho sinalizado, sem expor a senha em registros desnecessários.",
-        "Capacidade de pesquisar referências ao valor ou à constante no código-fonte.",
-        "Conhecimento do escopo de implantação da aplicação para diferenciar código produtivo, exemplo, teste ou fixture."
+        "Acesso à revisão do código analisada pelo SonarQube e ao contexto da linha 44 de lib/insecurity.ts.",
+        "Acesso autorizado às referências do valor sinalizado, às configurações de implantação e, quando necessário, ao histórico do repositório.",
+        "Ambiente de teste isolado e autorização explícita para qualquer tentativa de autenticação, com limites que evitem bloqueios de conta.",
+        "Disponibilidade do responsável pela aplicação ou pelo segredo para confirmar finalidade, validade e eventual rotação sem divulgar o valor em relatórios ou logs."
       ],
       "passos_de_verificacao": [
         {
-          "passo": "Passo 01",
-          "resultado_esperado_verdadeiro_positivo": "A linha 44 contém uma senha ou valor de credencial em texto claro no código-fonte.",
-          "resultado_esperado_falso_positivo": "A linha 44 não contém senha, token, chave ou valorsensível real; ou contém apenas valor de exemplo inequivocamente fictício, sem capacidade de autenticação e não utilizado por nenhum fluxo executável."
+          "passo": "Passo 01 — Inspecionar a linha 44 na revisão analisada e identificar a natureza do valor sinalizado, sem reproduzir seu conteúdo no relatório.",
+          "resultado_esperado_verdadeiro_positivo": "O valor é uma senha literal ou integra uma credencial incorporada ao código, e não apenas uma referência a um segredo externo.",
+          "resultado_esperado_falso_positivo": "O valor não representa uma senha nem outro material de autenticação; o contexto demonstra uma correspondência indevida da regra."
         },
         {
-          "passo": "Passo 02",
-          "resultado_esperado_verdadeiro_positivo": "A credencial é referenciada por código executável, por exemplo em autenticação, criação de usuário, configuração de serviço, seed de dados ou comparação de senha.",
-          "resultado_esperado_falso_positivo": "A busca por referências mostra que o valor não é importado, carregado, usado em autenticação, provisionamento de usuários, conexão a serviços ou configuração em qualquer ambiente executável."
+          "passo": "Passo 02 — Rastrear referências e fluxos do valor até operações de autenticação, provisionamento de usuários ou configuração de serviços; verificar também se o arquivo integra os artefatos implantados.",
+          "resultado_esperado_verdadeiro_positivo": "O valor é utilizado como credencial de uma conta ou serviço, inclusive como senha inicial ou alternativa, em um fluxo executável.",
+          "resultado_esperado_falso_positivo": "O valor é exclusivamente um marcador ou dado sintético sem função de autenticação, sem correspondência com credenciais reais e sem fluxo que o torne utilizável."
         },
         {
-          "passo": "Passo 03",
-          "resultado_esperado_verdadeiro_positivo": "O arquivo faz parte do artefato da aplicação ou do repositório principal e pode ser acessado por desenvolvedores, pipelines, builds ou ambientesimplantados, expondo a senha.",
-          "resultado_esperado_falso_positivo": "Há evidência documentada de que o arquivo/valor é restrito a teste local, demonstração isolada ou fixture sem implantação, sem acesso a sistemas reais e sem reutilização em ambientes compartilhados."
+          "passo": "Passo 03 — Confirmar com o responsável a conta e o ambiente associados e, somente se autorizado, realizar uma tentativa controlada de autenticação em ambiente isolado. Não testar serviços externos ou produção sem autorização específica.",
+          "resultado_esperado_verdadeiro_positivo": "A autenticação é aceita com o valor sinalizado, ou evidências de configuração e do responsável confirmam seu uso como credencial real. A confirmação de uso histórico mantém a exposição como verdadeira, mesmo que a senha já tenha sido revogada.",
+          "resultado_esperado_falso_positivo": "O contexto técnico e a confirmação do responsável demonstram que o valor nunca foi uma credencial real ou utilizável. Uma tentativa de autenticação malsucedida, isoladamente, não comprova falso positivo."
         },
         {
-          "passo": "Passo 04",
-          "resultado_esperado_verdadeiro_positivo": "A senha precisa ser considerada comprometida:deve ser revogada/alterada, removida do histórico ou tratada conforme processo de gestão de segredos, e substituída por referência segura fora do código.",
-          "resultado_esperado_falso_positivo": "Não há necessidade de rotação porque o valor nuncafoi segredo real, nunca foi válido e não autentica contra nenhum sistema ou usuário."
+          "passo": "Passo 04 — Consolidar as evidências e verificar o tratamento do segredo, caso a exposição seja confirmada, sem registrar seu valor.",
+          "resultado_esperado_verdadeiro_positivo": "As evidências confirmam a credencial incorporada ao código. Registrar a necessidade de revogação e substituição, remoção do literal e uso de armazenamento seguro de segredos; se já corrigido, classificar como verdadeiro positivo remediado, não como falso positivo.",
+          "resultado_esperado_falso_positivo": "As evidências demonstram que o literal não constitui uma credencial real. Documentar o contexto que sustenta o falso positivo; se as evidências forem insuficientes, manter o veredicto inconclusivo."
         }
       ]
     }

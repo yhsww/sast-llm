@@ -7,42 +7,43 @@
         "linha": 92,
         "severidade_sast": "MAJOR",
         "regra": "typescript:S5852",
-        "categoria": "Regular Expression Denial of Service (ReDoS)"
+        "categoria": "SECURITY_HOTSPOT"
       },
       "classificacao": {
-        "veredicto": "A verificar",
-        "cwe": "CWE-1333: Inefficient Regular Expression Complexity",
-        "owasp_top_10": "OWASP Top 10 2021: A04 - Insecure Design",
-        "wstg": "WSTG-DENL-01 - Testing for Denial of Service",
-        "justificativa": "O alerta é um SECURITY_HOTSPOT do SonarQube para a regra typescript:S5852, que indica possível expressão regular com backtracking superlinear. A confirmação depende de verificar se a regex da linha 92 recebe entrada controlável por usuário e se entradas especialmente construídas conseguem causar consumo excessivo de CPU/tempo. Sem essa confirmação, o veredicto deve permanecer como pendente de validação."
+        "veredicto": "Inconclusivo — requer revisão do código e verificação de explorabilidade",
+        "cwe": "CWE-1333 — Inefficient Regular Expression Complexity",
+        "owasp_top_10": "A06:2021 — Vulnerable and Outdated Components, incluindo uso de expressões regulares com risco de ReDoS",
+        "wstg": "WSTG-BUSL-05 — Test Number of Times a Function Can Be Used (referência complementar para abuso de recursos; sem correspondência específica para ReDoS)",
+        "justificativa": "O alerta indica possível execução superlinear de uma expressão regular, mas não foram fornecidos o padrão, a operação utilizada nem o fluxo de entrada. A classificação como vulnerabilidade depende de confirmar comportamento custoso com entradas controláveis e alcançáveis, considerando limites efetivos de tamanho e frequência. Por estar em código frontend, o impacto pode se restringir ao bloqueio da interface do próprio usuário; não há evidência de indisponibilidade do servidor ou de impacto sobre terceiros."
       },
-      "descricao_tecnica": "A expressão regular referenciada em frontend/src/app/change-password/change-password.component.ts, linha 92, deve ser avaliada quanto a risco de Regular Expression Denial of Service (ReDoS). Regexes com quantificadores aninhados, alternâncias ambíguas ou grupos repetidos podem apresentar tempo de execução superlinear/exponencial quando aplicadas a entradas longas e maliciosas, causando travamento da thread do navegador ou degradação de desempenho da aplicação durante a validação de troca de senha.",
+      "descricao_tecnica": "Uma expressão regular executada por um mecanismo com backtracking pode apresentar crescimento superlinear de tempo para entradas adversariais, especialmente quando há múltiplas formas de consumir a mesma sequência ou tentativas repetidas de correspondência. Na linha indicada do componente de alteração de senha, é necessário identificar a expressão e sua operação de uso antes de construir uma entrada de teste. Se executada na thread principal do navegador, uma avaliação demorada pode bloquear a interface. O alerta isolado não demonstra que esse comportamento seja alcançável nem que permita um ataque de negação de serviço relevante.",
       "pre_condicoes_para_verificacao": [
-        "Acesso ao código-fonte do arquivo frontend/src/app/change-password/change-password.component.ts na versão analisada pelo SonarQube.",
-        "Ambiente local ou de teste da aplicação disponível para executar o fluxo de troca de senha sem impactar usuários reais.",
-        "Permissão para instrumentar ou medir tempo de execução da validação no navegador ou em testes unitários.",
-        "Identificação exata da expressão regular localizada na linha 92 e do campo/fluxo que a utiliza."
+        "Acesso ao código da revisão analisada pelo SonarQube, incluindo a linha 92 e os métodos que a invocam.",
+        "Ambiente local ou de homologação autorizado, com navegador e ferramentas de medição de desempenho.",
+        "Conta e sessão de teste, caso sejam necessárias para alcançar o fluxo de alteração de senha.",
+        "Identificação do padrão completo, flags, operação de regex, origem da entrada e limites aplicados antes da avaliação.",
+        "Execução de testes adversariais em processo ou navegador descartável, com timeout externo e critérios de interrupção para evitar travamentos prolongados."
       ],
       "passos_de_verificacao": [
         {
-          "passo": "Passo 01",
-          "resultado_esperado_verdadeiro_positivo": "A regex da linha 92 contém construção suscetível a backtracking superlinear, como grupos repetidos com alternativas ambíguas, quantificadores aninhados ou padrões capazes de consumir a mesma sequência de múltiplas formas.",
-          "resultado_esperado_falso_positivo": "A regex da linha 92 não possui padrões ambíguos relevantes, como quantificadores aninhados ou alternâncias com prefixos sobrepostos, ou o uso apontado pelo SAST não corresponde a uma regex executada em fluxo real da aplicação."
+          "passo": "Passo 01 — Inspecionar a linha indicada e registrar a expressão regular completa, suas flags, a operação utilizada e as condições que levam à execução.",
+          "resultado_esperado_verdadeiro_positivo": "A implementação contém uma operação de regex cuja estrutura e forma de uso permitem múltiplas tentativas de correspondência potencialmente superlineares.",
+          "resultado_esperado_falso_positivo": "A análise demonstra execução limitada ou linear para a operação e o mecanismo utilizados, ou identifica que o trecho sinalizado não corresponde ao código efetivamente executado."
         },
         {
-          "passo": "Passo 02",
-          "resultado_esperado_verdadeiro_positivo": "A regex é aplicada a dados controláveis pelo usuário no fluxo de troca de senha, por exemplo campos de senha, confirmação de senha ou validação associada, sem limite de tamanho efetivo antes da execução da expressão regular.",
-          "resultado_esperado_falso_positivo": "A entrada processada pela regex não é controlável por usuário externo ou é rigidamente limitada antes da avaliação por tamanho baixo e seguro, impedindo exploração prática de ReDoS."
+          "passo": "Passo 02 — Rastrear a entrada até a regex e verificar controle pelo usuário, limites prévios de tamanho, eventos de disparo e possibilidades de fornecimento da entrada a outra vítima.",
+          "resultado_esperado_verdadeiro_positivo": "Uma entrada controlável alcança a regex com tamanho suficiente para provocar custo relevante, sem barreira efetiva anterior à avaliação. O alcance e as vítimas possíveis são documentados.",
+          "resultado_esperado_falso_positivo": "A entrada é restrita a um conjunto seguro ou há limite anterior à regex que impede custo relevante. Uma restrição apenas visual não basta como evidência se houver outros caminhos de entrada."
         },
         {
-          "passo": "Passo 03",
-          "resultado_esperado_verdadeiro_positivo": "Entradas longas especialmente construídas para quase corresponder ao padrão provocam aumento desproporcional do tempo de validação, alto uso de CPU ou congelamento da interface durante a troca de senha.",
-          "resultado_esperado_falso_positivo": "Ao testar em ambiente controlado com entradas longas e variações maliciosas compatíveis com a regex, o tempo de validação cresce de forma aproximadamente linear e não causa congelamento perceptível do navegador nem uso anormal de CPU."
+          "passo": "Passo 03 — Derivar do padrão real uma família de entradas adversariais e medir sua avaliação em tamanhos progressivos, no mesmo mecanismo JavaScript utilizado pela aplicação. Comparar com entradas benignas, repetir medições e interromper ao atingir o orçamento definido.",
+          "resultado_esperado_verdadeiro_positivo": "As medições reproduzíveis mostram crescimento superlinear e custo significativo para tamanhos permitidos no fluxo real; eventual timeout é registrado com o tamanho correspondente.",
+          "resultado_esperado_falso_positivo": "A análise do padrão, apoiada pelas medições, demonstra custo limitado ou aproximadamente linear para as entradas alcançáveis. A ausência de lentidão com uma única família de entradas não é suficiente para descartar o alerta."
         },
         {
-          "passo": "Passo 04",
-          "resultado_esperado_verdadeiro_positivo": "Não há mitigação antes da execução da regex, e a correção recomendada requer reescrever a expressão para eliminar ambiguidade/backtracking ou aplicar validação de tamanho estrita antes da avaliação.",
-          "resultado_esperado_falso_positivo": "Há mitigação efetiva, como limite de comprimento aplicado antes da regex, substituição por regex linear segura, uso de validação incremental simples ou outra lógica que impeça backtracking excessivo."
+          "passo": "Passo 04 — Reproduzir no fluxo real, em navegador isolado, com uma entrada já calibrada e dentro dos limites aceitos. Registrar perfil de desempenho, duração, responsividade e escopo do impacto.",
+          "resultado_esperado_verdadeiro_positivo": "A entrada alcança a regex e causa bloqueio significativo atribuível à sua avaliação. A conclusão distingue indisponibilidade local da interface de eventual impacto sobre terceiros, sem presumir indisponibilidade do backend.",
+          "resultado_esperado_falso_positivo": "O fluxo impede a entrada custosa antes da execução ou mantém custo efetivamente limitado. Se houver apenas degradação autoinfligida sem vetor contra terceiros, essa limitação é registrada para triagem, sem negar o comportamento superlinear observado."
         }
       ]
     }

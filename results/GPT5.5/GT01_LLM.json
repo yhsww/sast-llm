@@ -10,45 +10,39 @@
         "categoria": "SECURITY_HOTSPOT"
       },
       "classificacao": {
-        "veredicto": "A verificar",
-        "cwe": "CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code ('Eval Injection')",
-        "owasp_top_10": "A03:2021 - Injection",
-        "wstg": "WSTG-INPV-11 - Testing for Code Injection",
-        "justificativa": "O alerta indica uso de injeção ou execução dinâmica de código em TypeScript. Sem evidência do fluxo de dados e das validações aplicadas, deve ser tratado como Security Hotspot a ser revisado: será verdadeiro positivo se dados controláveis pelo usuário ou por arquivos externos alcançarem a execução dinâmica sem validação estrita; será falso positivo se a expressão executada for constante, controlada apenas pelo servidor ou suficientemente restringida por allowlist/sandbox segura."
+        "veredicto": "Inconclusivo — requer revisão do código e verificação do fluxo de dados",
+        "cwe": "CWE-95 — Improper Neutralization of Directives in Dynamically Evaluated Code ('Eval Injection')",
+        "owasp_top_10": "A03:2021 — Injection",
+        "wstg": "WSTG-INPV-11 — Testing for Code Injection",
+        "justificativa": "O alerta indica possível execução dinâmica de código, mas não apresenta o trecho afetado nem comprova que dados controláveis por um usuário alcancem essa operação. A classificação CWE é uma hipótese de investigação, não uma vulnerabilidade confirmada. É necessário verificar a origem dos dados, as transformações aplicadas e o contexto de execução."
       },
-      "descricao_tecnica": "Revisar o uso de execução dinâmica de código em `routes/b2bOrder.ts` na linha 23, associado à regra SonarQube `typescript:S1523`. A verificação deve confirmar se a chamada dinâmica, como `eval`, `Function`, importação dinâmica ou mecanismo equivalente, recebe direta ou indiretamente dados controláveis pelo usuário. Caso receba, avaliar se existe validação por allowlist, normalização, isolamento/sandbox e ausência de concatenação de código executável.",
+      "descricao_tecnica": "Revisar a operação sinalizada na linha 23 de routes/b2bOrder.ts e identificar se ela interpreta texto como código. Caso entrada externa componha o conteúdo executado sem restrições efetivas, poderá ocorrer injeção de código. O mecanismo utilizado, a alcançabilidade da rota e os privilégios de execução não foram fornecidos; portanto, não é possível afirmar exploração ou impacto concreto apenas com o alerta.",
       "pre_condicoes_para_verificacao": [
-        "Acesso ao repositório e ao arquivo `routes/b2bOrder.ts` na revisão analisada pelo SonarQube.",
-        "Capacidade de identificar o trecho exato da linha 23 e suas dependências/chamadores.",
-        "Ambiente local ou de homologação para executar a aplicação, sem uso de ambiente produtivo.",
-        "Conhecimento dos endpoints ou fluxos funcionais relacionados à rota B2B order.",
-        "Logs de aplicação habilitados para observar erros controlados durante os testes."
+        "Acesso à revisão do código analisada pelo SonarQube, incluindo routes/b2bOrder.ts, seus chamadores e dependências relevantes.",
+        "Ambiente de testes isolado e autorizado, sem dados ou credenciais de produção.",
+        "Identificação do endpoint associado, dos formatos de entrada aceitos e dos requisitos de autenticação, se existirem.",
+        "Instrumentação ou depuração para observar o conteúdo recebido pela operação dinâmica e seus resultados, sem expor dados sensíveis."
       ],
       "passos_de_verificacao": [
         {
-          "passo": "Passo 01",
-          "resultado_esperado_verdadeiro_positivo": "A linha 23 contém execução dinâmica de código, por exemplo `eval`, `new Function`, importação dinâmica ou mecanismo equivalente, capaz de interpretar strings ou expressões em tempo de execução.",
-          "resultado_esperado_falso_positivo": "A linha 23 não contém execução dinâmica de código ou a execução utiliza apenas valores constantes definidos no código-fonte, sem influência de requisições, arquivos enviados, banco de dados, variáveis de ambiente controláveis externamente ou outros dados não confiáveis."
+          "passo": "Passo 01 — Inspecionar a linha sinalizada e seu contexto para identificar a operação dinâmica, o argumento interpretado e as condições que levam à sua execução.",
+          "resultado_esperado_verdadeiro_positivo": "Identifica-se uma operação alcançável que interpreta uma string como código; a confirmação de injeção dependerá da origem e do controle sobre essa string.",
+          "resultado_esperado_falso_positivo": "A operação não interpreta dados como código, ou o trecho não integra o código executável da revisão e configuração avaliadas. A conclusão deve ser sustentada por evidências."
         },
         {
-          "passo": "Passo 02",
-          "resultado_esperado_verdadeiro_positivo": "Existe fluxo de dados controlável pelo usuário ou por fonte externa até a chamada de execução dinâmica na linha 23, direta ou indiretamente por variáveis intermediárias.",
-          "resultado_esperado_falso_positivo": "A análise de fluxo mostra que nenhum parâmetro HTTP, corpo da requisição, cabeçalho, cookie, arquivo carregado ou dado persistido por usuário alcança a chamada dinâmica."
+          "passo": "Passo 02 — Rastrear o argumento da operação até suas origens, incluindo campos da requisição e dados persistidos, e revisar validações, transformações e eventuais restrições do contexto de execução.",
+          "resultado_esperado_verdadeiro_positivo": "Dados controláveis por um usuário alcançam o código interpretado e podem alterar sua estrutura ou semântica, sem uma restrição efetiva que impeça essa influência.",
+          "resultado_esperado_falso_positivo": "O código executado é integralmente fixo e confiável, ou a entrada é mantida exclusivamente como dado por um mecanismo que impede sua interpretação como código. Autenticação ou filtragem superficial, isoladamente, não demonstram segurança."
         },
         {
-          "passo": "Passo 03",
-          "resultado_esperado_verdadeiro_positivo": "A entrada externa é concatenada, interpolada ou repassada para o código dinâmico sem allowlist estrita, permitindo alterar a expressão/comando executado.",
-          "resultado_esperado_falso_positivo": "Quando há entrada externa, ela é convertida para um conjunto finito de opções por allowlist estrita antes da execução, sem concatenação de código, sem interpretação de expressões arbitrárias e com tratamento seguro de erros."
+          "passo": "Passo 03 — No ambiente isolado, enviar uma entrada válida de referência e depois uma entrada de teste adaptada à sintaxe identificada, contendo apenas uma expressão inofensiva com resultado ou marcador único. Não acessar arquivos, rede, segredos ou executar comandos do sistema.",
+          "resultado_esperado_verdadeiro_positivo": "A instrumentação ou o resultado da operação demonstra que a expressão controlada pelo testador foi avaliada como código, alterando o comportamento além do tratamento esperado como dado.",
+          "resultado_esperado_falso_positivo": "A entrada é rejeitada antes da interpretação ou permanece um valor literal, e a análise do fluxo confirma que não pode alterar o código executado. Um erro ou a ausência de marcador, isoladamente, não comprovam falso positivo."
         },
         {
-          "passo": "Passo 04",
-          "resultado_esperado_verdadeiro_positivo": "Em ambiente de teste, payloads inofensivos inseridos no ponto de entrada relacionado à rota conseguem modificar o comportamento da execução, produzir erro característico de interpretação de código ou executar expressão não prevista pela lógica funcional.",
-          "resultado_esperado_falso_positivo": "Em ambiente de teste, payloads inofensivos de quebra de sintaxe ou tentativa de expressão arbitrária são rejeitados, geram erro controlado e não alteram o comportamento esperado da rota."
-        },
-        {
-          "passo": "Passo 05",
-          "resultado_esperado_verdadeiro_positivo": "Não há testes, validações ou controles suficientes para impedir execução de código arbitrário, ou a exploração controlada confirma que a expressão executada pode ser influenciada externamente.",
-          "resultado_esperado_falso_positivo": "A implementação possui testes automatizados ou controles documentados demonstrando que apenas operações autorizadas são executadas e que a chamada dinâmica não processa código fornecido externamente."
+          "passo": "Passo 04 — Correlacionar a requisição de teste, o argumento recebido pela operação e a evidência de execução; documentar as condições de acesso e as restrições efetivamente observadas.",
+          "resultado_esperado_verdadeiro_positivo": "Há evidência reproduzível de que entrada externa altera o código avaliado. Registrar como verdadeiro positivo, limitando o impacto ao contexto e às capacidades demonstradas.",
+          "resultado_esperado_falso_positivo": "A revisão e os testes sustentam que entradas externas não influenciam código executável ou que a operação foi sinalizada indevidamente. Na ausência de evidência suficiente, manter o resultado inconclusivo em vez de encerrar como falso positivo."
         }
       ]
     }
