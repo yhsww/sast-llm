@@ -1,0 +1,127 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "AX1a-sql-injection-001",
+        "arquivo": "com.example.app:src/main/java/com/example/app/repository/UserRepository.java",
+        "linha": 47,
+        "severidade_sast": "CRITICAL",
+        "regra": "java:S3649",
+        "categoria": "VULNERABILITY — SQL Injection"
+      },
+      "classificacao": {
+        "veredicto": "Pendente de verificação",
+        "cwe": "CWE-89",
+        "owasp_top_10": "A03:2021 — Injection",
+        "wstg": "WSTG-INPV-05 — Testing for SQL Injection",
+        "justificativa": "O alerta indica possível construção de SQL com dados controlados pelo usuário. Sem o código e o fluxo de dados, não é possível confirmar se a entrada altera a estrutura da consulta ou se existem parametrização e restrições eficazes."
+      },
+      "descricao_tecnica": "Verificar se uma entrada externa alcança a construção e a execução de SQL na linha indicada como parte da sintaxe, em vez de ser vinculada como parâmetro. O uso de PreparedStatement, isoladamente, não elimina o risco quando o SQL já foi construído por concatenação. Para elementos não parametrizáveis, como nomes de colunas, verificar mapeamento para valores fixos permitidos.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código do repositório e aos pontos de entrada que chamam o método sinalizado.",
+        "Ambiente de teste autorizado com banco isolado, dados sintéticos e possibilidade de restaurar o estado.",
+        "Capacidade de observar consultas e parâmetros por instrumentação ou logs de teste, sem expor dados sensíveis.",
+        "Identificação do SGBD, do contexto da consulta e das permissões necessárias para alcançar o fluxo."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 — Inspecionar a linha 47 e rastrear a origem dos valores até a execução da consulta, incluindo validações, concatenações e vinculação de parâmetros.",
+          "resultado_esperado_verdadeiro_positivo": "Dados controlados pelo usuário são incorporados à sintaxe SQL executada sem parametrização ou restrição estrutural eficaz.",
+          "resultado_esperado_falso_positivo": "O valor não é controlável externamente, é vinculado exclusivamente como parâmetro ou é convertido por mapeamento fechado para elementos SQL fixos."
+        },
+        {
+          "passo": "Passo 02 — Executar uma requisição de referência e testar entradas com delimitadores adequados ao contexto, como uma aspa simples, observando a consulta efetivamente enviada ao banco.",
+          "resultado_esperado_verdadeiro_positivo": "A entrada modifica a estrutura SQL; erros de sintaxe podem corroborar o fluxo inseguro, mas não confirmam isoladamente a exploração.",
+          "resultado_esperado_falso_positivo": "A estrutura SQL permanece constante e a entrada aparece apenas como dado vinculado ou é rejeitada por uma restrição estrutural comprovadamente eficaz."
+        },
+        {
+          "passo": "Passo 03 — Em operação de leitura e sobre dados sintéticos, comparar entradas com condições booleanas verdadeira e falsa adaptadas ao contexto SQL identificado, sem executar comandos destrutivos.",
+          "resultado_esperado_verdadeiro_positivo": "As condições injetadas são avaliadas pelo banco e alteram os resultados de forma reproduzível, confirmada pela consulta observada.",
+          "resultado_esperado_falso_positivo": "As condições são tratadas como texto ou rejeitadas antes da execução, e a inspeção confirma que não podem alterar a sintaxe. A ausência de diferença na resposta, isoladamente, não basta para encerrar como falso positivo."
+        }
+      ]
+    },
+    {
+      "identificacao": {
+        "id_sonarqube": "AX1b-xss-001",
+        "arquivo": "com.example.app:src/main/java/com/example/app/controller/CommentController.java",
+        "linha": 83,
+        "severidade_sast": "CRITICAL",
+        "regra": "java:S5131",
+        "categoria": "VULNERABILITY — Cross-Site Scripting"
+      },
+      "classificacao": {
+        "veredicto": "Pendente de verificação",
+        "cwe": "CWE-79",
+        "owasp_top_10": "A03:2021 — Injection",
+        "wstg": "WSTG-INPV-01 — Testing for Reflected Cross Site Scripting; WSTG-INPV-02 — Testing for Stored Cross Site Scripting",
+        "justificativa": "O alerta aponta inserção de dados do usuário em resposta HTML, mas não informa o contexto de saída, as proteções aplicadas nem se há persistência. É necessário verificar se a entrada pode ser interpretada como conteúdo executável pelo navegador."
+      },
+      "descricao_tecnica": "Rastrear a entrada até a resposta produzida na linha indicada e identificar o contexto de inserção: texto HTML, atributo, URL ou JavaScript. Verificar codificação contextual, escape automático do mecanismo de templates e, caso HTML seja permitido, sanitização por biblioteca apropriada. Determinar se o conteúdo é refletido imediatamente ou armazenado e exibido posteriormente.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao controlador, aos templates e a eventuais componentes de frontend que consomem sua resposta.",
+        "Ambiente autorizado com dados sintéticos e navegador de teste com ferramentas de desenvolvimento.",
+        "Identificação da entrada sinalizada e dos locais em que ela é exibida.",
+        "Se houver persistência, contas de teste e permissão para criar e remover comentários de verificação."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 — Inspecionar o fluxo até a linha 83, identificar o contexto de saída e verificar escape, sanitização, tipo de conteúdo e possíveis renderizações posteriores.",
+          "resultado_esperado_verdadeiro_positivo": "A entrada externa chega a um contexto interpretado pelo navegador sem proteção adequada àquele contexto.",
+          "resultado_esperado_falso_positivo": "O fluxo aplica codificação contextual ou sanitização eficaz, ou o conteúdo não alcança um contexto interpretável como HTML ou script, inclusive em consumidores posteriores."
+        },
+        {
+          "passo": "Passo 02 — Enviar um marcador único com caracteres como <, >, aspas duplas e simples; examinar a resposta bruta e o DOM para determinar como os caracteres são interpretados.",
+          "resultado_esperado_verdadeiro_positivo": "A entrada consegue criar elementos ou escapar do contexto original, indicando injeção de marcação; a execução de script ainda deve ser verificada.",
+          "resultado_esperado_falso_positivo": "Os caracteres permanecem como texto no contexto correto ou são removidos de forma segura, sem criação de elementos ou atributos controlados."
+        },
+        {
+          "passo": "Passo 03 — Aplicar uma prova de execução inofensiva adaptada ao contexto, como <svg onload=\"document.documentElement.dataset.xssTest='confirmado'\"> em contexto HTML. Verificar o DOM e o console; se houver armazenamento, abrir o conteúdo em outra sessão de teste e removê-lo ao final.",
+          "resultado_esperado_verdadeiro_positivo": "O navegador executa o código fornecido e define o marcador no documento da aplicação. A execução ocorre na resposta imediata ou na visualização posterior, permitindo distinguir XSS refletido de armazenado.",
+          "resultado_esperado_falso_positivo": "A prova é renderizada como texto ou neutralizada por proteção contextual comprovada. Bloqueio apenas por CSP ou falha de um único payload não demonstra falso positivo; nesses casos, manter a análise pendente se a inserção insegura persistir."
+        }
+      ]
+    },
+    {
+      "identificacao": {
+        "id_sonarqube": "AX1c-hardcoded-cred-001",
+        "arquivo": "com.example.app:src/main/java/com/example/app/config/DatabaseConfig.java",
+        "linha": 22,
+        "severidade_sast": "BLOCKER",
+        "regra": "java:S2068",
+        "categoria": "VULNERABILITY — Senha embutida no código"
+      },
+      "classificacao": {
+        "veredicto": "Pendente de verificação",
+        "cwe": "CWE-259 — Use of Hard-coded Password",
+        "owasp_top_10": "A07:2021 — Identification and Authentication Failures",
+        "wstg": "Sem correspondência direta; WSTG-ATHN-02 — Testing for Default Credentials, como referência complementar quando houver credencial fixa compartilhada",
+        "justificativa": "O alerta sinaliza uma possível senha literal na configuração do banco. Sem examinar o valor, seu uso e os perfis de execução, não é possível distinguir um segredo efetivamente embutido de um nome de propriedade, placeholder ou dado exclusivamente de teste."
+      },
+      "descricao_tecnica": "Verificar se a linha indicada contém uma senha literal utilizada para autenticação no banco, inclusive como fallback de configuração externa. Confirmar se o valor integra código ou artefatos implantáveis e se alcança a configuração efetiva de uma conexão. Não divulgar o segredo em evidências nem presumir que ele seja válido ou utilizado em produção.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao arquivo indicado, às referências da configuração e aos perfis de build e execução relevantes.",
+        "Acesso autorizado aos artefatos de teste e à configuração efetiva, com tratamento restrito de informações sensíveis.",
+        "Banco isolado ou mecanismo de instrumentação para observar a origem da senha sem registrar seu conteúdo.",
+        "Autorização explícita para qualquer tentativa de autenticação; não testar a credencial contra produção."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 — Inspecionar a linha 22 e seus usos para distinguir senha literal, nome de propriedade, placeholder e dado de fixture. Registrar evidências com o valor ocultado.",
+          "resultado_esperado_verdadeiro_positivo": "Existe um valor literal destinado a funcionar como senha e ele é encaminhado a uma API ou propriedade de autenticação.",
+          "resultado_esperado_falso_positivo": "O trecho contém apenas uma chave de configuração, referência a segredo externo ou texto que não é utilizado como credencial."
+        },
+        {
+          "passo": "Passo 02 — Examinar perfis, precedência de propriedades e artefatos para verificar se o literal pode ser selecionado em execução, inclusive quando a configuração externa está ausente.",
+          "resultado_esperado_verdadeiro_positivo": "O literal é incluído em artefato utilizável e selecionado como senha em um fluxo aplicável, diretamente ou como fallback.",
+          "resultado_esperado_falso_positivo": "O valor está comprovadamente restrito a fixture sem acesso a recursos reais e excluída dos artefatos implantáveis, ou não pode alcançar a configuração de autenticação em nenhum perfil aplicável."
+        },
+        {
+          "passo": "Passo 03 — No ambiente isolado, instrumentar a criação da conexão para confirmar a origem da senha; quando autorizado, validar seu uso em uma única conexão controlada, sem revelar o valor.",
+          "resultado_esperado_verdadeiro_positivo": "A execução confirma que a aplicação usa o literal como senha. Uma autenticação bem-sucedida comprova também sua validade naquele ambiente, mas não é necessária para demonstrar o uso de senha embutida.",
+          "resultado_esperado_falso_positivo": "A execução e a inspeção dos fluxos aplicáveis confirmam uso exclusivo de segredo externo, sem fallback literal. Falha de autenticação, isoladamente, não caracteriza falso positivo."
+        }
+      ]
+    }
+  ]
+}
