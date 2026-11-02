@@ -42,7 +42,7 @@ PROVIDERS = {
     "GPT": {
         "api_env": "OPENAI_API_KEY",
         "model_env": "OPENAI_CHAT_MODEL",
-        "model": "gpt-5.5",
+        "model": "gpt-6.1-sol",
         "folder": "GPT5.5",
     },
     "Gemini": {
@@ -54,13 +54,13 @@ PROVIDERS = {
     "Kimi": {
         "api_env": "KIMI_API_KEY",
         "model_env": "KIMI_MODEL",
-        "model": "moonshot-v1-8k",
+        "model": "kimi-k3.1-pro",
         "folder": "Kimi",
     },
     "Claude": {
         "api_env": "ANTHROPIC_API_KEY",
         "model_env": "CLAUDE_MODEL",
-        "model": "claude-sonnet-4-5",
+        "model": "claude-sonnet-5",
         "folder": "Claude",
     },
 }
