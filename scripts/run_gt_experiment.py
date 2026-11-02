@@ -453,14 +453,15 @@ def discover_reports(
 ) -> list[Path]:
     """Find the requested report or all GT*.json reports."""
     if requested:
-        path = input_dir / (
-            requested if requested.endswith(".json") else f"{requested}.json"
-        )
+        requested_path = Path(requested)
+        if requested_path.suffix.lower() != ".json":
+            requested_path = requested_path.with_suffix(".json")
+        path = requested_path if requested_path.is_absolute() else input_dir / requested_path
 
         if not path.is_file():
-            raise SystemExit(f"[ERROR] Report not found: {path}")
+            raise SystemExit(f"[ERROR] Report not found: {path.resolve()}")
 
-        return [path]
+        return [path.resolve()]
 
     reports = list(input_dir.glob("GT*.json"))
 
@@ -478,7 +479,7 @@ def discover_reports(
     return reports
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Branch 3 experiment: RAG + code context"
     )
@@ -488,18 +489,24 @@ def main() -> None:
         action="store_true",
         help="Call the selected LLM APIs to generate results.",
     )
+    def normalize_provider(value: str) -> str:
+        if value.casefold() == "all":
+            return "all"
+        for name in PROVIDERS:
+            if name.casefold() == value.casefold():
+                return name
+        return value
+
     parser.add_argument(
         "--provider",
-        type=lambda value: value if value == "all" else next(
-            (name for name in PROVIDERS if name.casefold() == value.casefold()), value
-        ),
+        type=normalize_provider,
         choices=[*PROVIDERS, "all"],
         default="all",
-        help="Provider: GPT, Gemini, Kimi, Claude, or all (default: all).",
+        help="Select GPT, Gemini, Kimi, Claude, or all (default: all).",
     )
     selection = parser.add_mutually_exclusive_group()
     selection.add_argument(
-        "--allreports",
+        "--allreports", "--all-reports",
         action="store_true",
         help="Process every *.json report in --reports-dir.",
     )
@@ -539,7 +546,7 @@ def main() -> None:
         help="Overwrite existing result JSON files. By default, existing results are preserved.",
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.input_file:
         input_path = args.input_file
@@ -764,6 +771,8 @@ def main() -> None:
             "ChromaDB uses local embeddings; the first run may initialize the local model."
         )
 
+    return 1 if totals["error"] else 0
+
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
