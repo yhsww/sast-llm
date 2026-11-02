@@ -100,7 +100,9 @@ python query.py --report sample.json
 python query.py --all-reports
 ```
 
-A geração real faz chamadas externas e pode consumir cota ou gerar custos. Consulte os arquivos JSON de saída em `results/` e as mensagens do terminal para identificar o resultado de cada execução.
+**Os comandos com `--provider` executam chamadas reais às APIs**; a execução não é simulada, a menos que você informe explicitamente `--simulate`. Antes de iniciar, o runner verifica se as credenciais dos provedores selecionados estão configuradas no `.env`. O Gemini recebe até quatro tentativas quando a API retorna HTTP 503 por indisponibilidade temporária, com espera crescente entre tentativas. Isso não elimina erros de cota, autenticação, modelo inexistente ou indisponibilidade persistente.
+
+A geração real faz chamadas externas e pode consumir cota ou gerar custos. Consulte os arquivos JSON de saída em `results/` e as mensagens do terminal para identificar o resultado de cada execução. Um arquivo `*_ERROR.txt` indica que aquela chamada não produziu uma saída válida; não o conte como resultado bem-sucedido.
 
 ## 3. Branch `branch-1-direct-llm` — Direct LLM
 
