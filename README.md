@@ -44,12 +44,14 @@ Na estratégia RAG, a busca semântica recupera documentos relevantes da base lo
 
 | Branch | Estratégia | Contexto enviado à LLM | Papel no experimento |
 |---|---|---|---|
-| `main` | Direct LLM | Findings do relatório SAST | Execução de referência sem RAG nem snippet adicional |
-| `branch-1-direct-llm` | Direct LLM | Findings do relatório SAST | Implementação experimental da abordagem direta |
+| `main` | Direct LLM | Findings do relatório SAST | Runner com opções `--report`/`--all-reports`; seleção de provedor por `--provider` ou menu interativo |
+| `branch-1-direct-llm` | Direct LLM | Findings do relatório SAST | Mesma estratégia direta, mas com interface de execução própria: `--only`/`--allreports` e provedor padrão definido por `LLM_PROVIDER` |
 | `branch-2-rag-cwe-wstg` | RAG com CWE e OWASP WSTG | Findings + documentos recuperados | Avaliar o efeito da documentação de segurança |
 | `branch-3-rag-code-context` | RAG + contexto de código | Findings + documentos recuperados + snippet | Avaliar se o código torna os testes mais específicos à implementação |
 
-As branches são versões experimentais distintas; os comandos e opções disponíveis podem variar entre elas. Consulte as instruções específicas da branch antes de executar.
+As branches `main` e `branch-1-direct-llm` usam a mesma **estratégia experimental** (findings enviados diretamente à LLM, sem RAG e sem snippet adicional), mas **não têm execução idêntica**: os argumentos de linha de comando e a seleção padrão do provedor diferem. Na `main`, use `--report`/`--all-reports`; na `branch-1-direct-llm`, use `--only`/`--allreports`. A branch 1 usa `LLM_PROVIDER` como provedor padrão quando nenhum provedor é informado. Portanto, compare a estratégia mantendo entrada, provedor/modelo e modo de execução equivalentes, e não apenas repetindo o mesmo comando nas duas branches.
+
+As branches 2 e 3 acrescentam, respectivamente, recuperação RAG e recuperação RAG com contexto de código. Consulte os comandos específicos de cada branch antes de executar.
 
 ### Dados utilizados
 
@@ -152,7 +154,7 @@ Modelos padrão:
 
 ## 2. Branch `main` — Direct LLM
 
-A `main` usa `query.py` para ler relatórios de `data/sast_reports/` e enviar os achados diretamente à LLM, sem recuperação RAG ou trecho adicional de código. O relatório padrão é `sample.json`.
+A `main` usa `query.py` para ler relatórios de `data/sast_reports/` e enviar os achados diretamente à LLM, sem recuperação RAG ou trecho adicional de código. O relatório padrão é `sample.json`. Esta branch e `branch-1-direct-llm` implementam a mesma estratégia direta, mas possuem interfaces de execução diferentes: na `main`, a seleção do relatório usa `--report`/`--all-reports` e a seleção do provedor usa `--provider` ou o menu interativo.
 
 Entre na branch e instale as dependências:
 
@@ -179,7 +181,7 @@ python query.py --provider claude
 python query.py --provider all
 ```
 
-Para selecionar a entrada:
+Para selecionar a entrada na `main`:
 
 ```powershell
 python query.py --report sample.json
@@ -187,11 +189,13 @@ python query.py --report GT01.json
 python query.py --all-reports
 ```
 
+`--simulate` valida os arquivos sem chamar APIs e sem gravar resultados. Sem essa opção, os comandos de geração chamam as APIs dos provedores selecionados.
+
 Esses comandos fazem chamadas reais, exceto quando acompanhados de `--simulate`. Confira os arquivos de saída em `results/` e mensagens `*_ERROR.txt`.
 
 ## 3. Branch `branch-1-direct-llm` — Direct LLM
 
-Esta branch compara a estratégia direta sem recuperação de documentos.
+Esta branch compara a mesma estratégia direta da `main` — sem recuperação de documentos e sem contexto adicional de código —, mas sua interface de execução é diferente. Ela usa `--only`/`--allreports` para selecionar relatórios e, se `--provider` não for informado, escolhe o provedor configurado em `LLM_PROVIDER` no `.env` (ou na configuração padrão). Por isso, os comandos da `main` não devem ser copiados para esta branch sem adaptar os argumentos.
 
 ```powershell
 git switch branch-1-direct-llm
@@ -209,10 +213,10 @@ Geração real com um provedor ou com todos:
 
 ```powershell
 python query.py --provider gemini
-python query.py --all-providers
+python query.py --provider all
 ```
 
-Para limitar a execução a um relatório, use `--only GT01` ou `--only sample.json`, conforme as opções mostradas por `python query.py --help`. Configure as credenciais correspondentes no `.env`.
+Para limitar a execução a um relatório, use `--only GT01.json` ou `--only sample.json`. Para processar todos os relatórios, use `--allreports`. Consulte `python query.py --help` para ver as opções disponíveis nesta branch. Configure no `.env` as credenciais dos provedores que pretende executar.
 
 ## 4. Branch `branch-2-rag-cwe-wstg` — RAG com CWE/WSTG
 
@@ -452,8 +456,10 @@ Registre também o relatório, finding, provedor/modelo, modo (dry run ou geraç
 
 | Branch | Estratégia | Entrada/execução principal |
 |---|---|---|
-| `main` | Direct LLM | `python query.py --simulate` ou `python query.py --provider gemini` |
-| `branch-1-direct-llm` | Direct LLM | `python query.py --help`; opções da própria branch |
+| `main` | Direct LLM | `python query.py --simulate`; geração: `python query.py --provider gemini` ou `--report sample.json` |
+| `branch-1-direct-llm` | Direct LLM | `python query.py --simulate`; geração: `python query.py --provider gemini --only sample.json` |
+
+**Importante:** `main` e `branch-1-direct-llm` são equivalentes quanto à estratégia (Direct LLM), mas não quanto à interface/comandos de execução. Para uma comparação justa, use o mesmo relatório, o mesmo provedor/modelo e o mesmo modo (simulação ou chamada real), adaptando os argumentos à branch.
 | `branch-2-rag-cwe-wstg` | RAG CWE/WSTG | `python -m scripts.run_gt_experiment` ou adicionar `--execute` |
 | `branch-3-rag-code-context` | RAG + trecho de código | `python query.py --provider GPT --only GT01.json --snippets-dir data/code_snippets` |
 
