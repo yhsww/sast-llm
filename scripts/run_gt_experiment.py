@@ -558,7 +558,8 @@ def main() -> None:
         if not reports:
             raise SystemExit(f"[ERROR] No JSON reports found in {args.reports_dir}")
     else:
-        reports = discover_reports(args.reports_dir, args.only or "sample.json")
+        # Preserve the original no-argument behavior: process GT*.json.
+        reports = discover_reports(args.reports_dir, args.only)
     provider_names = (
         list(PROVIDERS)
         if args.provider == "all"
