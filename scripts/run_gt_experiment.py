@@ -1,4 +1,4 @@
-﻿"""Branch 3 runner: RAG + source-code context.
+"""Branch 3 runner: RAG + source-code context.
 
 Input reports:
     data/sast_reports/GT*.json
@@ -252,6 +252,50 @@ def extract_source_snippets(
 
     return snippets
 
+def prompt_for_snippets(report_path: Path, report: SonarReport) -> list[str | None]:
+    """Prompt for a code snippet for each finding; finish each snippet with a line containing ###."""
+    snippets: list[str | None] = []
+    print(f"\n[SNIPPETS] {report_path.name}: informe o código para cada finding.")
+    print("Cole o conteúdo do arquivo e finalize com ### em uma linha isolada.")
+    print("Para pular um finding, pressione Enter e depois digite ###.\n")
+
+    for index, issue in enumerate(report.issues, start=1):
+        print("-" * 70)
+        print(f"Finding {index}/{len(report.issues)}")
+        print(f"Rule: {issue.rule}")
+        print(f"Message: {issue.message}")
+        print(f"Component: {issue.component or 'N/A'}")
+        line_number = issue.line or (
+            issue.textRange.startLine if issue.textRange else None
+        )
+        print(f"Line: {line_number or 'N/A'}")
+        print("Cole o snippet abaixo (terminador ###):")
+
+        lines: list[str] = []
+        while True:
+            try:
+                line = sys.stdin.readline()
+            except KeyboardInterrupt:
+                print("\n[WARN] Entrada interativa interrompida.")
+                return snippets + [None] * (len(report.issues) - len(snippets))
+
+            if line == "":
+                # EOF: preserve snippets already entered and skip remaining findings.
+                print("\n[WARN] Entrada encerrada; findings restantes serão ignorados.")
+                return snippets + [None] * (len(report.issues) - len(snippets))
+
+            line = line.rstrip("\r\n")
+            if line.strip() == "###":
+                break
+            lines.append(line)
+
+        snippet = "\n".join(lines).strip()
+        snippets.append(snippet if snippet else None)
+        print("[OK] Snippet recebido." if snippet else "[SKIP] Finding sem snippet.")
+
+    return snippets
+
+
 def parse_response(text: str) -> SecurityTestReport:
     """Parse a provider response as a SecurityTestReport."""
     text = text.strip()
@@ -469,6 +513,11 @@ def main() -> None:
         default=ROOT / "data" / "code_snippets",
     )
     parser.add_argument(
+        "--auto-snippets",
+        action="store_true",
+        help="Disable interactive prompts and load snippets from JSON/files or --source-root.",
+    )
+    parser.add_argument(
         "--source-root",
         type=Path,
         help="Optional source-code root to extract code around Sonar issues.",
@@ -511,22 +560,25 @@ def main() -> None:
             raw = json.loads(path.read_text(encoding="utf-8"))
             report = SonarReport.model_validate(raw)
 
-            snippets = load_snippets(
-                path,
-                raw,
-                report,
-                args.snippets_dir,
-            )
-
-            if args.source_root:
-                extracted = extract_source_snippets(
+            if args.auto_snippets:
+                snippets = load_snippets(
+                    path,
+                    raw,
                     report,
-                    args.source_root,
+                    args.snippets_dir,
                 )
-                snippets = [
-                    existing or extracted[i]
-                    for i, existing in enumerate(snippets)
-                ]
+
+                if args.source_root:
+                    extracted = extract_source_snippets(
+                        report,
+                        args.source_root,
+                    )
+                    snippets = [
+                        existing or extracted[i]
+                        for i, existing in enumerate(snippets)
+                    ]
+            else:
+                snippets = prompt_for_snippets(path, report)
 
             retrieved = [
                 query_knowledge(
