@@ -452,10 +452,3 @@ git rev-parse HEAD
 
 Registre também o relatório, finding, provedor/modelo, modo (dry run ou geração real), versão do código-fonte e resumo final. Não registre chaves de API.
 
-## 7. Resumo das branches
-
-| Branch | Estratégia | Entrada/execução principal |
-|---|---|---|
-| `main` | Direct LLM | `python query.py --simulate`; geração: `python query.py --provider gemini` ou `--report sample.json` |
-| `branch-1-direct-llm` | Direct LLM | `python query.py --simulate`; geração: `python query.py --provider gemini --only sample.json` |
-
