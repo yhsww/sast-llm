@@ -164,7 +164,7 @@ Geração real:
 python -m scripts.run_gt_experiment --execute
 ```
 
-A execução real depende de credenciais válidas e da cota disponível no provedor. O runner dessa branch processa especificamente `GT01.json` a `GT08.json` (não inclui `sample.json` por padrão) e consulta a base Chroma durante a preparação. O modo sem `--execute` valida leitura e recuperação de contexto, mas **não comprova a geração real pela LLM**. As saídas usam `results/GPT/`, `results/Gemini/`, `results/Kimi/` e `results/Claude/`; esta branch usa `GPT` como nome de pasta, diferente da pasta histórica `GPT5.5` usada nas outras branches.
+A execução real depende de credenciais válidas e da cota disponível no provedor. O runner dessa branch processa especificamente `GT01.json` a `GT08.json` (não inclui `sample.json` por padrão) e consulta a base Chroma durante a preparação. O modo sem `--execute` valida leitura e recuperação de contexto, mas **não comprova a geração real pela LLM**. As saídas usam `results/GPT5.5/`, `results/Gemini/`, `results/Kimi/` e `results/Claude/`. Embora o provedor OpenAI apareça no resumo do runner como `GPT`, os arquivos são salvos em `results/GPT5.5/` para manter a convenção de pastas das outras branches.
 
 ## 5. Branch `branch-3-rag-code-context` — RAG + contexto de código
 
@@ -237,7 +237,7 @@ As entradas de referência ficam em `data/sast_reports/`. Os arquivos `GT01.json
 |---|---|---|---|
 | `main` | `sample.json`; `--all-reports` lê todos os JSON da pasta | `results/GPT5.5/`, `results/Gemini/`, `results/Kimi/`, `results/Claude/` | `--simulate` só valida JSON; não escreve resultados. |
 | `branch-1-direct-llm` | Todos os JSON em `data/sast_reports/`, incluindo `sample.json` | Mesmas pastas de provedor da `main` | Use `--only GT01` para um relatório ou `--all-providers` para todos os provedores. |
-| `branch-2-rag-cwe-wstg` | `GT01.json` a `GT08.json` | `results/GPT/`, `results/Gemini/`, `results/Kimi/`, `results/Claude/` | Não inclui `sample.json` no lote fixo; no modo real preserva resultados já existentes e os pula. |
+| `branch-2-rag-cwe-wstg` | `GT01.json` a `GT08.json` | `results/GPT5.5/`, `results/Gemini/`, `results/Kimi/`, `results/Claude/` | Não inclui `sample.json` no lote fixo; no modo real preserva resultados já existentes e os pula. |
 | `branch-3-rag-code-context` | Todos os `GT*.json`; também aceita `--input-file` | `results/GPT5.5/`, `results/Gemini/`, `results/Kimi/`, `results/Claude/` | O modo real preserva resultados existentes; use `--force` para sobrescrever. |
 
-O nome de saída é `<nome-do-relatório>_LLM.json`; erros de execução real podem ser registrados como `<nome-do-relatório>_ERROR.txt`. Confira sempre a branch ativa e o caminho impresso no terminal. Como a `branch-2-rag-cwe-wstg` usa a pasta `GPT` enquanto as outras usam `GPT5.5`, não compare caminhos apenas pelo nome da pasta: registre também branch, provedor, modelo e relatório de entrada.
+O nome de saída é `<nome-do-relatório>_LLM.json`; erros de execução real podem ser registrados como `<nome-do-relatório>_ERROR.txt`. Confira sempre a branch ativa e o caminho impresso no terminal. Na `branch-2-rag-cwe-wstg`, o provedor OpenAI pode aparecer como `GPT` no terminal, mas a pasta de saída padronizada é `GPT5.5`. Registre também branch, provedor, modelo e relatório de entrada.
