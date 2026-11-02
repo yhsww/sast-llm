@@ -490,12 +490,23 @@ def main() -> None:
     )
     parser.add_argument(
         "--provider",
+        type=lambda value: value if value == "all" else next(
+            (name for name in PROVIDERS if name.casefold() == value.casefold()), value
+        ),
         choices=[*PROVIDERS, "all"],
         default="all",
+        help="Provider: GPT, Gemini, Kimi, Claude, or all (default: all).",
     )
-    parser.add_argument(
-        "--report",
-        help="Run one report from --reports-dir, e.g. GT01.",
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument(
+        "--allreports",
+        action="store_true",
+        help="Process every *.json report in --reports-dir.",
+    )
+    selection.add_argument(
+        "--only",
+        metavar="ARQUIVO.json",
+        help="Process only one report, e.g. --only GT01.json.",
     )
     parser.add_argument(
         "--input-file",
@@ -536,9 +547,18 @@ def main() -> None:
             input_path = (Path.cwd() / input_path).resolve()
         if not input_path.is_file():
             raise SystemExit(f"[ERROR] Input report not found: {input_path}")
+        if args.allreports or args.only:
+            parser.error("--input-file cannot be combined with --allreports or --only.")
         reports = [input_path]
+    elif args.allreports:
+        reports = sorted(
+            (p for p in args.reports_dir.glob("*.json") if p.is_file()),
+            key=lambda p: p.name.casefold(),
+        )
+        if not reports:
+            raise SystemExit(f"[ERROR] No JSON reports found in {args.reports_dir}")
     else:
-        reports = discover_reports(args.reports_dir, args.report)
+        reports = discover_reports(args.reports_dir, args.only or "sample.json")
     provider_names = (
         list(PROVIDERS)
         if args.provider == "all"
