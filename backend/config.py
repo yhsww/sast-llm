@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     # Kimi
     kimi_api_key: str = ""
-    kimi_model: str = "k3.1-pro"
+    kimi_model: str = "kimi-k3.1-pro"
 
     # Anthropic Claude
     anthropic_api_key: str = ""
