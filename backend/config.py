@@ -7,20 +7,20 @@ class Settings(BaseSettings):
 
     # OpenAI — chat and embeddings
     openai_api_key: str = ""
-    openai_chat_model: str = "gpt-4.1"
+    openai_chat_model: str = "gpt-6.1-sol"
     openai_embedding_model: str = "text-embedding-3-small"
 
     # Google Gemini
     google_api_key: str = ""
-    gemini_model: str = "gemini-3.8-flash"
+    gemini_model: str = "gemini-3.8-pro"
 
     # Kimi
     kimi_api_key: str = ""
-    kimi_model: str = "kimi-k2"
+    kimi_model: str = "k3.1-pro"
 
     # Anthropic Claude
     anthropic_api_key: str = ""
-    claude_model: str = "claude-sonnet-4-5"
+    claude_model: str = "claude-sonnet-5"
 
     # ChromaDB — RAG configuration
     chroma_persist_path: str = "./chroma_data"
