@@ -2,7 +2,7 @@
 
 Este repositório compara três estratégias para gerar casos de teste de segurança a partir de relatórios SAST do SonarQube:
 
-1. **Direct LLM** — envia os achados diretamente à LLM.
+1. **Direct LLM/main** — envia os achados diretamente à LLM.
 2. **RAG CWE/WSTG** — recupera documentação CWE e OWASP WSTG para enriquecer os achados.
 3. **RAG + contexto de código** — combina os achados, documentos recuperados e trechos reais do código-fonte relacionado.
    
