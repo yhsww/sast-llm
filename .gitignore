@@ -17,3 +17,4 @@ backup_relatorios_*/
 backup_scripts_*/
 results/**/*_ERROR.txt
 tg
+/SAST-COGNITIVE-LOAD-TEST-SECURITY
