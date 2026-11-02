@@ -202,8 +202,28 @@ def main(argv: list[str] | None = None) -> int:
         return run_simulation(reports)
 
     providers = choose_providers(args.provider)
+
+    required_keys = {
+        "openai": ("OPENAI_API_KEY", settings.openai_api_key),
+        "gemini": ("GOOGLE_API_KEY (or GEMINI_API_KEY)", settings.google_api_key),
+        "kimi": ("KIMI_API_KEY", settings.kimi_api_key),
+        "claude": ("ANTHROPIC_API_KEY", settings.anthropic_api_key),
+    }
+    missing = [
+        required_keys[provider][0]
+        for provider in providers
+        if not required_keys[provider][1]
+    ]
+    if missing:
+        parser.error(
+            "Real API execution requires configured credentials. Missing: "
+            + ", ".join(missing)
+            + ". Add them to the local .env file; do not commit API keys."
+        )
+
     print(f"Selected providers: {', '.join(providers)}")
-    print("Mode: direct LLM (no RAG and no additional context prompt)")
+    print("Mode: REAL API EXECUTION — provider APIs will be called.")
+    print("Strategy: direct LLM (no RAG and no additional context prompt)")
 
     succeeded = 0
     failed = 0
