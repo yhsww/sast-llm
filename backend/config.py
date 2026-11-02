@@ -11,7 +11,7 @@ class Settings(BaseSettings):
 
     # Google Gemini
     google_api_key: str = ""
-    gemini_model: str = "gemini-3.8-pro"
+    gemini_model: str = "gemini-3.8-flash"
 
     # Kimi
     kimi_api_key: str = ""
