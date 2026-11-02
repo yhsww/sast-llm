@@ -120,13 +120,14 @@ Configure o provedor e a chave no `.env`. Para validar em modo de simulação:
 python query.py --simulate
 ```
 
-Para gerar com um provedor específico:
+Para gerar com um provedor específico ou todos:
 
 ```powershell
 python query.py --provider gemini
+python query.py --all-providers
 ```
 
-Troque `gemini` por `openai`, `kimi` ou `claude`, conforme as opções disponíveis na versão da branch e as credenciais configuradas. Se a branch oferecer o executor em lote `run_experiment.py`, também é possível executar `python run_experiment.py` para usar o provedor definido em `.env`.
+Troque `gemini` por `openai`, `kimi` ou `claude` para selecionar outro provedor. Para processar somente um relatório, use `--only GT01` ou `--only sample.json`. A execução real exige credenciais válidas e pode consumir cota.
 
 ## 4. Branch `branch-2-rag-cwe-wstg` — RAG com CWE e WSTG
 
@@ -163,7 +164,7 @@ Geração real:
 python -m scripts.run_gt_experiment --execute
 ```
 
-A execução real depende de credenciais válidas e da cota disponível no provedor. O modo de simulação valida o fluxo de experimento e a recuperação de contexto, mas **não comprova a geração real pela LLM**.
+A execução real depende de credenciais válidas e da cota disponível no provedor. O runner dessa branch processa especificamente `GT01.json` a `GT08.json` (não inclui `sample.json` por padrão) e consulta a base Chroma durante a preparação. O modo sem `--execute` valida leitura e recuperação de contexto, mas **não comprova a geração real pela LLM**. As saídas usam `results/GPT/`, `results/Gemini/`, `results/Kimi/` e `results/Claude/`; esta branch usa `GPT` como nome de pasta, diferente da pasta histórica `GPT5.5` usada nas outras branches.
 
 ## 5. Branch `branch-3-rag-code-context` — RAG + contexto de código
 
@@ -200,13 +201,15 @@ Os trechos de código podem ser lidos de `data/code_snippets/` ou extraídos do 
 
 ## 6. Testes e critérios de validação
 
-Em cada branch, execute primeiro os testes automatizados disponíveis:
+Na raiz do repositório, em cada branch, execute:
 
 ```powershell
 python -m pytest -q
 ```
 
-Depois, execute o comando de simulação indicado na seção da branch. Para uma execução real, confira o resumo final e os arquivos de saída; não considere uma simulação como evidência de que a chamada real à LLM funcionou.
+Se o projeto não tiver testes descobertos, o pytest informará que não encontrou testes; isso não equivale a aprovação. Execute também a simulação indicada para a branch e confira se o número de relatórios válidos corresponde ao esperado. A simulação não chama a API de geração e, portanto, não comprova autenticação, disponibilidade do modelo ou geração real.
+
+Para validar a geração real, configure as credenciais do provedor e execute apenas um relatório primeiro. Confirme no terminal a contagem de achados, o resumo final e o arquivo de saída. Não interprete um arquivo `_ERROR.txt`, um relatório antigo ou uma execução em modo de simulação como resultado novo bem-sucedido.
 
 Antes de comparar resultados entre abordagens, use os mesmos relatórios de entrada e registre:
 
@@ -226,6 +229,15 @@ Registre também o provedor/modelo, o relatório usado, o modo (simulação ou g
 - **Relatório não encontrado:** confirme o caminho em `data/sast_reports/` e o nome passado ao comando.
 - **Branch não encontrada:** execute `git fetch origin` e confira `git branch -a`.
 
-## 8. Saídas do experimento
+## 8. Entradas e saídas por branch
 
-As entradas de referência incluem `GT01.json` a `GT08.json` e `sample.json`, quando presentes em `data/sast_reports/`. As saídas e a organização por provedor variam entre branches; use o caminho mostrado no terminal e confirme se a execução terminou com sucesso. Arquivos de erro, quando gerados, indicam falha daquela execução e não devem ser confundidos com relatórios de teste gerados com sucesso.
+As entradas de referência ficam em `data/sast_reports/`. Os arquivos `GT01.json` a `GT08.json` são processados em lote pelos runners RAG; `sample.json` é a entrada padrão da `main` e pode ser passado explicitamente à `branch-3-rag-code-context`.
+
+| Branch | Entrada padrão | Saídas | Observações |
+|---|---|---|---|
+| `main` | `sample.json`; `--all-reports` lê todos os JSON da pasta | `results/GPT5.5/`, `results/Gemini/`, `results/Kimi/`, `results/Claude/` | `--simulate` só valida JSON; não escreve resultados. |
+| `branch-1-direct-llm` | Todos os JSON em `data/sast_reports/`, incluindo `sample.json` | Mesmas pastas de provedor da `main` | Use `--only GT01` para um relatório ou `--all-providers` para todos os provedores. |
+| `branch-2-rag-cwe-wstg` | `GT01.json` a `GT08.json` | `results/GPT/`, `results/Gemini/`, `results/Kimi/`, `results/Claude/` | Não inclui `sample.json` no lote fixo; no modo real preserva resultados já existentes e os pula. |
+| `branch-3-rag-code-context` | Todos os `GT*.json`; também aceita `--input-file` | `results/GPT5.5/`, `results/Gemini/`, `results/Kimi/`, `results/Claude/` | O modo real preserva resultados existentes; use `--force` para sobrescrever. |
+
+O nome de saída é `<nome-do-relatório>_LLM.json`; erros de execução real podem ser registrados como `<nome-do-relatório>_ERROR.txt`. Confira sempre a branch ativa e o caminho impresso no terminal. Como a `branch-2-rag-cwe-wstg` usa a pasta `GPT` enquanto as outras usam `GPT5.5`, não compare caminhos apenas pelo nome da pasta: registre também branch, provedor, modelo e relatório de entrada.
