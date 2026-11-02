@@ -44,9 +44,6 @@ Confira se a branch possui `.env.example`. Se possuir, crie o arquivo local:
 ```powershell
 Copy-Item .env.example .env
 ```
-
-Preencha no `.env` somente as chaves e os modelos necessários à branch/provedor escolhidos. **Nunca envie o arquivo `.env` ou chaves de API ao Git.** Confira também `.env.example` e `backend/config.py`, pois os nomes das variáveis podem variar entre branches.
-
 ### Atualizar e conferir branches
 
 ```powershell
@@ -219,17 +216,6 @@ git rev-parse HEAD
 ```
 
 Registre também o provedor/modelo, o relatório usado, o modo (simulação ou geração real) e o resumo final. Não registre chaves de API.
-
-## 7. Problemas comuns
-
-- **`ModuleNotFoundError`:** ative o ambiente virtual e instale `requirements.txt`.
-- **Erro de autenticação:** confira a variável de ambiente e a chave do provedor.
-- **HTTP 429 / `RESOURCE_EXHAUSTED`:** a cota ou o limite de requisições foi atingido. Aguarde a renovação da cota ou use outro provedor configurado; repetir imediatamente pode falhar novamente.
-- **Nenhum documento RAG recuperado:** confira a construção das bases CWE/WSTG e a ingestão no ChromaDB.
-- **Relatório não encontrado:** confirme o caminho em `data/sast_reports/` e o nome passado ao comando.
-- **Branch não encontrada:** execute `git fetch origin` e confira `git branch -a`.
-
-## 8. Entradas e saídas por branch
 
 As entradas de referência ficam em `data/sast_reports/`. Os arquivos `GT01.json` a `GT08.json` são processados em lote pelos runners RAG; `sample.json` é a entrada padrão da `main` e pode ser passado explicitamente à `branch-3-rag-code-context`.
 
