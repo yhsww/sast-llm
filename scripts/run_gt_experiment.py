@@ -105,29 +105,115 @@ def _source_excerpt(path: Path, line_number: int | None, radius: int = 15) -> st
     return f"Source: {path.name} (lines {start}-{end})\n{excerpt}"
 
 
+def _finding_type_tokens(issue) -> set[str]:
+    """Return normalized vulnerability labels used to match files in code_snippets/."""
+    text = " ".join([
+        str(getattr(issue, "rule", "") or ""),
+        str(getattr(issue, "message", "") or ""),
+        " ".join(getattr(issue, "tags", []) or []),
+        str(getattr(issue, "component", "") or ""),
+    ]).casefold()
+    aliases = {
+        "sql_injection": ("sql-injection", "sql_injection", "sqli", "sql injection"),
+        "xss": ("xss", "cross-site-scripting", "cross site scripting"),
+        "hardcoded_credentials": ("hardcoded-cred", "hardcoded_cred", "hardcoded-password",
+                                  "hardcoded_password", "hard-coded password", "hardcoded credentials",
+                                  "hardcoded-credentials", "credentials"),
+    }
+    found = set()
+    for label, variants in aliases.items():
+        if any(v in text for v in variants):
+            found.add(label)
+    return found
+
+
+def _read_snippet_file(path: Path) -> str | None:
+    """Read a text snippet or a common JSON snippet shape."""
+    try:
+        if path.suffix.casefold() == ".json":
+            data = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(data, str):
+                return data.strip() or None
+            if isinstance(data, list):
+                parts = [item.strip() for item in data if isinstance(item, str) and item.strip()]
+                return "\\n\\n".join(parts) or None
+            if isinstance(data, dict):
+                for key in ("code_snippet", "snippet", "code", "source", "content", "code_snippets"):
+                    value = data.get(key)
+                    if isinstance(value, str) and value.strip():
+                        return value.strip()
+                    if isinstance(value, list):
+                        parts = [item.strip() for item in value if isinstance(item, str) and item.strip()]
+                        if parts:
+                            return "\\n\\n".join(parts)
+                # A type file may map finding IDs/rules to snippets.
+                parts = [value.strip() for value in data.values()
+                         if isinstance(value, str) and value.strip()]
+                return "\\n\\n".join(parts) or None
+        else:
+            content = path.read_text(encoding="utf-8", errors="replace").strip()
+            return content or None
+    except (OSError, json.JSONDecodeError):
+        return None
+    return None
+
+
 def load_snippets(
     report_path: Path,
     raw: dict[str, Any],
     report: SonarReport,
     snippets_dir: Path,
 ) -> list[str | None]:
-    """Load explicit snippets, or match sample source files by component basename."""
+    """Load snippets by finding type from data/code_snippets, then use report-specific fallbacks."""
+    # First, use files organized by vulnerability type (e.g. SQL injection, XSS).
+    # Match filenames/folder names against labels derived from rule, tags and message.
+    supported_suffixes = {".json", ".txt", ".md", ".java", ".js", ".jsx", ".ts",
+                          ".tsx", ".py", ".php", ".cs", ".go", ".rb", ".html", ".xml", ".sql"}
+    type_files = []
+    if snippets_dir.is_dir():
+        type_files = sorted(
+            p for p in snippets_dir.rglob("*")
+            if p.is_file() and p.suffix.casefold() in supported_suffixes
+        )
+
+    typed_snippets: list[str | None] = []
+    for issue in report.issues:
+        labels = _finding_type_tokens(issue)
+        matched = []
+        for candidate in type_files:
+            name = candidate.stem.casefold().replace(" ", "_")
+            parents = {part.casefold().replace(" ", "_") for part in candidate.relative_to(snippets_dir).parts[:-1]}
+            if any(label in name or label in parent for label in labels for parent in (parents or {""})):
+                matched.append(candidate)
+        snippet = _read_snippet_file(matched[0]) if matched else None
+        typed_snippets.append(snippet)
+
+    if typed_snippets and any(typed_snippets):
+        # Type-based snippets take precedence; retain report-provided snippets only
+        # for findings without a matching type file.
+        explicit = raw.get("code_snippets")
+        if isinstance(explicit, dict) and "code_snippets" in explicit:
+            explicit = explicit["code_snippets"]
+        if isinstance(explicit, list):
+            typed_snippets = [
+                snippet or (explicit[i] if i < len(explicit) and isinstance(explicit[i], str) else None)
+                for i, snippet in enumerate(typed_snippets)
+            ]
+        return typed_snippets
+
+    # Backward compatibility: a file named after the report (e.g. GT01.json).
     value: Any = raw.get("code_snippets")
     snippet_path = snippets_dir / f"{report_path.stem}.json"
-
     if value is None and snippet_path.is_file():
         try:
             value = json.loads(snippet_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
             raise ValueError(f"Cannot read {snippet_path}: {exc}") from exc
-
     if isinstance(value, dict) and "code_snippets" in value:
         value = value["code_snippets"]
-
     if isinstance(value, list):
         values = [v if isinstance(v, str) and v.strip() else None for v in value]
         return (values + [None] * len(report.issues))[:len(report.issues)]
-
     if isinstance(value, dict):
         snippets = []
         for index, issue in enumerate(report.issues, start=1):
@@ -135,34 +221,22 @@ def load_snippets(
             item = next((value[k] for k in keys if k and k in value), None)
             snippets.append(item if isinstance(item, str) and item.strip() else None)
         return snippets
-
     if value is not None:
-        raise ValueError(
-            f"Unsupported snippet format in {snippet_path}; use a list or object."
-        )
+        raise ValueError(f"Unsupported snippet format in {snippet_path}; use a list or object.")
 
+    # Legacy fallback: source files placed directly/recursively under snippets_dir.
     files_by_name: dict[str, Path] = {}
-    if snippets_dir.is_dir():
-        for candidate in sorted(snippets_dir.rglob("*")):
-            if candidate.is_file() and candidate.suffix.lower() in {
-                ".java", ".js", ".ts", ".py", ".php", ".cs", ".go"
-            }:
-                files_by_name.setdefault(candidate.name.casefold(), candidate)
-
+    for candidate in type_files:
+        if candidate.suffix.casefold() in {".java", ".js", ".jsx", ".ts", ".tsx", ".py",
+                                            ".php", ".cs", ".go", ".rb", ".html", ".xml", ".sql"}:
+            files_by_name.setdefault(candidate.name.casefold(), candidate)
     snippets: list[str | None] = []
     for issue in report.issues:
-        component = (issue.component or "").split(":", 1)[-1].replace("\\", "/")
+        component = (issue.component or "").split(":", 1)[-1].replace("\\\\", "/")
         source_path = files_by_name.get(Path(component).name.casefold())
-        line_number = issue.line or (
-            issue.textRange.startLine if issue.textRange else None
-        )
-        snippets.append(
-            _source_excerpt(source_path, line_number) if source_path else None
-        )
-
+        line_number = issue.line or (issue.textRange.startLine if issue.textRange else None)
+        snippets.append(_source_excerpt(source_path, line_number) if source_path else None)
     return snippets
-
-
 def extract_source_snippets(
     report: SonarReport,
     source_root: Path,
