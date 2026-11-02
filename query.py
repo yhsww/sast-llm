@@ -45,7 +45,7 @@ def model_for(provider: str) -> str:
     return str(models[provider])
 
 
-def discover_reports(only: str | None = None) -> list[Path]:
+def discover_reports(only: str | None = None, all_reports: bool = False) -> list[Path]:
     """Return JSON reports in a stable order, optionally selecting one by stem."""
     if not REPORTS_DIR.is_dir():
         raise SystemExit(f"Reports directory not found: {REPORTS_DIR}")
@@ -63,6 +63,10 @@ def discover_reports(only: str | None = None) -> list[Path]:
     if only:
         requested = Path(only.strip()).stem.casefold()
         reports = [path for path in reports if path.stem.casefold() == requested]
+    elif not all_reports:
+        reports = [path for path in reports if path.name.casefold() == "sample.json"]
+        if not reports:
+            raise SystemExit(f"Default report sample.json not found in: {REPORTS_DIR}")
         if not reports:
             available = ", ".join(path.stem for path in discover_reports())
             raise SystemExit(
@@ -82,7 +86,8 @@ def choose_providers(
     providers = list(PROVIDER_FOLDERS)
 
     if requested_provider:
-        return [requested_provider.strip().lower()]
+        normalized = requested_provider.strip().lower()
+        return providers if normalized == "all" else [normalized]
     if all_providers:
         return providers
 
@@ -207,20 +212,21 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run the direct-LLM SAST experiment."
     )
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument(
+        "--allreports",
+        action="store_true",
+        help="Run every *.json report in data/sast_reports.",
+    )
+    selection.add_argument(
+        "--only",
+        metavar="ARQUIVO.json",
+        help="Run one report by filename, e.g. --only GT01.json.",
+    )
     parser.add_argument(
         "--provider",
-        choices=tuple(PROVIDER_FOLDERS),
-        help="Run one provider without prompting.",
-    )
-    parser.add_argument(
-        "--all-providers",
-        action="store_true",
-        help="Run all configured providers. This may incur API costs.",
-    )
-    parser.add_argument(
-        "--only",
-        metavar="REPORT",
-        help="Run one report by filename or stem, e.g. GT01 or sample.json.",
+        choices=(*PROVIDER_FOLDERS, "all"),
+        help="Run one provider or all providers without prompting.",
     )
     parser.add_argument(
         "--simulate",
@@ -233,17 +239,14 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    if args.provider and args.all_providers:
-        parser.error("--provider and --all-providers cannot be used together.")
-
-    reports = discover_reports(args.only)
+    reports = discover_reports(args.only, args.allreports)
     print(f"Reports found: {len(reports)}")
     print("Inputs: " + ", ".join(path.name for path in reports))
 
     if args.simulate:
         return run_simulation(reports)
 
-    providers = choose_providers(args.provider, args.all_providers)
+    providers = choose_providers(args.provider, args.provider == "all")
     print(f"Selected providers: {', '.join(providers)}")
     print("Mode: direct LLM (no RAG and no additional context prompt)")
 
