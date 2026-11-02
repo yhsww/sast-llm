@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     gemini_model: str = "gemini-3.8-pro"
 
     kimi_api_key: str | None = None
-    kimi_model: str = "k3.1-pro"
+    kimi_model: str = "kimi-k3.1-pro"
 
     anthropic_api_key: str | None = None
     claude_model: str = "claude-sonnet-5"
