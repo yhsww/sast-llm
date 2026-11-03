@@ -1,0 +1,90 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "java:S3649",
+        "arquivo": "com/example/app/repository/UserRepository.java",
+        "linha": 47,
+        "severidade_sast": "CRITICAL",
+        "regra": "java:S3649",
+        "categoria": "SQL Injection"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-566",
+        "owasp_top_10": "A03:2021-Injection",
+        "wstg": "WSTG-INPV-05-3",
+        "justificativa": "O parâmetro username é concatenado diretamente na construção da query SQL sem o uso de prepared statements ou bind variables, permitindo manipulação da consulta."
+      },
+      "descricao_tecnica": "A vulnerabilidade de SQL Injection ocorre porque a aplicação compõe instruções SQL por meio de concatenação de strings utilizando dados controlados pelo usuário no método findByUsername.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso à aplicação alvo em ambiente autorizado",
+        "Possibilidade de enviar requisições contendo parâmetros controlados para a rota que consome UserRepository.java"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "O envio de uma carga útil como ' OR '1'='1 no parâmetro username altera o comportamento da consulta, retornando registros não autorizados ou gerando um erro de sintaxe do banco de dados.",
+          "resultado_esperado_falso_positivo": "O banco de dados trata a entrada estritamente como string literal, retornando nenhum registro ou erro tratado sem alterar a lógica da consulta."
+        }
+      ]
+    },
+    {
+      "identificacao": {
+        "id_sonarqube": "java:S5131",
+        "arquivo": "com/example/app/controller/CommentController.java",
+        "linha": 83,
+        "severidade_sast": "CRITICAL",
+        "regra": "java:S5131",
+        "categoria": "Cross-Site Scripting (XSS)"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-80",
+        "owasp_top_10": "A03:2021-Injection",
+        "wstg": "WSTG-INPV-02",
+        "justificativa": "Os parâmetros authorName e content são refletidos diretamente na resposta HTML retornada pelo endpoint addReply sem qualquer codificação ou sanitização."
+      },
+      "descricao_tecnica": "O método addReply retorna uma string HTML contendo dados fornecidos pelo usuário sem sanitização, permitindo a execução arbitrária de scripts no contexto do navegador da vítima.",
+      "pre_condicoes_para_verificacao": [
+        "Ambiente de testes autorizado configurado",
+        "Capacidade de realizar requisições POST para o endpoint de comentários"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A tag script injetada nos parâmetros authorName ou content é refletida sem codificação na resposta HTTP e executada pelo navegador.",
+          "resultado_esperado_falso_positivo": "A aplicação realiza a codificação de caracteres especiais (ex: &lt;, &gt;), impedindo a execução do script."
+        }
+      ]
+    },
+    {
+      "identificacao": {
+        "id_sonarqube": "java:S2068",
+        "arquivo": "com/example/app/config/DatabaseConfig.java",
+        "linha": 22,
+        "severidade_sast": "BLOCKER",
+        "regra": "java:S2068",
+        "categoria": "Hard-coded Credentials"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-555",
+        "owasp_top_10": "A07:2021-Identification and Authentication Failures",
+        "wstg": "WSTG-ATHN-07",
+        "justificativa": "A senha do banco de dados de produção está escrita diretamente como uma string literal no código fonte da classe de configuração."
+      },
+      "descricao_tecnica": "A utilização de credenciais hard-coded compromete a confidencialidade do acesso ao banco de dados e expõe segredos caso o código seja acessível ou descompilado.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte do repositório ou artefato compilado"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A inspeção do arquivo DatabaseConfig.java revela a string da senha em texto plano atribuída à constante DB_PASSWORD.",
+          "resultado_esperado_falso_positivo": "A credencial é carregada dinamicamente de variáveis de ambiente ou de um gerenciador de segredos externo."
+        }
+      ]
+    }
+  ]
+}
