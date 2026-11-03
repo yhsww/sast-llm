@@ -333,13 +333,57 @@ A API pode limitar a quantidade de requisições por minuto por organização. U
 
 ## 7. Testes e validação do experimento
 
-Na raiz de cada branch, tente executar:
+Há três tipos de execução que têm objetivos diferentes: **pytest**, **dry run** e **execução real**.
+
+### Pytest — testes automatizados do código
+
+O `pytest` é uma ferramenta de testes para Python. Ele executa os testes automatizados existentes no repositório para verificar comportamentos específicos do código, como funções de leitura ou validação, quando esses comportamentos têm testes implementados.
+
+Na raiz do projeto, com o ambiente virtual ativado, execute:
 
 ```powershell
 python -m pytest -q
 ```
 
-Se não houver testes descobertos, isso não equivale a aprovação do experimento. Execute também o dry run específico da branch e confira as contagens no terminal. Para validar a geração real, use primeiro um único finding e confirme que o arquivo foi criado nesta execução.
+Para ver o nome e o resultado de cada teste:
+
+```powershell
+python -m pytest -v
+```
+
+Se o Python informar que `pytest` não está instalado, instale-o com:
+
+```powershell
+python -m pip install pytest
+```
+
+**Importante:** o pytest só executa os testes que existem no projeto; ele não cria automaticamente testes para todo o código. Se aparecer uma mensagem como “no tests ran”, isso significa que nenhum teste foi descoberto nessa execução — não significa que o projeto passou nos testes. Se houver falhas, analise a mensagem para identificar qual teste falhou.
+
+### Dry run — validar o fluxo sem chamar a LLM
+
+O dry run verifica etapas locais da preparação, conforme os recursos de cada branch: por exemplo, a leitura dos relatórios, a validação do JSON e, nas branches com RAG/código, a preparação ou recuperação de contexto e snippets.
+
+Use o comando de validação documentado na seção da branch em que estiver trabalhando. Na `main` e na `branch-1-direct-llm`, por exemplo:
+
+```powershell
+python query.py --simulate
+```
+
+Na branch 3, confira também a contagem de snippets apresentada no terminal. O dry run **não comprova** que a chave de API está correta, que o modelo está disponível ou que a chamada real será bem-sucedida.
+
+### Execução real — chamar a LLM
+
+A execução real envia os dados à API do provedor selecionado e pode consumir créditos ou cota de API. Use o comando específico da branch e comece com um relatório pequeno antes de executar um lote. Depois, confirme no terminal e em `results/` se os resultados foram gerados; verifique também os arquivos `*_ERROR.txt`, se existirem.
+
+Em resumo:
+
+| Método | O que verifica | Chama a API da LLM? |
+|---|---|---|
+| `pytest` | Os testes automatizados implementados no repositório | Em geral, não; confira o que os testes fazem |
+| Dry run | Etapas locais de validação e preparação previstas pela branch | Não, nos modos de dry run descritos neste README |
+| Execução real | A geração dos casos de teste pelo provedor escolhido | Sim; pode consumir créditos/cota |
+
+Nenhum desses métodos, isoladamente, garante que os casos de teste gerados sejam corretos ou seguros. Revise os resultados antes de utilizá-los.
 
 Antes de comparar resultados entre estratégias, registre a branch e o commit:
 
