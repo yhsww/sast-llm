@@ -1,0 +1,129 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "java:S3649",
+        "arquivo": "src/main/java/com/example/app/repository/UserRepository.java",
+        "linha": 47,
+        "severidade_sast": "CRITICAL",
+        "regra": "Change this code to not construct SQL queries directly from user-controlled data.",
+        "categoria": "Injeção de SQL por construção dinâmica de consulta"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro positivo provável, com explorabilidade a confirmar",
+        "cwe": "CWE-89",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-05, utilizando a subseção correspondente ao SGBD somente após sua identificação",
+        "justificativa": "O trecho concatena username diretamente entre aspas na consulta. Se esse valor for controlado por um usuário e a consulta for executada sem parametrização, metacaracteres poderão alterar sua estrutura. O fluxo de origem e o ponto de execução não foram fornecidos, portanto a exploração ainda precisa ser demonstrada. CWE-89 é a classificação principal; CWE-566 exigiria evidência adicional de bypass de autorização por chave primária, e CWE-564 seria específico de Hibernate."
+      },
+      "descricao_tecnica": "A consulta SELECT é formada por concatenação de uma variável com o texto SQL. Uma entrada contendo aspas ou operadores pode modificar a condição WHERE, provocar erros ou ampliar o conjunto de registros retornados. A correção estrutural consiste em usar PreparedStatement ou mecanismo equivalente com parâmetro vinculado, mantendo validação de entrada e autorização por registro.",
+      "pre_condicoes_para_verificacao": [
+        "Obter o método completo, seus chamadores e o código que executa a variável sql, incluindo eventuais validações e transformações de username.",
+        "Utilizar exclusivamente ambiente autorizado e isolado, com banco de dados contendo registros sintéticos e conta de aplicação com privilégios mínimos.",
+        "Preparar observação segura das consultas por teste de integração, proxy ou spy do driver, sem habilitar logs de dados sensíveis e sem executar payloads destrutivos ou comandos empilhados."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 - Rastrear estaticamente username desde sua origem até a execução da consulta, verificando se há PreparedStatement, bind de parâmetros ou outra construção segura no caminho efetivamente utilizado.",
+          "resultado_esperado_verdadeiro_positivo": "Uma origem não confiável, como parâmetro HTTP ou mensagem, alcança a concatenação e o SQL resultante é executado sem vinculação do valor e sem restrição rigorosa que impeça metacaracteres.",
+          "resultado_esperado_falso_positivo": "O trecho não é executado, username não é controlável, ou o fluxo real utiliza parâmetro vinculado antes da execução. Uma validação rigorosa que torne a entrada inexplorável pode reduzir o impacto, mas não substitui a parametrização."
+        },
+        {
+          "passo": "Passo 02 - Em teste de unidade ou integração, chamar o repositório com um usuário sintético comum e com o valor O'Reilly, observando a estrutura da consulta e o tratamento da aspa sem alterar dados.",
+          "resultado_esperado_verdadeiro_positivo": "O valor aparece incorporado ao texto SQL e a aspa altera a estrutura ou provoca erro de sintaxe, evidenciando que entrada e instrução não estão separadas. Um erro isolado, contudo, não confirma exploração.",
+          "resultado_esperado_falso_positivo": "A consulta mantém estrutura constante, com placeholder e valor vinculado, e a aspa é tratada apenas como parte literal do nome, sem erro ou mudança de semântica."
+        },
+        {
+          "passo": "Passo 03 - Somente no banco sintético, submeter o payload de leitura ' OR '1'='1' --  ao fluxo que consulta usuários e comparar os registros retornados com uma consulta normal.",
+          "resultado_esperado_verdadeiro_positivo": "A condição é neutralizada ou ampliada e são retornados registros que não correspondem ao username solicitado, confirmando injeção e possível bypass do filtro.",
+          "resultado_esperado_falso_positivo": "A entrada é rejeitada por validação eficaz ou tratada como valor literal, sem alteração da condição e sem retorno de registros adicionais."
+        }
+      ]
+    },
+    {
+      "identificacao": {
+        "id_sonarqube": "java:S5131",
+        "arquivo": "src/main/java/com/example/app/controller/CommentController.java",
+        "linha": 83,
+        "severidade_sast": "CRITICAL",
+        "regra": "Sanitize user-provided data before inserting it into the HTML response.",
+        "categoria": "Cross-Site Scripting por inserção não codificada em HTML"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro positivo provável, com fluxo HTTP e tipo de XSS a confirmar",
+        "cwe": "CWE-79",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-01 para XSS refletido e WSTG-INPV-02 para XSS armazenado, conforme a persistência dos dados",
+        "justificativa": "authorName e content são inseridos diretamente nos conteúdos de span e p, sem codificação HTML visível. Se forem controlados pelo usuário e esse retorno compuser uma resposta HTML, será possível injetar marcação e potencialmente script. Ainda é necessário verificar origem dos dados, sanitizações posteriores, Content-Type e renderização no cliente. CWE-79 é mais abrangente que as variantes CWE-80 e CWE-83 fornecidas; a referência de SSTI não caracteriza este trecho."
+      },
+      "descricao_tecnica": "O método constrói HTML por concatenação, sem neutralizar caracteres como <, >, &, aspas e apóstrofo. Um valor pode encerrar o elemento atual ou introduzir novos elementos e manipuladores de eventos no contexto da origem da aplicação. Se comentários forem persistidos e exibidos a outros usuários, o cenário será XSS armazenado; caso contrário, poderá ser refletido ou DOM-based, dependendo do fluxo.",
+      "pre_condicoes_para_verificacao": [
+        "Revisar os chamadores do método, a origem de authorName e content, o Content-Type da resposta e qualquer template, sanitizador ou manipulação DOM posterior.",
+        "Executar os testes em ambiente autorizado, com usuários e comentários sintéticos, mantendo as configurações reais de segurança e sem utilizar payloads de exfiltração, roubo de sessão ou requisições externas.",
+        "Disponibilizar um navegador de teste com inspeção de resposta e DOM e, se houver persistência, uma segunda sessão para verificar a visualização por outro usuário."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 - Confirmar estaticamente se os dois valores são controláveis e se retornam ao navegador como HTML sem codificação contextual ou sanitização HTML rigorosa e posterior à concatenação.",
+          "resultado_esperado_verdadeiro_positivo": "Dados de requisição ou de comentários persistidos alcançam o retorno e são entregues ou renderizados como HTML sem neutralização adequada.",
+          "resultado_esperado_falso_positivo": "Os valores são fixos e não controláveis, o retorno não é tratado como HTML, ou todo o fluxo aplica codificação contextual ou sanitização eficaz antes do sink."
+        },
+        {
+          "passo": "Passo 02 - Testar separadamente authorName e content com a marcação inerte <b data-probe=\"xss-teste\">TESTE</b>, inspecionando tanto o corpo HTTP quanto o DOM, sem editar manualmente o DOM.",
+          "resultado_esperado_verdadeiro_positivo": "A marcação aparece sem codificação e o navegador cria um elemento b com o atributo de teste, confirmando injeção de HTML e justificando o teste de execução controlado.",
+          "resultado_esperado_falso_positivo": "Os caracteres aparecem codificados, por exemplo como &lt;, o texto é exibido literalmente e nenhum elemento novo é criado."
+        },
+        {
+          "passo": "Passo 03 - Em cada campo que apresentou injeção de HTML, usar o payload local e não destrutivo <svg onload=\"document.documentElement.dataset.xssProbe='1'\"></svg> e abrir a visualização em um navegador de teste.",
+          "resultado_esperado_verdadeiro_positivo": "O atributo data-xss-probe é criado pela execução do manipulador injetado, confirmando XSS. Se somente uma CSP bloquear a execução, a injeção de HTML continuará sendo evidência do defeito e a CSP será apenas defesa adicional.",
+          "resultado_esperado_falso_positivo": "O payload é removido ou codificado antes do sink e nenhum elemento ou manipulador controlado é criado. A ausência de execução apenas por bloqueio da CSP não deve ser considerada correção da saída insegura."
+        },
+        {
+          "passo": "Passo 04 - Se o fluxo persistir comentários, salvar apenas o marcador de teste e visualizá-lo em outra sessão sintética, verificando se ele permanece ativo após nova recuperação dos dados.",
+          "resultado_esperado_verdadeiro_positivo": "O conteúdo armazenado é recuperado e gera marcação ou execução para outro usuário, classificando o cenário como XSS armazenado.",
+          "resultado_esperado_falso_positivo": "Não há persistência ou a saída armazenada é neutralizada na renderização; nesse caso, não classificar o achado como XSS armazenado."
+        }
+      ]
+    },
+    {
+      "identificacao": {
+        "id_sonarqube": "java:S2068",
+        "arquivo": "src/main/java/com/example/app/config/DatabaseConfig.java",
+        "linha": 22,
+        "severidade_sast": "BLOCKER",
+        "regra": "Remove this hard-coded password.",
+        "categoria": "Credencial sensível embutida no código-fonte"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro positivo para o padrão de senha hard-coded; validade e exposição operacional a confirmar",
+        "cwe": "CWE-798",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-ATHN-07 como contexto de credenciais; a confirmação principal é por revisão de código, configuração e gestão de segredos",
+        "justificativa": "O trecho atribui um literal com formato de senha a DB_PASSWORD, caracterizando diretamente a presença de uma credencial candidata no código. Ainda deve ser verificado se é um segredo real, se está em uso e em quais ambientes. CWE-798 é a classificação adequada; CWE-555 trata especificamente de senha em arquivo de configuração J2EE e CWE-549, de mascaramento de campos, não se aplica ao trecho."
+      },
+      "descricao_tecnica": "Uma senha embutida em uma constante pode ser recuperada por qualquer pessoa com acesso ao repositório, ao histórico ou a artefatos que preservem a constante. Se utilizada para abrir conexões com o banco, sua divulgação pode permitir acesso com os privilégios dessa conta, além de dificultar rotação e diferenciação por ambiente. O valor do segredo não deve ser reproduzido em relatórios, logs ou evidências.",
+      "pre_condicoes_para_verificacao": [
+        "Obter autorização para revisar os usos de DatabaseConfig, a criação do DataSource e os mecanismos de configuração de cada ambiente, sem divulgar o valor do literal.",
+        "Tratar o literal como potencialmente válido, aplicando manuseio restrito de segredos e evitando copiá-lo para tickets, saídas de teste ou logs.",
+        "Não tentar autenticação em produção; qualquer validação de credencial deve ser previamente aprovada e limitada a um banco de testes isolado."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 - Rastrear todas as referências a DB_PASSWORD e verificar se o valor é fornecido a propriedades de conexão, DataSource, pool ou outro mecanismo de autenticação.",
+          "resultado_esperado_verdadeiro_positivo": "A constante alimenta efetivamente a configuração de autenticação e não é substituída por um segredo externo antes do uso.",
+          "resultado_esperado_falso_positivo": "O literal é apenas um marcador não sensível em código de teste ou inalcançável, nunca representa uma credencial e não participa de nenhuma autenticação."
+        },
+        {
+          "passo": "Passo 02 - Em teste isolado com DataSource ou fábrica de conexões simulada, instanciar a configuração e observar apenas a origem e a identidade do argumento de senha, mascarando seu conteúdo.",
+          "resultado_esperado_verdadeiro_positivo": "O argumento recebido corresponde à constante do código, inclusive quando variáveis de ambiente ou perfis legítimos deveriam fornecer a credencial.",
+          "resultado_esperado_falso_positivo": "A configuração executada obtém a senha de cofre, serviço de segredos ou outra fonte externa e a constante não é utilizada no fluxo."
+        },
+        {
+          "passo": "Passo 03 - Confirmar com os responsáveis pelo ambiente e pelo cofre de segredos se a credencial é real, compartilhada, ativa ou já rotacionada; não registrar seu valor nem realizar login fora do escopo aprovado.",
+          "resultado_esperado_verdadeiro_positivo": "O segredo é ou foi válido e sua presença no código amplia seu acesso indevidamente, exigindo remoção, rotação e revisão do histórico e dos artefatos afetados.",
+          "resultado_esperado_falso_positivo": "Trata-se comprovadamente de valor fictício, revogado e sem correspondência com qualquer conta ou ambiente, restando apenas o padrão de código apontado pelo SAST."
+        }
+      ]
+    }
+  ]
+}

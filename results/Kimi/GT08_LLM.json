@@ -1,0 +1,44 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S6437",
+        "arquivo": "lib/insecurity.ts",
+        "linha": 44,
+        "severidade_sast": "BLOCKER",
+        "regra": "typescript:S6437",
+        "categoria": "Segredo criptográfico codificado no código-fonte"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro positivo",
+        "cwe": "CWE-798 (Use of Hard-coded Credentials); CWE-321 (Use of Hard-coded Cryptographic Key)",
+        "owasp_top_10": "A02:2021 - Cryptographic Failures; A07:2021 - Identification and Authentication Failures, caso o HMAC seja usado em decisões de autenticação",
+        "wstg": "WSTG-ATHN-02, com aplicabilidade parcial ao contexto de segredos estáticos; não constitui evidência de credencial padrão",
+        "justificativa": "O trecho fornece uma chave HMAC não vazia diretamente como literal a crypto.createHmac, confirmando que o segredo está embutido no fonte e sujeito a exposição pelo repositório ou artefato distribuído. O impacto sobre autenticação ou integridade depende da confirmação dos pontos que consomem e confiam nesse HMAC. CWE-258 não se aplica, pois não há senha vazia, e CWE-592 está depreciada e não descreve adequadamente o achado."
+      },
+      "descricao_tecnica": "A função exportada hmac calcula HMAC-SHA256 usando sempre a mesma chave definida em uma string literal. Quem obtiver o código pode recuperar a chave e gerar HMACs idênticos aos da aplicação; se esses valores forem aceitos como prova de autenticidade ou integridade, poderá forjar artefatos confiáveis. Além disso, a rotação exige alteração e nova distribuição do código. A chave deve ser tratada como comprometida e substituída por um segredo fornecido em tempo de execução por mecanismo apropriado de gestão de segredos, sem presumir, antes da verificação dinâmica, que existe um fluxo explorável de autenticação.",
+      "pre_condicoes_para_verificacao": [
+        "Obter autorização e acesso ao commit analisado, às configurações de execução e a um ambiente de teste isolado equivalente ao implantado.",
+        "Localizar os consumidores da função hmac e identificar se seus resultados participam de autenticação, autorização, assinatura ou verificação de integridade.",
+        "Utilizar somente dados sintéticos, não repetir o segredo em relatórios ou logs e não testar valores forjados contra produção ou sistemas de terceiros."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Inspecione a linha 44 no commit analisado e no artefato executável, verificando também se configuração, variável de ambiente ou etapa de build substitui a chave antes do uso.",
+          "resultado_esperado_verdadeiro_positivo": "O literal não vazio permanece como segundo argumento de createHmac no caminho executado, sem substituição por segredo externo, e a mesma função é incluída no artefato de execução.",
+          "resultado_esperado_falso_positivo": "O trecho não pertence à versão executada ou é exclusivamente um exemplo inerte, e o caminho real utiliza outra implementação sem qualquer segredo codificado."
+        },
+        {
+          "passo": "Passo 02: Rastreie estaticamente todas as chamadas de hmac e os respectivos verificadores, registrando fluxos, dados protegidos e possibilidade de rotação da chave, sem alterar o comportamento da aplicação.",
+          "resultado_esperado_verdadeiro_positivo": "Há pelo menos um fluxo executável que confia no resumo produzido com essa chave para autenticidade ou integridade, e a chave fixa não pode ser rotacionada independentemente de uma alteração de código.",
+          "resultado_esperado_falso_positivo": "A função é código morto ou restrita a testes descartáveis, nenhum fluxo de segurança consome seu resultado e o segredo não está presente em ambientes ou artefatos reais."
+        },
+        {
+          "passo": "Passo 03: No ambiente isolado, gere localmente o HMAC-SHA256 de uma entrada sintética conhecida usando a chave recuperada do fonte e compare-o com a saída da função. Se existir um verificador associado, utilize apenas um artefato descartável, sem modificar dados persistentes, para observar sua validação.",
+          "resultado_esperado_verdadeiro_positivo": "Os resumos coincidem, demonstrando conhecimento da chave operacional; quando houver um verificador dependente desse valor, o artefato sintético é aceito com base nesse HMAC, confirmando também o impacto de forja.",
+          "resultado_esperado_falso_positivo": "A execução utiliza uma chave diferente e os resumos não coincidem, ou não existe qualquer verificador ou decisão de segurança que aceite valores produzidos por essa função."
+        }
+      ]
+    }
+  ]
+}

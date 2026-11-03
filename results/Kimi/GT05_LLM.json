@@ -1,0 +1,46 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S5852",
+        "arquivo": "juice-shop:frontend/src/app/change-password/change-password.component.ts",
+        "linha": 92,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S5852",
+        "categoria": "Inefficient Regular Expression Complexity / ReDoS"
+      },
+      "classificacao": {
+        "veredicto": "A verificar — forte indício de verdadeiro positivo",
+        "cwe": "CWE-1333",
+        "owasp_top_10": "Sem mapeamento direto no OWASP Top 10 (2021); o impacto principal é em disponibilidade, por consumo excessivo de CPU.",
+        "wstg": "WSTG-BUSL-07, apenas como contexto para avaliação de abuso da funcionalidade e defesas de disponibilidade; a referência não confirma a vulnerabilidade.",
+        "justificativa": "A expressão contém quatro lookaheads com buscas ilimitadas por '.*' e não possui âncoras. Em determinadas strings longas que falham, o mecanismo pode repetir essas buscas a partir de várias posições, produzindo comportamento superlinear. O limite de 12 a 30 caracteres no trecho final não limita as buscas dos lookaheads. Entretanto, o snippet não mostra a origem da entrada, eventuais limites de tamanho nem se a execução ocorre somente no navegador ou também no servidor; portanto, a explorabilidade e o impacto em negação de serviço precisam ser confirmados. A referência CWE-177 não é pertinente a este achado."
+      },
+      "descricao_tecnica": "Possível Regular Expression Denial of Service causado por retrocesso e reavaliação das lookaheads em entradas longas sem correspondência. Se senhas ou outros valores controláveis alcançarem a expressão sem uma restrição prévia de comprimento, a validação poderá consumir CPU de forma desproporcional e bloquear temporariamente a interface ou o processo executor. Caso a expressão seja executada exclusivamente no navegador do próprio usuário, o impacto deve ser tratado como indisponibilidade local do cliente, e não presumido como DoS remoto do servidor.",
+      "pre_condicoes_para_verificacao": [
+        "Executar os testes somente em ambiente local ou de homologação autorizado, sem utilizar produção.",
+        "Obter o componente completo, seu template e os pontos de chamada para identificar onde a expressão é executada e quais validações antecedem seu uso.",
+        "Utilizar o mesmo mecanismo de expressões regulares e versões representativas de Node.js e/ou navegador empregados pela aplicação.",
+        "Executar o benchmark em processo descartável e isolado, com timeout, limites de recursos e tamanhos de entrada aumentados gradualmente.",
+        "Usar exclusivamente strings sintéticas e evitar registrar senhas reais ou outros dados sensíveis."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 — Rastrear a alcançabilidade: identificar onde a regex é avaliada, se recebe valor controlado pelo usuário, se há validação de comprimento antes dela e se a execução ocorre no cliente, no servidor ou em ambos.",
+          "resultado_esperado_verdadeiro_positivo": "Uma entrada controlável alcança a regex sem um limite prévio pequeno e efetivamente aplicado, existindo um caminho capaz de afetar a responsividade da interface ou de um processo da aplicação.",
+          "resultado_esperado_falso_positivo": "A regex é código inalcançável ou toda entrada possível é limitada, antes da avaliação, a um tamanho comprovadamente seguro. Limites existentes apenas na interface não devem ser tratados como proteção de uma eventual execução no servidor."
+        },
+        {
+          "passo": "Passo 02 — Medir a regex isoladamente: após aquecimento do runtime, avaliar entradas inválidas como a letra 'A' repetida n vezes, usando n igual a 1.000, 2.000, 4.000 e 8.000, com várias repetições e controles curtos válidos e inválidos. Registrar a mediana dos tempos e interromper o teste ao primeiro bloqueio relevante.",
+          "resultado_esperado_verdadeiro_positivo": "As entradas longas sem correspondência apresentam crescimento consistentemente superlinear, aproximadamente compatível com comportamento quadrático, e tempo desproporcional ao dos controles, confirmando o risco de consumo excessivo de CPU.",
+          "resultado_esperado_falso_positivo": "Nos runtimes efetivamente utilizados, o tempo permanece pequeno e cresce aproximadamente de forma linear, sem picos reproduzíveis de retrocesso ou bloqueio nas faixas de entrada relevantes."
+        },
+        {
+          "passo": "Passo 03 — Validar pelo fluxo real da aplicação: submeter tamanhos moderados e crescentes pela interface e, se aplicável, pelo endpoint autorizado, observando CPU, atraso do event loop, responsividade da interface e tempo de resposta, sem exceder os limites seguros do ambiente.",
+          "resultado_esperado_verdadeiro_positivo": "A degradação é reproduzível pelo fluxo real e correlacionada à avaliação da regex, causando bloqueio perceptível da interface ou consumo anormal de CPU/latência no serviço. O relatório deve distinguir impacto apenas local no navegador de impacto sobre o servidor ou outros usuários.",
+          "resultado_esperado_falso_positivo": "A aplicação rejeita entradas excessivas antes da regex e mantém CPU e latência estáveis, sem degradação atribuível à expressão. Se não houver alcançabilidade ou se a proteção de comprimento não puder ser verificada, o resultado deve permanecer inconclusivo, e não ser classificado automaticamente como falso positivo."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "secrets:S6706",
+        "arquivo": "lib/insecurity.ts",
+        "linha": 23,
+        "severidade_sast": "BLOCKER",
+        "regra": "secrets:S6706",
+        "categoria": "Exposição de segredo: chave privada criptográfica embutida no código"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-321 (Use of a Hard-coded Cryptographic Key); CWE-798 (Use of Hard-coded Credentials)",
+        "owasp_top_10": "A02:2021 - Cryptographic Failures",
+        "wstg": "WSTG-ATHN-04, condicionalmente aplicável se a chave for utilizada em tokens ou mecanismos de autenticação",
+        "justificativa": "O trecho evidencia uma chave privada RSA completa armazenada diretamente em um literal no código-fonte, confirmando a exposição estática do segredo. Sua validade criptográfica, utilização pela aplicação e impacto em autenticação ainda devem ser verificados. As referências CWE-324 e CWE-1291 fornecidas tratam de expiração e reutilização de chaves e não representam o problema principal evidenciado."
+      },
+      "descricao_tecnica": "A variável privateKey contém material privado RSA recuperável por qualquer pessoa com acesso ao código-fonte, histórico do repositório ou artefatos que preservem o literal. Se a chave corresponder ao par utilizado para assinar tokens, mensagens ou outros artefatos confiáveis, um atacante poderá gerar assinaturas aparentemente legítimas e potencialmente contornar autenticação ou autorização. A ausência de uso ativo reduz o impacto demonstrável, mas não elimina a exposição de uma chave real. A correção exige revogação ou rotação do par comprometido, remoção do segredo do código e dos artefatos distribuídos, armazenamento da nova chave em mecanismo apropriado de gerenciamento de segredos e avaliação do histórico; apenas apagar a linha não invalida a chave já exposta.",
+      "pre_condicoes_para_verificacao": [
+        "Obter autorização para análise e testes e confirmar que o código e o ambiente correspondem à mesma versão analisada pelo SonarQube.",
+        "Utilizar ambiente isolado de testes, conta dedicada sem privilégios elevados e dados não produtivos; não testar a chave contra sistemas de terceiros.",
+        "Ter acesso às referências de privateKey, às configurações de assinatura e verificação e ao fluxo de autenticação, sem copiar o segredo para logs, tickets ou canais públicos.",
+        "Acionar o responsável pela chave ou pela aplicação para contenção e rotação caso se confirme que o material é real ou esteve em uso."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 - Confirmar, sem divulgar o conteúdo, a presença do literal no código, no histórico e nos artefatos gerados; em ambiente controlado, verificar apenas se o material pode ser interpretado como uma chave privada RSA.",
+          "resultado_esperado_verdadeiro_positivo": "O material privado permanece recuperável e é sintaticamente válido, confirmando que não se trata apenas de um marcador ou exemplo vazio.",
+          "resultado_esperado_falso_positivo": "O valor é comprovadamente um placeholder ou material inválido, sem chave privada recuperável e sem segredo real correspondente no histórico ou nos artefatos."
+        },
+        {
+          "passo": "Passo 02 - Rastrear os usos de privateKey e, sem registrar a chave, derivar localmente sua chave pública e comparar somente a impressão digital com as chaves públicas configuradas no ambiente de teste.",
+          "resultado_esperado_verdadeiro_positivo": "Há correspondência entre a chave exposta e o par utilizado para assinatura ou verificação, ou existem referências que demonstram seu consumo pela aplicação, confirmando impacto operacional.",
+          "resultado_esperado_falso_positivo": "Não existe chave privada real ou utilizável, nem correspondência com chaves implantadas ou consumidores do segredo. Se a chave for real, porém estiver sem uso, deve-se registrar apenas que a explorabilidade não foi demonstrada, e não classificar a exposição como falsa."
+        },
+        {
+          "passo": "Passo 03 - Somente se o fluxo utilizar tokens assinados, gerar localmente um token de curta duração para a conta dedicada de testes, sem privilégios adicionais, e enviá-lo a um endpoint de leitura; usar também um controle com assinatura inválida e não persistir chave ou tokens.",
+          "resultado_esperado_verdadeiro_positivo": "O token assinado com a chave exposta é aceito, enquanto o controle com assinatura inválida é rejeitado, demonstrando possibilidade de falsificação e eventual bypass do esquema de autenticação.",
+          "resultado_esperado_falso_positivo": "O token é rejeitado e o fluxo legítimo permanece funcional, indicando que essa chave não permite bypass no fluxo testado. Esse resultado não invalida a exposição caso o material privado seja real."
+        }
+      ]
+    }
+  ]
+}

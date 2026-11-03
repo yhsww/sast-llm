@@ -1,0 +1,45 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S5852",
+        "arquivo": "frontend/src/app/change-password/change-password.component.ts",
+        "linha": 92,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S5852",
+        "categoria": "Regular Expression Denial of Service (ReDoS) / Inefficient Regular Expression Complexity"
+      },
+      "classificacao": {
+        "veredicto": "Falso Positivo (provável)",
+        "cwe": "CWE-1333",
+        "owasp_top_10": "A05:2021 - Security Misconfiguration / A06:2021 - Vulnerable and Outdated Components (ReDoS classified under DoS risks, not strictly mapped to Top 10 2021 category)",
+        "wstg": "WSTG-BUSL-07",
+        "justificativa": "O padrão utiliza quatro lookaheads independentes (?=.*[a-z]), (?=.*[A-Z]), (?=.*\\d), (?=.*[@$!%*?&]) seguidos por um grupo quantificado com limite superior fixo {12,30}. Cada lookahead percorre a string uma única vez de forma independente (não há quantificadores aninhados nem alternância sobreposta dentro de um mesmo grupo), o que resulta em complexidade aproximadamente linear (O(n) por lookahead, O(4n) no total) e não em complexidade exponencial/catastrófica. Além disso, o quantificador final é limitado (máximo 30 caracteres), o que restringe drasticamente o espaço de backtracking mesmo em cenários adversos. Esse padrão é um falso positivo comum identificado pela regra S5852 para expressões de validação de senha com múltiplos lookaheads. Ainda assim, é necessário confirmar em ambiente de teste que o campo de senha possui um limite de tamanho de entrada (ex.: maxlength no HTML e/ou validação no backend) para eliminar qualquer risco residual de entrada anormalmente longa."
+      },
+      "descricao_tecnica": "A regra S5852 identificou uma expressão regular utilizada para validação de complexidade de senha no componente Angular 'change-password'. A expressão combina múltiplos lookaheads positivos para garantir presença de letra minúscula, maiúscula, dígito e caractere especial, seguida por uma validação de tamanho de 12 a 30 caracteres. Embora o uso de múltiplos lookaheads com '.*' seja um padrão frequentemente sinalizado por ferramentas de análise estática como potencialmente vulnerável a backtracking catastrófico, a ausência de quantificadores aninhados (nested quantifiers) e a limitação superior do grupo principal (máximo 30 caracteres) tornam a exploração prática de DoS via ReDoS improvável neste caso específico. É necessário validar empiricamente o comportamento com entradas extremas para descartar qualquer risco residual.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte do componente 'change-password.component.ts' e ao template HTML associado para verificar se há atributo 'maxlength' ou validação equivalente no campo de senha.",
+        "Ambiente de teste autorizado (dev/staging) com a aplicação Juice Shop em execução.",
+        "Ferramenta de medição de tempo de execução (ex.: script Node.js isolado ou DevTools Performance) para testar a regex isoladamente, sem impactar a aplicação em produção.",
+        "Conhecimento do input máximo aceito pelo campo de senha (frontend e backend)."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Ao testar a regex isoladamente (fora da aplicação, em ambiente controlado como Node.js REPL) com strings de entrada crescentes (ex.: 50, 100, 500, 1000, 5000 caracteres) contendo padrões que forcem backtracking (ex.: repetição de caracteres que quase satisfazem os lookaheads), o tempo de processamento cresce de forma exponencial ou superlinear perceptível (ex.: de milissegundos para segundos/minutos), confirmando vulnerabilidade real a ReDoS.",
+          "resultado_esperado_falso_positivo": "O tempo de processamento da regex permanece linear e constante (na ordem de microssegundos/milissegundos) mesmo com entradas de até milhares de caracteres, pois os lookaheads são independentes e o grupo final é limitado a 30 caracteres, confirmando que a regex não é suscetível a backtracking catastrófico."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "O campo de senha no frontend (HTML/Angular) e a validação no backend não impõem nenhum limite de tamanho máximo de entrada, permitindo que um usuário envie uma string arbitrariamente longa para o campo que utiliza essa regex, aumentando a superfície de exploração.",
+          "resultado_esperado_falso_positivo": "O campo de senha possui atributo 'maxlength' (ex.: 30 ou valor próximo) no template HTML e/ou validação de tamanho máximo no backend antes da aplicação da regex, o que limita o tamanho da entrada processada e reduz significativamente qualquer risco de DoS, mesmo que a regex fosse teoricamente vulnerável."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Ao submeter, através da interface de troca de senha da aplicação em execução, uma string de senha extremamente longa e com padrão adversarial, a requisição trava, demora anormalmente (>5-10 segundos) ou causa consumo elevado de CPU no processo do frontend/backend, evidenciando DoS explorável.",
+          "resultado_esperado_falso_positivo": "A submissão de uma senha longa (respeitando ou não o limite de 30 caracteres) é processada rapidamente (resposta em milissegundos), sem impacto perceptível de CPU ou tempo de resposta, confirmando que a expressão regular não representa risco prático de negação de serviço neste contexto."
+        }
+      ]
+    }
+  ]
+}

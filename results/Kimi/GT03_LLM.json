@@ -1,0 +1,51 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S6268",
+        "arquivo": "frontend/src/app/about/about.component.ts",
+        "linha": 119,
+        "severidade_sast": "CRITICAL",
+        "regra": "typescript:S6268",
+        "categoria": "Cross-Site Scripting (XSS)"
+      },
+      "classificacao": {
+        "veredicto": "Provável verdadeiro positivo",
+        "cwe": "CWE-79",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-02 (Stored Cross-Site Scripting); WSTG-CLNT-03 (HTML Injection, como apoio)",
+        "justificativa": "O trecho converte feedbacks[i].comment em HTML confiável por meio de bypassSecurityTrustHtml, desativando explicitamente a sanitização do Angular. Comentários de feedback são potencialmente controlados por usuários; se esse valor for persistido e renderizado por [innerHTML] ou mecanismo equivalente, poderá ocorrer XSS armazenado. O recorte não inclui a origem do dado, eventuais validações anteriores nem o template, portanto a explorabilidade deve ser confirmada. CWE-79 descreve melhor o risco; CWE-644 trata de cabeçalhos HTTP e WSTG-INPV-18 trata de SSTI, não sendo diretamente aplicáveis a este sink."
+      },
+      "descricao_tecnica": "A chamada a bypassSecurityTrustHtml informa ao Angular que o conteúdo do comentário é seguro sem que o framework realize sua neutralização habitual. Caso não exista uma sanitização rigorosa baseada em allowlist antes dessa chamada, markup malicioso pode chegar ao DOM. Em uma página que apresenta os comentários como HTML, atributos de evento, elementos ativos ou URLs perigosas podem permitir execução de JavaScript na origem da aplicação quando outras páginas ou usuários visualizarem o feedback. Tags script inseridas via innerHTML não são, por si só, uma prova adequada de exploração; a verificação deve usar um vetor não destrutivo compatível com o navegador, como um manipulador de erro de imagem.",
+      "pre_condicoes_para_verificacao": [
+        "Utilizar somente um ambiente de teste autorizado e isolado, com dados descartáveis e a mesma versão do código analisado.",
+        "Disponibilizar a aplicação, um usuário capaz de enviar feedback e acesso à página About que apresenta os comentários.",
+        "Ter acesso ao template de About, ao serviço de feedback e, quando possível, à resposta da API para rastrear a origem e o destino do campo comment.",
+        "Usar DevTools do navegador e registrar a CSP e eventuais controles de filtragem sem desativá-los.",
+        "Empregar apenas payloads que alterem um marcador local de teste, sem alertas, exfiltração, comandos ou efeitos sobre outros usuários."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 - Rastrear estaticamente o fluxo de feedbacks[i].comment desde a submissão ou resposta da API até bypassSecurityTrustHtml e até o template. Verificar especificamente se o valor é consumido por [innerHTML] e se existe sanitização anterior baseada em allowlist.",
+          "resultado_esperado_verdadeiro_positivo": "Um comentário controlável pelo usuário alcança o bypass sem neutralização adequada e o SafeHtml resultante é renderizado como HTML no template.",
+          "resultado_esperado_falso_positivo": "O valor é exclusivamente confiável e fixo, ou recebe sanitização rigorosa e contextualmente adequada antes do bypass, e não existe caminho pelo qual markup não confiável alcance o sink."
+        },
+        {
+          "passo": "Passo 02 - Enviar um comentário textual com identificador único e abrir a página About em uma nova sessão do navegador. Confirmar, pela interface e pela resposta da API, se o comentário é persistido e entregue ao componente.",
+          "resultado_esperado_verdadeiro_positivo": "O comentário enviado é persistido, retornado ao componente e exibido na página, demonstrando que o fluxo potencialmente perigoso é alcançável.",
+          "resultado_esperado_falso_positivo": "Comprova-se que o campo manipulado na linha 119 não recebe dados controláveis nem é exibido. A simples ausência do comentário na interface, sem concluir essa análise, não é suficiente para declarar falso positivo."
+        },
+        {
+          "passo": "Passo 03 - Enviar como comentário o payload não destrutivo <img src=\"sast-invalid-image\" onerror=\"document.body.setAttribute('data-sast-xss','executed')\"> e abrir a página About. Inspecionar o DOM e verificar se o atributo data-sast-xss foi acrescentado ao body apenas pelo carregamento da página.",
+          "resultado_esperado_verdadeiro_positivo": "O atributo data-sast-xss com valor executed aparece, demonstrando execução de JavaScript a partir do comentário e confirmando XSS; se o comentário permanecer disponível para outras visualizações, confirma-se o caráter armazenado.",
+          "resultado_esperado_falso_positivo": "O payload é exibido como texto, ou o elemento e o atributo de evento são removidos ou neutralizados, o marcador não é criado e a análise estática confirma que essa neutralização ocorre antes do bypass."
+        },
+        {
+          "passo": "Passo 04 - Se o marcador não for criado, examinar o HTML efetivamente renderizado e mensagens de CSP no console antes de concluir a triagem. Distinguir neutralização do conteúdo de um bloqueio externo à renderização.",
+          "resultado_esperado_verdadeiro_positivo": "O handler perigoso permanece no DOM ou o bloqueio ocorre apenas pela CSP; nesse segundo caso, a CSP pode reduzir a explorabilidade atual, mas não transforma o bypass inseguro em falso positivo nem substitui a correção do fluxo.",
+          "resultado_esperado_falso_positivo": "Não há handler ou conteúdo ativo no DOM, nenhuma execução ocorre e a revisão do código comprova sanitização adequada ou inexistência de fluxo não confiável até o sink."
+        }
+      ]
+    }
+  ]
+}

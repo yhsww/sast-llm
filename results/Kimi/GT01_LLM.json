@@ -1,0 +1,51 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S1523",
+        "arquivo": "routes/b2bOrder.ts",
+        "linha": 23,
+        "severidade_sast": "MAJOR",
+        "regra": "Make sure that this dynamic injection or execution of code is safe.",
+        "categoria": "Security Hotspot - Execução dinâmica de código e potencial injeção de código"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro positivo provável, mas exploração ainda não confirmada",
+        "cwe": "CWE-95 (Eval Injection) como classificação principal; CWE-94 como secundária. CWE-1321 somente se for demonstrada modificação indevida de protótipos; CWE-430 não é a melhor classificação para o trecho fornecido.",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-09 - Testing for Code Injection. WSTG-INPV-18 e WSTG-CLNT-15 são referências sobre template injection e não comprovam este achado.",
+        "justificativa": "O trecho comprova o uso de vm.runInContext e a delegação de orderLinesData a safeEval, mas a expressão passada diretamente ao vm é fixa. Para confirmar uma injeção explorável, é necessário demonstrar que orderLinesData contenha dados controlados pelo usuário e que safeEval os avalie como código, sem validação ou isolamento suficiente. O timeout de 2000 ms limita apenas o tempo de execução e não impede acesso indevido a objetos ou outras ações dentro desse intervalo."
+      },
+      "descricao_tecnica": "A linha executa safeEval(orderLinesData) em um contexto do módulo vm do Node.js. Se orderLinesData for derivado do corpo da requisição e safeEval interpretar seu conteúdo como JavaScript, um usuário poderá injetar expressões no avaliador. O impacto dependerá da implementação e da versão de safeEval, dos objetos expostos em sandbox e das capacidades acessíveis a partir do contexto. A simples presença de vm.runInContext não comprova RCE, pois o código fornecido não mostra a origem do dado, a criação do sandbox nem eventuais validações. Também não se deve presumir que vm ou o timeout constituam uma fronteira de segurança completa.",
+      "pre_condicoes_para_verificacao": [
+        "Realizar os testes somente em ambiente isolado e autorizado, sem dados de produção e sem executar comandos do sistema, acessar arquivos, fazer conexões externas ou provocar indisponibilidade.",
+        "Obter o arquivo completo, o registro da rota e os pontos em que orderLinesData e sandbox são inicializados, incluindo eventuais validações e condições que habilitam a funcionalidade.",
+        "Identificar a implementação, a origem e a versão exata de safeEval no código e no arquivo de dependências bloqueadas.",
+        "Preparar uma requisição legítima conhecida e instrumentação de teste, como logs ou um spy em safeEval, para observar a entrada e o resultado da avaliação mesmo quando o retorno não aparece na resposta HTTP.",
+        "Definir um canário benigno, como uma expressão aritmética ou um marcador exclusivamente local ao teste, e registrar o comportamento normal antes dos testes diferenciais."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A análise estática confirma que um parâmetro da requisição, como req.body.orderLinesData, chega a orderLinesData e é encaminhado a safeEval sem tipagem estrita, schema ou allowlist que impeça a entrada de código. Também são documentados os objetos incluídos em sandbox.",
+          "resultado_esperado_falso_positivo": "O valor não é controlável por usuários, é convertido em uma estrutura de dados estritamente validada antes do sink ou nunca é avaliado como código. Nesse caso, o caminho explorável indicado pelo SAST não se sustenta."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Uma requisição legítima alcança a linha 23 e a instrumentação registra a chamada de safeEval com o valor proveniente da requisição, estabelecendo uma baseline de alcançabilidade sem alterar o comportamento da aplicação.",
+          "resultado_esperado_falso_positivo": "Não existe caminho alcançável para o sink em nenhuma configuração suportada. A rota estar temporariamente indisponível ou uma requisição malformada ser rejeitada, isoladamente, não é suficiente para declarar falso positivo."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "No ambiente instrumentado, uma expressão aritmética benigna enviada no mesmo campo é efetivamente avaliada como código, e não apenas tratada como texto ou dados, confirmando avaliação dinâmica de entrada não confiável. Esse resultado, sozinho, não deve ser apresentado como prova de RCE.",
+          "resultado_esperado_falso_positivo": "A expressão é rejeitada ou tratada exclusivamente como dado, enquanto entradas legítimas continuam funcionando; safeEval não realiza avaliação de código controlável pelo usuário ou uma validação anterior impede que esse conteúdo alcance o avaliador."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "A revisão do sandbox e uma sonda benigna, limitada a verificar a visibilidade de objetos ou a alterar um marcador de teste, demonstram que código avaliado ultrapassa o escopo de dados pretendido ou acessa capacidades não autorizadas. O impacto confirmado deve ser descrito apenas até o nível efetivamente observado.",
+          "resultado_esperado_falso_positivo": "O avaliador aceita somente a linguagem ou os dados estritamente previstos, não expõe capacidades indevidas e a sonda não produz efeitos fora do contexto autorizado. A ausência de escape reduz o impacto, mas não deve ser usada para negar uma avaliação de código já comprovada no Passo 03."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S7790",
+        "arquivo": "routes/userProfile.ts",
+        "linha": 87,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S7790",
+        "categoria": "Server-Side Template Injection (SSTI)"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro positivo provável, com explorabilidade a confirmar",
+        "cwe": "CWE-1336",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-18 - Server-side Template Injection",
+        "justificativa": "A linha compila a variável template como código-fonte Pug, constituindo um sumidouro relevante para SSTI. Se essa variável incorporar entrada controlada pelo usuário antes da compilação, expressões e diretivas Pug poderão ser interpretadas no servidor. O trecho fornecido não mostra a origem de template, eventual sanitização nem a execução da função retornada; portanto, a compilação isolada não comprova explorabilidade. WSTG-CLNT-15 não é a referência primária, pois o processamento indicado ocorre no servidor."
+      },
+      "descricao_tecnica": "pug.compile(template) transforma o conteúdo da variável em um template executável. O risco não está simplesmente em apresentar dados por meio de Pug, mas em permitir que dados externos modifiquem a estrutura ou as expressões do template antes da compilação. Para confirmar um verdadeiro positivo, é necessário demonstrar o fluxo de uma entrada externa até template, a execução da função compilada e a interpretação de uma expressão inofensiva. A exploração com execução de comandos não deve ser presumida nem é necessária para esta verificação.",
+      "pre_condicoes_para_verificacao": [
+        "Utilizar somente uma instância de teste autorizada, com o mesmo commit, configuração e versão de Pug do achado.",
+        "Identificar a rota que renderiza o perfil, a origem completa da variável template e os campos que um usuário de baixo privilégio consegue alterar.",
+        "Dispor de uma conta de teste e de uma renderização basal funcional da página de perfil.",
+        "Limitar os testes a expressões aritméticas sem efeitos colaterais; não utilizar cargas de execução de comandos, acesso a arquivos ou alteração de outros usuários."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 - Rastrear estaticamente a variável template desde sua criação até pug.compile(template), verificando também onde a função compilada é chamada e como sua saída é utilizada.",
+          "resultado_esperado_verdadeiro_positivo": "Uma entrada externa, como um atributo editável do perfil, é concatenada, interpolada ou usada em substituições dentro de template antes da compilação, e a função resultante é executada para produzir a resposta, sem uma garantia eficaz de que essa entrada permaneça apenas como dado.",
+          "resultado_esperado_falso_positivo": "template é integralmente fixo ou proveniente exclusivamente de fonte confiável, a linha não é alcançável com influência externa, ou os valores externos são fornecidos somente como dados a um template previamente definido e não podem alterar seu código-fonte."
+        },
+        {
+          "passo": "Passo 02 - Confirmar dinamicamente a alcançabilidade usando inicialmente um marcador textual inofensivo no campo identificado no Passo 01. Renderizar novamente o perfil e comparar a resposta com a linha de base.",
+          "resultado_esperado_verdadeiro_positivo": "O marcador chega ao fluxo de renderização associado ao perfil e aparece na resposta ou no conteúdo usado para montar o template, confirmando que o campo é relevante para o teste de injeção.",
+          "resultado_esperado_falso_positivo": "O campo não participa desse fluxo, a linha não é executada para a requisição ou o valor é descartado antes da composição do template. Nesse caso, não se deve classificar o achado apenas pela ausência de reflexão; é preciso verificar se existe outro caminho de entrada."
+        },
+        {
+          "passo": "Passo 03 - No mesmo ponto de entrada cuja alcançabilidade foi confirmada, utilizar o valor inofensivo SSTI_CHECK_#{7*7}, acionar a renderização e procurar especificamente o marcador e seu resultado na resposta.",
+          "resultado_esperado_verdadeiro_positivo": "A resposta contém SSTI_CHECK_49 no contexto correspondente à entrada, enquanto a expressão deixa de aparecer literalmente. Isso demonstra avaliação de sintaxe Pug pelo servidor e confirma SSTI, sem necessidade de testar execução de comandos.",
+          "resultado_esperado_falso_positivo": "A resposta preserva SSTI_CHECK_#{7*7} literalmente, ou o valor é rejeitado ou neutralizado antes de poder alterar o template, e a análise do fluxo confirma que todo conteúdo externo permanece apenas como dado devidamente tratado."
+        },
+        {
+          "passo": "Passo 04 - Avaliar o resultado negativo ou positivo em conjunto com os controles existentes, verificando se há escape voltado à sintaxe Pug, validação por lista permitida ou apenas codificação HTML, e repetir a renderização de controle sem sintaxe de template.",
+          "resultado_esperado_verdadeiro_positivo": "A avaliação da expressão é reproduzível somente quando a entrada alcança a compilação, e os controles existentes não impedem que ela se torne código do template. Codificação HTML isolada não elimina a confirmação, pois pode ocorrer depois da avaliação pelo Pug.",
+          "resultado_esperado_falso_positivo": "Não há avaliação de expressões, o controle normal continua funcionando e a revisão completa do fluxo demonstra que entradas externas não são compiladas como código Pug. Um único payload sem efeito, sem alcançabilidade comprovada, não é evidência suficiente de falso positivo."
+        }
+      ]
+    }
+  ]
+}

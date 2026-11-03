@@ -1,0 +1,50 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S6437",
+        "arquivo": "lib/insecurity.ts",
+        "linha": 44,
+        "severidade_sast": "BLOCKER",
+        "regra": "S6437 - Hardcoded credentials/secrets should not be used",
+        "categoria": "Hardcoded Secret / Cryptographic Key Management"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-798 (Use of Hard-coded Credentials) / CWE-321 (Use of Hard-coded Cryptographic Key)",
+        "owasp_top_10": "A02:2021 - Cryptographic Failures",
+        "wstg": "WSTG-CRYP-04 (Testing for Weak Encryption) - nota: as referências fornecidas WSTG-ATHN-02 e WSTG-BUSL-07 não se aplicam diretamente a este cenário de chave hardcoded; são mantidas apenas como contexto de apoio.",
+        "justificativa": "O código-fonte evidencia de forma direta uma string literal ('pa4qacea4VK9t9nGv7yZtwmj') utilizada como chave secreta na função crypto.createHmac('sha256', ...). Isso constitui um segredo criptográfico fixo (hardcoded) embutido no repositório de código, visível a qualquer pessoa com acesso ao código-fonte (incluindo histórico de VCS), o que é considerado comprometido por definição independentemente de uso em produção. Não há necessidade de execução dinâmica para confirmar a presença do padrão vulnerável; a evidência estática é suficiente para confirmar o achado de código, embora o impacto real dependa do uso desse HMAC (ex.: tokens de redefinição de senha, assinatura de cookies, etc.)."
+      },
+      "descricao_tecnica": "A função hmac() em lib/insecurity.ts utiliza uma chave secreta fixa, embutida diretamente no código-fonte ('pa4qacea4VK9t9nGv7yZtwmj'), para gerar um HMAC-SHA256 sobre dados arbitrários. Segredos hardcoded em código versionado são considerados comprometidos assim que o repositório é exposto (público, vazado, ou acessível a ex-colaboradores), pois não podem ser rotacionados sem alteração de código e deploy, e são triviais de extrair por qualquer pessoa com acesso ao repositório, build artifacts ou descompilação do bundle. Se este HMAC for usado para proteger tokens sensíveis (ex.: tokens de redefinição de senha, assinatura de requisições, verificação de integridade de cookies/JWT), um atacante que obtenha a chave pode forjar tokens válidos, resultando em bypass de autenticação, personificação de usuários ou adulteração de dados protegidos pela assinatura.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao repositório de código-fonte (incluindo histórico de commits/VCS) do Juice Shop.",
+        "Permissão para executar análise estática/dinâmica em ambiente de teste autorizado (não produção).",
+        "Identificação de todos os pontos de uso da função hmac() no código para mapear o impacto (ex.: geração/verificação de tokens, cookies, etc.).",
+        "Ambiente de laboratório isolado para testes de geração/forjamento de HMAC sem afetar sistemas produtivos."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 - Confirmar a presença do segredo hardcoded no código-fonte atual e no histórico do VCS",
+          "resultado_esperado_verdadeiro_positivo": "A string 'pa4qacea4VK9t9nGv7yZtwmj' é encontrada como literal na função hmac() em lib/insecurity.ts, confirmando que a chave está embutida no código e potencialmente exposta no histórico git, builds públicos ou pacotes distribuídos.",
+          "resultado_esperado_falso_positivo": "A string identificada não é, de fato, uma chave secreta usada para proteção de dados sensíveis (ex.: é um valor de teste/mock usado apenas em ambiente de desenvolvimento isolado, sem impacto em produção, ou já foi substituída por carregamento via variável de ambiente/segredo gerenciado em versões mais recentes)."
+        },
+        {
+          "passo": "Passo 02 - Mapear todos os usos da função hmac() na aplicação para identificar o que está sendo protegido",
+          "resultado_esperado_verdadeiro_positivo": "A função hmac() é utilizada para gerar/validar tokens sensíveis (ex.: tokens de redefinição de senha, parâmetros de URL assinados, verificação de integridade), confirmando que o comprometimento da chave permite forjar esses artefatos.",
+          "resultado_esperado_falso_positivo": "A função hmac() não é utilizada para nenhum mecanismo de segurança relevante (ex.: usada apenas para fins de cache/hash não sensível), reduzindo o impacto prático do achado."
+        },
+        {
+          "passo": "Passo 03 - Em ambiente de laboratório, reproduzir a geração de um HMAC usando a chave extraída do código e comparar com o HMAC gerado pela aplicação para o mesmo input",
+          "resultado_esperado_verdadeiro_positivo": "O HMAC gerado manualmente com a chave hardcoded extraída do código-fonte é idêntico ao gerado pela aplicação em tempo de execução, confirmando que um atacante com acesso ao código pode forjar valores válidos (ex.: tokens de reset de senha) sem precisar comprometer o servidor.",
+          "resultado_esperado_falso_positivo": "Não foi possível reproduzir o HMAC esperado (ex.: a aplicação usa uma chave diferente carregada de variável de ambiente em runtime, divergente do valor hardcoded no repositório público), indicando que o valor exposto no código não é o efetivamente usado em produção."
+        },
+        {
+          "passo": "Passo 04 - Verificar se existe mecanismo de rotação de chave ou carregamento via gerenciador de segredos (ex.: variáveis de ambiente, vault) substituindo o valor hardcoded",
+          "resultado_esperado_verdadeiro_positivo": "Não há nenhum mecanismo de rotação/sobrescrita; a chave hardcoded é a efetivamente usada em todos os ambientes, inclusive produção, confirmando exposição total e necessidade de revogação/rotação imediata.",
+          "resultado_esperado_falso_positivo": "Existe um mecanismo de override (ex.: process.env.HMAC_SECRET) que substitui o valor hardcoded em ambientes de produção, e o valor do código é apenas um fallback de desenvolvimento documentado como não sensível."
+        }
+      ]
+    }
+  ]
+}

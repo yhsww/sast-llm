@@ -1,0 +1,56 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S6268",
+        "arquivo": "frontend/src/app/about/about.component.ts",
+        "linha": 119,
+        "severidade_sast": "CRITICAL",
+        "regra": "typescript:S6268",
+        "categoria": "Cross-Site Scripting (Unsafe Angular Sanitization Bypass)"
+      },
+      "classificacao": {
+        "veredicto": "verdadeiro_positivo_potencial",
+        "cwe": "CWE-79 (Improper Neutralization of Input During Web Page Generation); related: CWE-644, CWE-83",
+        "owasp_top_10": "A03:2021 - Injection (Cross-Site Scripting)",
+        "wstg": "WSTG-CLNT-01 (DOM-based Cross-Site Scripting); related: WSTG-CLNT-15 (Client-side Template Injection)",
+        "justificativa": "O código chama explicitamente `this.sanitizer.bypassSecurityTrustHtml(feedbacks[i].comment)`, desabilitando a sanitização automática de HTML do Angular para o conteúdo de `comment`. Esse campo corresponde a um comentário de feedback que, em aplicações como o Juice Shop, é tipicamente fornecido por usuários através de um formulário público e armazenado no backend. Se o valor não for validado/sanitizado em nenhuma outra camada (ex.: backend, allowlist de tags) antes de ser renderizado via binding `[innerHTML]` no template, qualquer payload HTML/JS malicioso inserido no campo de comentário será executado no navegador de outros usuários que visualizarem a lista de feedbacks, configurando um XSS persistente (stored XSS). A classificação como potencial verdadeiro positivo decorre do uso direto e sem controles adicionais aparentes de uma API que é documentada pelo próprio Angular como perigosa e só deve ser usada para conteúdo confiável/controlado pela aplicação, nunca para dados de entrada do usuário."
+      },
+      "descricao_tecnica": "O componente `AboutComponent` itera sobre uma lista de feedbacks obtidos presumivelmente de uma API backend e aplica `DomSanitizer.bypassSecurityTrustHtml()` ao campo `comment` de cada item antes de atribuí-lo de volta ao array. Essa função instrui o Angular a tratar a string como HTML seguro, desativando completamente a sanitização automática contra XSS que o framework normalmente aplica em bindings como `[innerHTML]`. Caso o valor de `comment` seja proveniente, direta ou indiretamente, de entrada de usuário (ex.: formulário de envio de feedback) e seja posteriormente renderizado no DOM via `[innerHTML]`, um atacante pode injetar `<script>`, `<img onerror=...>` ou outras tags/atributos maliciosos, resultando em execução de JavaScript arbitrário no contexto da aplicação (roubo de sessão, exfiltração de dados, defacement, etc.). A regra S6268 do SonarQube sinaliza qualquer uso de `bypassSecurityTrustHtml`/`bypassSecurityTrustScript`/etc. como ponto de atenção obrigatório, pois a segurança passa a depender inteiramente da garantia (fora do alcance do Angular) de que o dado é confiável.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso a um ambiente autorizado de teste (ex.: instância local do Juice Shop) com permissão para submeter feedbacks.",
+        "Acesso ao código-fonte completo do componente e do template associado (`about.component.html`) para confirmar como `feedbacks[i].comment` é renderizado (ex.: via `[innerHTML]`).",
+        "Acesso ao endpoint/API de backend responsável por armazenar e retornar os feedbacks, para verificar se há sanitização/validação server-side.",
+        "Ferramenta de interceptação de requisições (ex.: Burp Suite/DevTools) para inspecionar payloads enviados e refletidos.",
+        "Permissão explícita para testes de injeção de payloads não destrutivos (ex.: `<img src=x onerror=alert(1)>`) no ambiente de teste."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Localizar no template (`about.component.html` ou similar) o binding `[innerHTML]=\"feedback.comment\"` (ou equivalente) confirmando que o HTML sanitizado-bypassado é de fato injetado diretamente no DOM.",
+          "resultado_esperado_falso_positivo": "O valor retornado por `bypassSecurityTrustHtml` não é usado em nenhum binding `[innerHTML]`/`[src]`/`[style]` no DOM, sendo apenas armazenado ou usado em contexto que não renderiza HTML ativo (ex.: apenas texto plano ou propriedade não vinculada ao template)."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Submeter um feedback de teste (em ambiente autorizado) contendo um payload não destrutivo como `<img src=x onerror=\"console.log('XSS-POC')\">` e, ao carregar a página de listagem de feedbacks, observar a execução do script no console do navegador.",
+          "resultado_esperado_falso_positivo": "O payload é exibido como texto literal (escapado) na página ou é removido/filtrado antes de ser renderizado, sem execução de script, indicando sanitização efetiva em outra camada (backend ou pipe/validador adicional)."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Revisar o código do backend/API que persiste e retorna os comentários de feedback, confirmando ausência de sanitização de HTML (ex.: sem uso de bibliotecas como DOMPurify, sanitize-html, ou validação de allowlist de tags) antes do envio ao frontend.",
+          "resultado_esperado_falso_positivo": "O backend aplica sanitização robusta de HTML (allowlist estrita de tags/atributos) ou rejeita caracteres especiais/tags antes de persistir o comentário, reduzindo a superfície de exploração mesmo com o bypass no frontend."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Testar múltiplos vetores de payload HTML/JS (ex.: `<svg onload=...>`, `javascript:` URIs em atributos) para confirmar que diferentes técnicas de injeção são aceitas e executadas, evidenciando ausência de qualquer filtro.",
+          "resultado_esperado_falso_positivo": "Apenas tags/atributos específicos são bloqueados por uma allowlist documentada e seu propósito é exibir formatação legítima (ex.: negrito/itálico) controlada por um editor WYSIWYG com parser seguro, e tentativas de injeção de script são consistentemente neutralizadas."
+        },
+        {
+          "passo": "Passo 05",
+          "resultado_esperado_verdadeiro_positivo": "Confirmar impacto registrando que o script injetado é executado no contexto de sessão de outro usuário (ex.: acesso a `document.cookie`, tokens em localStorage, ou chamadas autenticadas à API), caracterizando XSS persistente explorável.",
+          "resultado_esperado_falso_positivo": "Mesmo com execução de script, não há acesso a dados sensíveis de sessão (ex.: aplicação não usa cookies/tokens acessíveis via JS, ou CSP robusta bloqueia exfiltração), reduzindo criticidade prática do achado, embora o uso da API insegura ainda deva ser corrigido como boa prática."
+        }
+      ]
+    }
+  ]
+}

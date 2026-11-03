@@ -1,0 +1,50 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S1523",
+        "arquivo": "routes/b2bOrder.ts",
+        "linha": 23,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S1523",
+        "categoria": "Code Injection / Insecure Dynamic Code Execution"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-95 (Improper Neutralization of Directives in Dynamically Evaluated Code - Eval Injection); related: CWE-1321, CWE-430",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-18 (Server-side Template Injection) - analogous risk pattern for dynamic code evaluation",
+        "justificativa": "O código utiliza vm.runInContext para executar 'safeEval(orderLinesData)' dentro de um sandbox do Node.js VM module, onde orderLinesData aparenta ser derivado de entrada de usuário (dados de pedido B2B). Embora o uso de uma sandbox (vm module) e um timeout mitiguem parcialmente o risco, o módulo 'vm' do Node.js é conhecido por não ser uma sandbox de segurança completa e possui bypasses documentados (prototype pollution, acesso a globals, etc.), especialmente quando combinado com funções como 'safeEval' de bibliotecas como 'notevil' que já tiveram CVEs de bypass. A necessidade de confirmar a origem exata de orderLinesData (se é diretamente controlável pelo usuário) é essencial para validar exploração completa, mas o padrão de código já configura uma superfície de ataque de injeção de código dinâmico."
+      },
+      "descricao_tecnica": "A linha identificada invoca vm.runInContext, que executa a string 'safeEval(orderLinesData)' dentro de um contexto de sandbox criado via Node.js 'vm' module, com um timeout de 2000ms. Isso configura execução dinâmica de código (eval-like) sobre dados de entrada (orderLinesData), que presumivelmente são originados do corpo de uma requisição HTTP relacionada a pedidos B2B. O uso do módulo 'vm' para isolar código não confiável é uma prática arriscada, pois é amplamente documentado que o 'vm' module do Node.js não fornece isolamento de segurança robusto contra código malicioso, permitindo em certos cenários escape de sandbox via manipulação de protótipos de objetos (prototype pollution) ou acesso a objetos globais do processo Node.js hospedeiro. Além disso, dependendo da implementação de 'safeEval', podem existir funções remanescentes (ex.: Function constructor, require, process) acessíveis dentro do sandbox, permitindo RCE (Remote Code Execution) completo no servidor.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte completo do arquivo routes/b2bOrder.ts para analisar como orderLinesData é obtido (ex.: req.body, req.params) e se passa por alguma validação/sanitização antes de chegar à linha 23.",
+        "Identificar a implementação e origem da função/lib 'safeEval' (ex.: pacote npm 'notevil' ou implementação customizada) e verificar se há CVEs conhecidos de bypass para a versão utilizada.",
+        "Ambiente de teste autorizado (staging/dev) com a aplicação Juice Shop em execução, sem impacto em produção.",
+        "Permissão explícita para realizar testes de injeção de payloads controlados (non-destructive PoC) no endpoint relacionado a b2bOrder."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Revisão do código-fonte confirma que orderLinesData é derivado diretamente (ou com transformação mínima) de um campo controlável pelo cliente, como req.body.orderLinesData, sem validação de schema nem allowlist de operações permitidas, confirmando a superfície de injeção.",
+          "resultado_esperado_falso_positivo": "orderLinesData é um valor fixo, gerado internamente pelo servidor, ou passa por validação estrita de schema/tipo que impede a inserção de expressões arbitrárias antes de alcançar o sandbox."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Ao identificar o endpoint que invoca este fluxo (ex.: POST /b2b/v2/orders), envio de um payload JSON controlado contendo uma expressão JavaScript válida (ex.: um array/objeto que, ao ser avaliado por safeEval, produz um resultado observável, como um cálculo aritmético simples) resulta em comportamento que indica a expressão foi avaliada dinamicamente pelo servidor (ex.: resposta HTTP contendo o resultado computado ou alteração de comportamento observável), confirmando execução de código arbitrário controlado pelo atacante.",
+          "resultado_esperado_falso_positivo": "O endpoint rejeita o payload com erro de validação de schema/tipo antes de chegar à função vulnerável, ou o valor é tratado apenas como dado estruturado sem avaliação de expressões, sem produzir qualquer efeito de execução dinâmica observável."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Teste controlado de escape de sandbox (ex.: tentativa de acessar 'this.constructor.constructor(\"return process\")()' ou vetores conhecidos de prototype pollution contra o módulo 'vm'/'safeEval' utilizado) demonstra, em ambiente de teste isolado, acesso a objetos/módulos fora do escopo do sandbox (como 'process' ou 'require'), confirmando potencial de Remote Code Execution (RCE) no servidor.",
+          "resultado_esperado_falso_positivo": "Tentativas de escape de sandbox são bloqueadas pelo timeout de 2000ms, por restrições do contexto vm (ex.: sandbox congelado com Object.freeze, ausência de referências a 'process'/'require'/'global'), ou pela implementação robusta de safeEval que não expõe funções perigosas, indicando mitigação efetiva apesar do padrão de código arriscado."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Verificação da versão/implementação de 'safeEval' confirma uso de biblioteca com vulnerabilidades conhecidas (CVE) de bypass de sandbox, reforçando a classificação como verdadeiro positivo mesmo que a exploração completa dependa de técnica específica adicional.",
+          "resultado_esperado_falso_positivo": "A biblioteca/implementação de 'safeEval' está atualizada, sem CVEs conhecidos aplicáveis, e implementa controles adicionais (allowlist de operadores, ausência de acesso a construtores) que reduzem significativamente a superfície de exploração, sugerindo que o achado é um falso positivo ou risco teórico de baixa severidade prática."
+        }
+      ]
+    }
+  ]
+}

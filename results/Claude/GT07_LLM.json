@@ -1,0 +1,50 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S2068",
+        "arquivo": "frontend/src/app/login/login.component.ts",
+        "linha": 61,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S2068",
+        "categoria": "Hard-coded Credentials / Insecure Configuration"
+      },
+      "classificacao": {
+        "veredicto": "Falso Positivo (provável)",
+        "cwe": "CWE-798 (Use of Hard-coded Credentials) / CWE-259 (referenciado como CWE-258/CWE-592 no achado original)",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-ATHN-02, WSTG-ATHN-07",
+        "justificativa": "A variável 'testingPassword' é uma string estática no componente de login, o que ativa a regra genérica S2068 de detecção de senhas hard-coded. No entanto, o nome da variável ('testingPassword') e o contexto (arquivo de componente Angular de login do projeto OWASP Juice Shop, uma aplicação propositalmente vulnerável usada para fins de treinamento/teste) sugerem fortemente que se trata de um valor utilitário usado em testes automatizados (e2e/unitários) e não de uma credencial real usada para autenticar um usuário privilegiado em produção. Não há evidência no snippet de que esse valor seja enviado a um endpoint de autenticação real ou que corresponda a uma conta válida no backend. É necessária verificação adicional do uso da variável no restante do arquivo e nos testes do projeto para confirmar definitivamente."
+      },
+      "descricao_tecnica": "A regra S2068 do SonarQube identifica a declaração de uma string literal atribuída a uma variável cujo nome contém o termo 'password', o que pode indicar uma credencial hard-coded no código-fonte. Credenciais hard-coded representam risco quando usadas para autenticação real, pois podem ser extraídas do código-fonte (incluindo bundles JS do frontend, que são totalmente visíveis ao cliente) e usadas por um atacante para acessar contas ou funcionalidades privilegiadas. No caso em análise, a variável está em um componente de frontend Angular, cujo código é sempre exposto ao cliente após o build, portanto qualquer segredo real colocado ali já seria trivialmente obtido por um atacante inspecionando o bundle JS.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte completo do arquivo frontend/src/app/login/login.component.ts e de seus testes associados (login.component.spec.ts)",
+        "Acesso ao repositório do projeto Juice Shop para busca por outras referências a 'testingPassword'",
+        "Ambiente de build/execução do Juice Shop disponível para inspeção do bundle JS gerado (opcional, não destrutivo)",
+        "Permissão para realizar testes de login autorizados no ambiente de teste do Juice Shop"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Buscar todas as ocorrências da variável 'testingPassword' no código-fonte (grep/ripgrep) para identificar onde e como ela é utilizada (ex.: em chamadas de API de login, em testes e2e, em mocks)",
+          "resultado_esperado_verdadeiro_positivo": "A variável é utilizada para autenticar um usuário real contra o backend (ex.: enviada no corpo de uma requisição POST /rest/user/login) e corresponde a uma conta válida com privilégios (ex.: admin), confirmando uso de credencial hard-coded explorável.",
+          "resultado_esperado_falso_positivo": "A variável é utilizada exclusivamente em arquivos de teste (*.spec.ts) ou como placeholder/fixture para preenchimento de formulário em testes automatizados, sem corresponder a uma conta real no backend."
+        },
+        {
+          "passo": "Passo 02: Verificar se o valor 'IamUsedForTesting' corresponde à senha de alguma conta real cadastrada no backend do Juice Shop (ex.: banco de dados seed, arquivo de usuários padrão)",
+          "resultado_esperado_verdadeiro_positivo": "O valor coincide com a senha de uma conta ativa documentada no backend, permitindo login bem-sucedido e acesso não autorizado a funcionalidades da conta.",
+          "resultado_esperado_falso_positivo": "O valor não corresponde a nenhuma credencial válida cadastrada; tentativa de login com esse valor (em ambiente de teste autorizado) falha ou não concede acesso a nenhum recurso sensível."
+        },
+        {
+          "passo": "Passo 03: Inspecionar o bundle JavaScript final gerado pelo build do frontend (ambiente de teste, não produção) para confirmar que a string permanece exposta no cliente, reforçando a análise de risco caso seja uma credencial real",
+          "resultado_esperado_verdadeiro_positivo": "A string é encontrada em claro no bundle JS publicado, confirmando exposição pública de uma credencial real usada em autenticação.",
+          "resultado_esperado_falso_positivo": "A string está presente no bundle, mas não é usada em nenhum fluxo de autenticação real, sendo apenas um artefato de teste sem valor de segurança para um atacante."
+        },
+        {
+          "passo": "Passo 04: Revisar o histórico de commits/documentação do projeto (CHANGELOG, issues) para confirmar a finalidade declarada da variável 'testingPassword'",
+          "resultado_esperado_verdadeiro_positivo": "Não há documentação indicando propósito de teste; a variável foi introduzida como parte de lógica de autenticação de produção.",
+          "resultado_esperado_falso_positivo": "Documentação/commits confirmam que a variável foi criada especificamente para suportar testes automatizados (e2e/Protractor/Cypress) do fluxo de login, sem relação com contas de produção."
+        }
+      ]
+    }
+  ]
+}

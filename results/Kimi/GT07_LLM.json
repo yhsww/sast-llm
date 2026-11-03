@@ -1,0 +1,45 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S2068",
+        "arquivo": "juice-shop:frontend/src/app/login/login.component.ts",
+        "linha": 61,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S2068",
+        "categoria": "Credenciais embutidas no código-fonte"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro positivo quanto à presença de senha hard-coded; impacto de autenticação a verificar",
+        "cwe": "CWE-798 - Use of Hard-coded Credentials",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-ATHN-02 - Testing for Default Credentials; WSTG-ATHN-07 como contexto secundário caso a credencial seja efetivamente utilizada",
+        "justificativa": "O trecho contém uma string fixa e não vazia atribuída diretamente ao campo público testingPassword, confirmando o padrão de credencial embutida no código. Se esse campo for incluído no bundle do frontend, seu valor poderá ser recuperado por qualquer usuário. Entretanto, a declaração isolada não comprova que exista uma conta válida, que o valor seja usado em autenticação ou que haja bypass. Caso seja apenas um valor fictício de teste, sem uso ou distribuição, o risco explorável não se confirma. CWE-258 não se aplica porque a senha não está vazia, e CWE-592 está depreciada e não é necessária para classificar este achado."
+      },
+      "descricao_tecnica": "Na linha 61, o componente de login declara public testingPassword = 'IamUsedForTesting'. Credenciais literais em código de frontend não oferecem confidencialidade quando chegam ao navegador, além de exigirem alteração e nova distribuição do código para rotação. A verificação deve distinguir a existência do literal, já evidenciada pelo SAST, da sua efetiva utilização em autenticação, provisionamento de contas ou testes automatizados e da exposição no artefato implantado.",
+      "pre_condicoes_para_verificacao": [
+        "Dispor de autorização para analisar o código, os artefatos de build e o ambiente de teste correspondentes à versão analisada pelo SonarQube.",
+        "Utilizar ambiente isolado, sem contas ou dados reais, e obter do responsável pela aplicação a identificação de qualquer conta exclusiva de teste.",
+        "Ter acesso de leitura aos usos de testingPassword e testingUsername, às configurações de build e, quando necessário, aos logs de autenticação do ambiente autorizado.",
+        "Não realizar força bruta, pulverização de senhas ou tentativas contra contas de terceiros."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 - Inspecionar estaticamente a declaração e pesquisar todas as referências a testingPassword e testingUsername, incluindo testes, inicialização de dados, serviços de autenticação e configurações de build.",
+          "resultado_esperado_verdadeiro_positivo": "O literal permanece no código e é referenciado por um fluxo de autenticação, criação de conta, seed de dados ou automação que dependa dessa senha fixa; registra-se o caminho de uso sem alterar o sistema.",
+          "resultado_esperado_falso_positivo": "O valor é um dummy isolado, não é referenciado por nenhum fluxo executável ou de provisionamento e não representa credencial real; nesse caso, o risco de autenticação não se confirma, embora o padrão textual detectado pelo SAST exista."
+        },
+        {
+          "passo": "Passo 02 - Examinar, em ambiente autorizado, os arquivos JavaScript efetivamente servidos pelo frontend e os artefatos de build, verificando se a string ou seu valor equivalente é distribuído ao navegador.",
+          "resultado_esperado_verdadeiro_positivo": "A senha fixa é recuperável no bundle, em source map publicado ou em outro recurso entregue ao cliente, confirmando exposição pública do valor e impossibilidade de tratá-lo como segredo.",
+          "resultado_esperado_falso_positivo": "O campo é removido por tree shaking ou pertence exclusivamente a código de teste não implantado, e o valor não aparece em nenhum artefato acessível; não há exposição no frontend nessa versão."
+        },
+        {
+          "passo": "Passo 03 - Somente se a análise estática associar o valor a uma conta exclusiva de teste, executar uma única tentativa controlada de autenticação nesse ambiente e correlacionar o resultado com os logs, sem testar outras contas ou senhas.",
+          "resultado_esperado_verdadeiro_positivo": "A credencial fixa é aceita e permite assumir a identidade da conta de teste, confirmando impacto de autenticação; o teste é encerrado imediatamente após registrar o resultado, sem acessar ou modificar dados.",
+          "resultado_esperado_falso_positivo": "Não existe conta de teste associada ou a autenticação não é aceita, e não há outro fluxo que utilize a senha; não se confirma acesso indevido, devendo o achado ser tratado como exposição sem exploração demonstrada ou como achado sem impacto se também estiver ausente do build."
+        }
+      ]
+    }
+  ]
+}

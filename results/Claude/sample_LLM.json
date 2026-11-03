@@ -1,0 +1,132 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "java:S3649",
+        "arquivo": "src/main/java/com/example/app/repository/UserRepository.java",
+        "linha": 47,
+        "severidade_sast": "CRITICAL",
+        "regra": "java:S3649",
+        "categoria": "SQL Injection"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-89 (Improper Neutralization of Special Elements used in an SQL Command)",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-05 (SQL Injection)",
+        "justificativa": "O trecho de código evidenciado concatena diretamente a variável 'username' na construção da query SQL ('SELECT * FROM users WHERE username = '' + username + ...'), sem uso de prepared statements, parameterized queries ou sanitização. Esse padrão é o caso clássico de SQL Injection (CWE-89). As referências CWE-566/CWE-564 fornecidas são variantes relacionadas (chave primária controlada pelo usuário / Hibernate), mas o código mostrado é uma concatenação SQL genérica via JDBC/String, portanto CWE-89 é a classificação primária mais precisa."
+      },
+      "descricao_tecnica": "O método em UserRepository.java constrói uma instrução SQL via concatenação de string com um parâmetro de entrada (username) potencialmente controlado pelo usuário, permitindo que um atacante injete metacaracteres SQL (ex. ' OR '1'='1) para alterar a lógica da consulta, extrair dados não autorizados, contornar autenticação ou manipular registros no banco de dados.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte completo do método para confirmar a origem do parâmetro 'username' (se vem de entrada HTTP, API, etc.)",
+        "Ambiente de teste autorizado com banco de dados de testes isolado (não produção)",
+        "Ferramenta de interceptação de requisições (ex. Burp Suite/OWASP ZAP) ou acesso a cliente de API/Postman",
+        "Permissão formal para realizar testes de SQL Injection no ambiente"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Revisão do código confirma que 'username' é recebido diretamente de input externo (request parameter/body) sem validação, e é concatenado na query sem uso de PreparedStatement/binding.",
+          "resultado_esperado_falso_positivo": "O valor 'username' é um valor fixo, interno, gerado pelo próprio sistema (não controlado por usuário externo) ou já passa por validação allowlist rígida antes de chegar a este ponto."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Em ambiente de teste, submeter um payload como username = \"' OR '1'='1\" através do endpoint que invoca este método resulta em retorno de múltiplos registros de usuários (bypass da condição WHERE), confirmando a injeção.",
+          "resultado_esperado_falso_positivo": "O payload é bloqueado/escapado antes de atingir o método (ex. por WAF, filtro de entrada, ou uso oculto de PreparedStatement em camada não visível no snippet), e a consulta retorna resultado vazio/erro controlado sem alterar a lógica da query."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Análise do restante da classe UserRepository.java confirma ausência de qualquer mecanismo de parametrização (PreparedStatement, NamedParameterJdbcTemplate, Hibernate Criteria/HQL parametrizado) em toda a cadeia de execução dessa query.",
+          "resultado_esperado_falso_positivo": "Identifica-se que a string 'sql' construída é posteriormente usada apenas como parte de um PreparedStatement com placeholders reais (a concatenação é apenas para fins de log/debug), não sendo a query efetivamente executada contra o banco dessa forma."
+        }
+      ]
+    },
+    {
+      "identificacao": {
+        "id_sonarqube": "java:S5131",
+        "arquivo": "src/main/java/com/example/app/controller/CommentController.java",
+        "linha": 83,
+        "severidade_sast": "CRITICAL",
+        "regra": "java:S5131",
+        "categoria": "Cross-Site Scripting (XSS)"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-79 (Improper Neutralization of Input During Web Page Generation)",
+        "owasp_top_10": "A03:2021 - Injection (XSS)",
+        "wstg": "WSTG-INPV-02 (Stored Cross Site Scripting)",
+        "justificativa": "O código concatena diretamente as variáveis 'authorName' e 'content' dentro de uma string HTML retornada na resposta, sem qualquer função de encoding/escaping (ex. HTML entity encoding) ou uso de bibliotecas de sanitização (ex. OWASP Java Encoder, ESAPI). Se esses valores forem originados de input de usuário (comentários/respostas), trata-se de XSS armazenado clássico (CWE-79), associado à referência CWE-80 (Basic XSS) e potencialmente CWE-83 se atributos forem manipuláveis."
+      },
+      "descricao_tecnica": "O método em CommentController.java monta uma resposta HTML via concatenação direta das variáveis 'authorName' e 'content', que aparentam ser dados de usuário armazenados (nome do autor e conteúdo de um comentário/resposta). A ausência de sanitização ou encoding permite que um atacante injete tags/scripts maliciosos (ex. <script>) que serão executados no navegador de outros usuários que visualizarem o conteúdo, caracterizando uma vulnerabilidade de Stored XSS.",
+      "pre_condicoes_para_verificacao": [
+        "Confirmar a origem de 'authorName' e 'content' (se provêm de input de usuário via formulário/API) analisando o restante do controller e camada de persistência",
+        "Ambiente de teste autorizado com possibilidade de criar/editar comentários através da aplicação",
+        "Navegador para inspeção do DOM renderizado e verificação de execução de script",
+        "Permissão para inserir payloads de teste não destrutivos (ex. payloads de alerta JS) no ambiente de teste"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Confirma-se no código que 'authorName' e 'content' são atribuídos a partir de parâmetros de requisição HTTP ou de registros de banco de dados alimentados por entrada de usuário, sem qualquer sanitização prévia (ex. Jsoup.clean, ESAPI.encoder()).",
+          "resultado_esperado_falso_positivo": "'authorName' e 'content' são valores fixos/controlados internamente pela aplicação (não originados de input externo) ou já passam por sanitização/encoding em uma camada anterior (ex. ao serem persistidos ou ao serem lidos)."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Em ambiente de teste, submeter um comentário com content = \"<script>alert('XSS-test')</script>\" e, ao visualizar a página renderizada, o script é executado no navegador (alerta exibido), confirmando a injeção.",
+          "resultado_esperado_falso_positivo": "O payload é exibido como texto literal (ex. &lt;script&gt;) na página, indicando que houve encoding adequado em alguma camada (ex. template engine com auto-escaping) não visível apenas neste snippet."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Inspeção do HTML de resposta via ferramenta de proxy (Burp/ZAP) confirma que os caracteres especiais ('<', '>', '\"', '&') do payload são refletidos sem transformação na resposta HTTP.",
+          "resultado_esperado_falso_positivo": "A resposta HTTP real (via proxy) mostra os caracteres especiais devidamente codificados (&lt;, &gt;, etc.), indicando mecanismo de proteção ativo não evidenciado no trecho estático de código analisado."
+        }
+      ]
+    },
+    {
+      "identificacao": {
+        "id_sonarqube": "java:S2068",
+        "arquivo": "src/main/java/com/example/app/config/DatabaseConfig.java",
+        "linha": 22,
+        "severidade_sast": "BLOCKER",
+        "regra": "java:S2068",
+        "categoria": "Hard-coded Credentials"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-798 (Use of Hard-coded Credentials)",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-CONF-05 (Enumerate Infrastructure and Application Admin Interfaces) / WSTG-ATHN-07 (Weak Authentication Methods)",
+        "justificativa": "A constante 'DB_PASSWORD' contém uma senha em texto plano diretamente embutida no código-fonte compilado ('Pr0d@dm1n#2024!'), o que é uma instância direta de CWE-798 (Use of Hard-coded Credentials), uma vez que qualquer pessoa com acesso ao código-fonte, bytecode (via decompilação) ou repositório de versionamento pode extrair a credencial. As referências fornecidas (CWE-555, CWE-549) tratam de temas adjacentes (configuração J2EE e mascaramento de campos de senha em UI), mas não capturam com precisão o problema central, que é a presença de uma senha estática embutida no binário/fonte da aplicação."
+      },
+      "descricao_tecnica": "A classe DatabaseConfig.java define uma constante estática final 'DB_PASSWORD' com uma senha de produção em texto plano embutida diretamente no código Java. Isso expõe a credencial a qualquer pessoa com acesso ao repositório de código, ao artefato compilado (via decompilação de .class/.jar) ou a sistemas de controle de versão (histórico de commits), permitindo acesso não autorizado ao banco de dados caso a credencial seja válida em ambiente real.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao repositório de código-fonte e histórico de commits (git log/git blame) para verificar se a credencial já foi exposta publicamente ou em branches anteriores",
+        "Confirmar com a equipe responsável se esta credencial ('Pr0d@dm1n#2024!') está atualmente ativa em algum ambiente (produção/homologação)",
+        "Acesso a ferramentas de varredura de segredos (ex. TruffleHog, GitLeaks, Gitrob) para análise do repositório",
+        "Ambiente de teste autorizado para eventual tentativa de uso da credencial (sem causar impacto em produção)"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Confirma-se, via leitura direta do arquivo DatabaseConfig.java, que a senha está hard-coded como literal de string na constante DB_PASSWORD, sem uso de variáveis de ambiente, cofre de segredos (Vault/KMS/Secrets Manager) ou arquivo de configuração externo criptografado.",
+          "resultado_esperado_falso_positivo": "O valor apresentado é um placeholder/exemplo de documentação, dado de teste/mock usado exclusivamente em ambiente de desenvolvimento local isolado, sem relação com credenciais reais de produção."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Verificação junto à equipe de infraestrutura/DBA confirma que a senha 'Pr0d@dm1n#2024!' corresponde (ou correspondeu) a uma credencial real e válida de acesso ao banco de dados de produção.",
+          "resultado_esperado_falso_positivo": "A equipe confirma que a credencial é fictícia, já foi revogada/rotacionada há muito tempo e não concede mais acesso a nenhum sistema real."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Busca no histórico do repositório (git log -p / ferramentas de secret scanning) mostra que essa credencial está presente em commits anteriores e pode ser facilmente recuperada mesmo após remoção do código atual, configurando exposição persistente.",
+          "resultado_esperado_falso_positivo": "O arquivo nunca foi versionado publicamente (ex. está em repositório privado com controle de acesso rígido) e a senha será rotacionada imediatamente como parte do processo de remediação, mitigando o risco de exposição contínua."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Build/artefato compilado (JAR/WAR) da aplicação é decompilado e a string da senha é extraída com sucesso em texto plano, demonstrando exposição mesmo sem acesso ao código-fonte.",
+          "resultado_esperado_falso_positivo": "Não aplicável/Não foi possível reproduzir devido a ofuscação de bytecode ou a senha ser substituída dinamicamente em tempo de build por um valor de ambiente antes da compilação final (necessita confirmação do pipeline de CI/CD)."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S7790",
+        "arquivo": "routes/userProfile.ts",
+        "linha": 87,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S7790",
+        "categoria": "Server-Side Template Injection (SSTI) / Improper Neutralization of Special Elements in Template Engine"
+      },
+      "classificacao": {
+        "veredicto": "verdadeiro_positivo_provavel",
+        "cwe": "CWE-1336",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-18",
+        "justificativa": "O código invoca pug.compile(template) com uma variável 'template' cuja origem não é mostrada no trecho, mas é um padrão de uso sensível amplamente conhecido no projeto OWASP Juice Shop, onde o template de perfil de usuário é construído dinamicamente a partir de entrada controlada pelo usuário (ex.: nome ou campo de perfil), permitindo injeção de expressões Pug e execução arbitrária de código no servidor (SSTI). A regra do SonarQube aponta corretamente para um sink perigoso (compilação dinâmica de template), mas a confirmação definitiva requer validar se 'template' é, de fato, alimentado por entrada não sanitizada do usuário antes de chegar a esta linha."
+      },
+      "descricao_tecnica": "A linha identificada compila dinamicamente uma string em um template Pug usando pug.compile(template). Se a variável 'template' incorporar, total ou parcialmente, dados fornecidos pelo usuário (por exemplo, um campo de perfil, nome, bio, ou qualquer input de formulário) sem sanitização ou uso de allowlist, um atacante pode injetar sintaxe de template Pug (ex.: '#{ global.process.mainModule.require(\"child_process\").execSync(\"id\") }') que será executada no contexto do servidor durante a renderização, resultando em Server-Side Template Injection (SSTI) e potencial Remote Code Execution (RCE). Esta classe de vulnerabilidade é conhecida e documentada no projeto OWASP Juice Shop como um desafio intencional relacionado ao endpoint de atualização de perfil de usuário.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte completo do arquivo routes/userProfile.ts para rastrear a origem da variável 'template' (verificar se vem de req.body, req.query, banco de dados alimentado por usuário, etc.)",
+        "Ambiente de teste autorizado com uma instância do Juice Shop em execução (local ou staging), sem impacto em produção",
+        "Conta de usuário válida (ou fluxo de registro) para acessar a funcionalidade de atualização de perfil",
+        "Permissão explícita para realizar testes de injeção não destrutivos neste ambiente"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Revisão do código-fonte confirma que a variável 'template' é construída concatenando ou interpolando diretamente um valor de entrada do usuário (ex.: campo de perfil, nome) sem sanitização, antes de ser passada para pug.compile().",
+          "resultado_esperado_falso_positivo": "A variável 'template' é um template estático, hardcoded, ou carregado de um arquivo de confiança do sistema de arquivos sem influência do usuário, não havendo caminho de dados do usuário até pug.compile()."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Identificar o endpoint HTTP associado (ex.: rota de atualização de perfil de usuário) que aceita o parâmetro vulnerável e documentar o fluxo de dados desde a requisição HTTP até a chamada de pug.compile(template).",
+          "resultado_esperado_falso_positivo": "Não é possível localizar nenhum endpoint que permita ao usuário influenciar o conteúdo de 'template'; a funcionalidade está desabilitada, removida ou inacessível externamente."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Em ambiente de teste autorizado, submeter um payload de teste não destrutivo de detecção de SSTI (ex.: um valor contendo sintaxe de interpolação Pug como '#{1+1}') no campo identificado e observar se o valor '2' é refletido na resposta renderizada, confirmando a execução da expressão no motor de template.",
+          "resultado_esperado_falso_positivo": "O payload de teste é refletido literalmente como texto (sem interpolação) na resposta, ou a aplicação rejeita/sanitiza caracteres especiais de template (ex.: '#', '{', '}'), indicando que a entrada não alcança pug.compile() sem tratamento."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Confirmada a interpolação no Passo 03, validar com a equipe de desenvolvimento/segurança se há mitigação planejada (ex.: uso de pug.render com dados separados do template, allowlist, ou desabilitação de compilação dinâmica), documentando o risco de RCE para priorização de correção.",
+          "resultado_esperado_falso_positivo": "Não aplicável — caso os passos anteriores já tenham indicado ausência de caminho de exploração, encerrar o caso como falso positivo e registrar a justificativa técnica (ex.: template estático ou sanitização adequada confirmada no código)."
+        }
+      ]
+    }
+  ]
+}

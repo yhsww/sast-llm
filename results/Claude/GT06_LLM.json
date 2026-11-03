@@ -1,0 +1,50 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S5122",
+        "arquivo": "server.ts",
+        "linha": 182,
+        "severidade_sast": "MINOR",
+        "regra": "typescript:S5122",
+        "categoria": "Security Misconfiguration / CORS"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo (configuração) - requer confirmação de contexto/impacto",
+        "cwe": "CWE-942",
+        "owasp_top_10": "A05:2021 - Security Misconfiguration",
+        "wstg": "WSTG-CLNT-07",
+        "justificativa": "O código invoca app.use(cors()) sem nenhuma configuração de 'origin', o que faz com que a biblioteca cors (Express) reflita/permita qualquer origem por padrão (Access-Control-Allow-Origin: *), ou, dependendo da versão/config, reflita o header Origin recebido. Isso é um achado real de configuração insegura de CORS presente no código-fonte, confirmando a existência do padrão vulnerável identificado pela regra S5122. No entanto, a severidade real do risco (ex.: exposição de dados sensíveis autenticados via CORS) depende de quais endpoints são expostos, se cookies/credenciais são usados em conjunto com 'credentials: true', e se dados sensíveis trafegam por essas rotas — fatores que devem ser validados dinamicamente antes de classificar o impacto final. As referências a CWE-97 e CWE-592 fornecidas não se aplicam diretamente a este achado (SSI Injection e Auth Bypass deprecado, respectivamente); o CWE correto para CORS mal configurado é CWE-942 (Permissive Cross-domain Policy with Untrusted Domains)."
+      },
+      "descricao_tecnica": "A aplicação Juice Shop habilita CORS globalmente através do middleware 'cors()' do Express sem especificar uma lista de origens permitidas (allowlist) nem restringir métodos/headers. Por padrão, o pacote 'cors' sem opções define Access-Control-Allow-Origin como '*', permitindo que qualquer origem faça requisições cross-origin para a API. Se endpoints sensíveis (ex.: dados de usuário autenticado) estiverem acessíveis e a aplicação também habilitar 'credentials: true' em algum lugar, isso pode levar a vazamento de dados sensíveis para domínios não confiáveis. Mesmo sem credentials, uma política CORS totalmente aberta amplia a superfície de ataque para abuso de API pública por terceiros não autorizados.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte completo do server.ts e demais arquivos de configuração de middleware para confirmar se há configuração adicional de CORS em outro ponto (ex.: whitelist de origin) que sobrescreva o comportamento padrão.",
+        "Ambiente de teste autorizado (dev/staging) com a aplicação Juice Shop em execução.",
+        "Ferramenta de interceptação HTTP (Burp Suite, ZAP, curl) para inspecionar cabeçalhos de resposta.",
+        "Conhecimento de quais endpoints da API expõem dados sensíveis ou requerem autenticação."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Ao enviar uma requisição HTTP para qualquer endpoint da API incluindo um header 'Origin: https://attacker-domain.test', a resposta contém 'Access-Control-Allow-Origin: *' ou reflete exatamente o valor arbitrário do Origin enviado, confirmando que a política CORS aceita qualquer origem.",
+          "resultado_esperado_falso_positivo": "A resposta não inclui o header Access-Control-Allow-Origin, ou o valor retornado é restrito a uma lista fixa de domínios confiáveis (allowlist), indicando que há configuração adicional de CORS em outro trecho do código que mitiga o comportamento padrão aberto."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Repetir o teste em um endpoint que retorna dados de usuário autenticado (ex.: /rest/user/whoami ou similar) usando uma origem arbitrária; se o header 'Access-Control-Allow-Credentials: true' também estiver presente junto com uma origem refletida (não '*'), confirma-se um cenário de alto risco onde um site malicioso pode ler dados autenticados da vítima via CORS.",
+          "resultado_esperado_falso_positivo": "O endpoint sensível não retorna Access-Control-Allow-Credentials: true, ou exige autenticação adicional que não pode ser satisfeita cross-origin sem cookies compartilhados, reduzindo o impacto prático do CORS aberto."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Busca no restante do código-fonte (grep por 'cors(' e por arquivos de configuração) não revela nenhuma restrição adicional de 'origin' aplicada antes ou depois da linha 182, confirmando que app.use(cors()) é a única e definitiva configuração de CORS da aplicação, em conformidade com o padrão inseguro detectado pela regra S5122.",
+          "resultado_esperado_falso_positivo": "É encontrada configuração adicional de CORS (ex.: middleware customizado, variável de ambiente controlando origin, ou override em rota específica) que restringe adequadamente as origens permitidas, tornando o achado um falso positivo ou um risco mitigado/aceito."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Validar com a equipe de produto/segurança se a API é intencionalmente pública (ex.: API aberta para integrações de terceiros sem dados sensíveis), documentando a decisão; caso contrário, confirma-se a necessidade de corrigir a configuração para usar uma allowlist de origens confiáveis.",
+          "resultado_esperado_falso_positivo": "A equipe confirma formalmente que a API é pública por design e não expõe dados sensíveis nem opera com credenciais, sendo o uso de CORS aberto uma decisão de arquitetura aceita e documentada (risco aceito, não uma vulnerabilidade)."
+        }
+      ]
+    }
+  ]
+}

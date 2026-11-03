@@ -1,0 +1,51 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "typescript:S5122",
+        "arquivo": "juice-shop:server.ts",
+        "linha": 182,
+        "severidade_sast": "MINOR",
+        "regra": "typescript:S5122",
+        "categoria": "Configuração de segurança - CORS"
+      },
+      "classificacao": {
+        "veredicto": "Necessita verificação - configuração permissiva evidente, mas impacto de segurança não confirmado",
+        "cwe": "CWE-942 - Permissive Cross-domain Policy with Untrusted Domains",
+        "owasp_top_10": "A05:2021 - Security Misconfiguration; A01:2021 somente se for demonstrado acesso indevido a recursos protegidos",
+        "wstg": "WSTG-CLNT-07 - Cross Origin Resource Sharing; WSTG-APIT-04 não é diretamente aplicável sem uma falha independente de autorização em nível de função",
+        "justificativa": "O trecho app.use(cors()) evidencia a ativação do middleware CORS sem uma allowlist explícita de origens. No pacote cors para Express, a configuração padrão utiliza Access-Control-Allow-Origin: * e não habilita credenciais por padrão. Isso confirma uma política potencialmente permissiva, mas não demonstra, isoladamente, exposição de dados sensíveis, bypass de autenticação ou BFLA. CWE-97 e CWE-592, fornecidas como contexto, não descrevem adequadamente esse comportamento. A classificação final depende da configuração efetiva, do escopo das rotas e da sensibilidade das respostas acessíveis."
+      },
+      "descricao_tecnica": "Quando aplicado globalmente com app.use, o middleware pode incluir cabeçalhos CORS permissivos nas respostas das rotas registradas posteriormente. Com a configuração padrão, scripts de origens arbitrárias podem ler respostas CORS não credenciadas permitidas pelo navegador. Entretanto, Access-Control-Allow-Origin: * não permite, por si só, leitura de respostas credenciadas com cookies: o navegador exige uma origem explícita e Access-Control-Allow-Credentials: true. Também não há evidência de que CORS substitua os controles de autenticação ou autorização da aplicação. A verificação deve considerar a ordem dos middlewares, possíveis configurações em proxies e a existência de dados não públicos ou autoridade ambiente acessível cross-origin.",
+      "pre_condicoes_para_verificacao": [
+        "Dispor de um ambiente autorizado de teste executando a mesma versão e configuração de server.ts, sem dados de produção.",
+        "Confirmar a configuração efetiva do middleware, sua ordem em relação às rotas e eventuais alterações de cabeçalhos CORS realizadas por proxy ou gateway.",
+        "Selecionar endpoints somente leitura e não destrutivos, incluindo um endpoint público e, se necessário, um endpoint autenticado com dados fictícios.",
+        "Dispor de uma conta de teste com privilégios mínimos e de uma origem controlada para executar testes em navegador.",
+        "Conhecer a política esperada de compartilhamento da API e quais origens e dados são considerados confiáveis ou públicos."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 - Envie uma requisição GET somente leitura com uma origem arbitrária: curl -i -H 'Origin: https://origem-nao-confiavel.example' <URL-base>/<endpoint-publico-seguro>. Registre Access-Control-Allow-Origin, Access-Control-Allow-Credentials e Vary.",
+          "resultado_esperado_verdadeiro_positivo": "A resposta contém Access-Control-Allow-Origin: * ou reflete a origem arbitrária sem validação por allowlist. Isso confirma o comportamento CORS permissivo apontado pela regra, embora ainda não comprove impacto em dados sensíveis.",
+          "resultado_esperado_falso_positivo": "A resposta não contém Access-Control-Allow-Origin para a origem arbitrária, rejeita a origem ou apresenta somente uma origem confiável previamente autorizada, indicando que a configuração efetiva difere do comportamento presumido."
+        },
+        {
+          "passo": "Passo 02 - Sem executar a operação real, envie um preflight não destrutivo: curl -i -X OPTIONS <URL-base>/<endpoint-seguro> -H 'Origin: https://origem-nao-confiavel.example' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type'. Observe os métodos e cabeçalhos anunciados.",
+          "resultado_esperado_verdadeiro_positivo": "O servidor aceita o preflight para a origem arbitrária e retorna cabeçalhos CORS amplos, como origem curinga ou refletida e os métodos ou cabeçalhos solicitados. A autorização do preflight, isoladamente, não deve ser interpretada como autorização para executar a função.",
+          "resultado_esperado_falso_positivo": "O preflight é negado ou não retorna cabeçalhos que permitam a origem arbitrária, demonstrando restrição efetiva na camada da aplicação, proxy ou gateway."
+        },
+        {
+          "passo": "Passo 03 - A partir de uma página hospedada na origem controlada, execute fetch em modo CORS para endpoints GET seguros, primeiro com credentials: 'omit' e, usando apenas a conta e os dados fictícios, depois com credentials: 'include'. Não invoque operações de escrita ou administrativas.",
+          "resultado_esperado_verdadeiro_positivo": "O JavaScript da origem não confiável consegue ler uma resposta contendo dados não públicos de teste, ou acessa um recurso protegido utilizando autoridade automaticamente disponível ao navegador. Isso demonstra impacto de segurança além da simples presença do cabeçalho permissivo.",
+          "resultado_esperado_falso_positivo": "O navegador bloqueia a leitura, especialmente no cenário credenciado, ou somente respostas deliberadamente públicas e não sensíveis ficam acessíveis. Nesse caso não há exploração demonstrada; se houver allowlist efetiva, o achado comportamental é falso positivo, e se houver apenas dados públicos, trata-se de configuração permissiva sem impacto comprovado ou risco explicitamente aceito."
+        },
+        {
+          "passo": "Passo 04 - Repita apenas verificações GET e OPTIONS seguras em uma amostra representativa de rotas para determinar o escopo global do app.use e compare os resultados com a política documentada. Não use a resposta CORS como evidência de que uma função administrativa pode ser executada.",
+          "resultado_esperado_verdadeiro_positivo": "A política permissiva alcança rotas que expõem informações não públicas ou amplia indevidamente o acesso cross-origin, permitindo documentar escopo e impacto. Falhas de autorização devem ser registradas separadamente se forem efetivamente demonstradas.",
+          "resultado_esperado_falso_positivo": "A política é restrita a recursos públicos ou é substituída por controles eficazes nas demais camadas, não havendo leitura indevida nem execução não autorizada de funções."
+        }
+      ]
+    }
+  ]
+}
