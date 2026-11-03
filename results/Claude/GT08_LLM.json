@@ -1,0 +1,50 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "fe05cc96-7ed2-4ea0-9c61-48e5a0304238",
+        "arquivo": "lib/insecurity.ts",
+        "linha": 44,
+        "severidade_sast": "BLOCKER",
+        "regra": "typescript:S6437",
+        "categoria": "Hardcoded Credentials / Secret Leak"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-798: Use of Hard-coded Credentials",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-CONFIG-05: Enumerate Infrastructure and Application Admin Interfaces / WSTG-AUTHN-02: Testing for Default Credentials",
+        "justificativa": "O código-fonte em lib/insecurity.ts contém uma credencial/senha (ou segredo criptográfico, ex.: chave de assinatura JWT) codificada diretamente no código-fonte. Como o repositório é público (OWASP Juice Shop), esse valor já está comprometido e exposto, podendo ser utilizado por um atacante para forjar tokens de autenticação, decifrar dados sensíveis ou se passar por usuários legítimos, incluindo administradores."
+      },
+      "descricao_tecnica": "A regra S6437 do SonarQube identificou uma string literal no arquivo lib/insecurity.ts (linha 44) que corresponde a um padrão de senha ou segredo (ex.: chave privada/secreta usada em operações de assinatura ou criptografia, como geração de JWT). O armazenamento de credenciais diretamente no código-fonte viola práticas de gerenciamento seguro de segredos (secrets management), pois qualquer pessoa com acesso ao repositório — inclusive histórico de commits — pode extrair o valor e utilizá-lo para comprometer a aplicação, falsificar tokens de sessão ou burlar mecanismos de autenticação/autorização.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso de leitura ao código-fonte do repositório juice-shop (incluindo histórico de commits no Git).",
+        "Ambiente de execução local ou de teste da aplicação Juice Shop configurado e em execução.",
+        "Ferramenta de inspeção de código ou decompilação (ex.: editor de texto, grep, git log) disponível.",
+        "Conhecimento do algoritmo/biblioteca utilizada para assinatura de tokens (ex.: jsonwebtoken) caso o segredo seja usado para JWT."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Ao abrir lib/insecurity.ts na linha 44, confirma-se a presença de uma string hardcoded utilizada como senha, segredo ou chave (ex.: 'secretKey', 'privateKey' ou valor de senha em texto plano) diretamente no código-fonte, sem uso de variáveis de ambiente ou cofre de segredos.",
+          "resultado_esperado_falso_positivo": "A linha 44 não contém nenhuma credencial real, mas sim um valor de teste/mock explicitamente documentado como não sensível (ex.: placeholder claramente identificado como 'CHANGE_ME' sem uso real em produção) ou um comentário/string não utilizada na lógica de autenticação."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Buscando no restante do código-base (grep -r) por referências à constante/variável definida na linha 44, confirma-se que ela é efetivamente utilizada em operações sensíveis, como assinatura/verificação de JWT (jwt.sign/jwt.verify) ou hashing de senhas, comprovando o impacto real da exposição.",
+          "resultado_esperado_falso_positivo": "A variável definida na linha 44 não é referenciada em nenhum outro ponto do código, indicando que se trata de código morto ou não utilizado em fluxo de autenticação/autorização."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Utilizando o valor extraído da linha 44 como chave secreta, é possível gerar manualmente um token JWT válido (ex.: via jwt.io ou script Node.js) que é aceito pela aplicação em execução, permitindo autenticação não autorizada ou escalonamento de privilégios (ex.: forjar token de usuário admin).",
+          "resultado_esperado_falso_positivo": "O valor extraído não corresponde à chave realmente utilizada em tempo de execução (por exemplo, a aplicação sobrescreve o valor via variável de ambiente em produção), tornando a chave hardcoded inofensiva no ambiente real de produção."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Verifica-se no histórico do Git (git log -p -- lib/insecurity.ts) que o segredo está presente em múltiplos commits históricos, confirmando que a rotação da chave não invalida versões anteriores do repositório já clonadas/forkadas, ampliando a superfície de exposição.",
+          "resultado_esperado_falso_positivo": "O segredo foi introduzido apenas recentemente em um branch de desenvolvimento isolado, nunca promovido a produção, e já possui plano de rotação/remoção antes do merge, sem exposição em ambiente produtivo."
+        }
+      ]
+    }
+  ]
+}

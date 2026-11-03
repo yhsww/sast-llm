@@ -1,0 +1,46 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "8a61c8f6-3bef-4b6e-9787-a9479df9ef26",
+        "arquivo": "frontend/src/app/login/login.component.ts",
+        "linha": 61,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S2068",
+        "categoria": "Hard-coded Credentials"
+      },
+      "classificacao": {
+        "veredicto": "Potencial Falso Positivo - Requer Validação Manual",
+        "cwe": "CWE-798: Use of Hard-coded Credentials",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-AUTH-01 (Testing for Credentials Transported over an Encrypted Channel) / WSTG-CONF-05 (Review Old Backup and Unreferenced Files for Sensitive Information)",
+        "justificativa": "A regra S2068 do SonarQube utiliza análise léxica/regex para identificar literais de senha hard-coded, mas frequentemente gera falsos positivos quando o termo 'password' aparece como nome de propriedade, variável de binding de formulário (ex.: Angular FormControl/FormGroup) ou campo de DTO/interface, sem conter um valor de credencial fixo embutido no código. É necessário inspecionar o código-fonte real na linha 61 para confirmar se há um valor literal de senha atribuído diretamente (ex.: password = 'admin123') ou se trata-se apenas de uma referência/binding de campo de formulário de login, o que é prática comum e segura em componentes Angular."
+      },
+      "descricao_tecnica": "A ferramenta de análise estática (SAST) identificou, na linha 61 do arquivo login.component.ts, um padrão que corresponde à assinatura de senha hard-coded (CWE-798). Esse tipo de vulnerabilidade ocorre quando credenciais sensíveis (senhas, chaves de API, tokens) são embutidas diretamente no código-fonte, permitindo que qualquer pessoa com acesso ao repositório, build compilado ou bundle JavaScript do frontend extraia essas credenciais e as utilize para acesso não autorizado. Em aplicações Angular como a Juice Shop, é comum que componentes de login declarem propriedades como 'password: string' para vincular campos de formulário (two-way binding com ngModel ou FormControl), o que pode disparar falsos positivos na regra S2068 sem representar um valor de senha realmente fixo no código.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte do repositório juice-shop, especificamente ao arquivo frontend/src/app/login/login.component.ts",
+        "Permissão para visualizar o histórico de commits (git blame/git log) da linha 61 para entender o contexto da alteração",
+        "Ambiente de desenvolvimento configurado para executar a aplicação Angular localmente (opcional, para testes dinâmicos)",
+        "Conhecimento básico de TypeScript/Angular (FormGroup, FormControl, ngModel, interfaces de credenciais)",
+        "Ferramenta de busca em texto (grep/IDE) para localizar outras ocorrências do termo 'password' no mesmo arquivo"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Ao abrir o arquivo login.component.ts na linha 61, observa-se um literal de string atribuído diretamente a uma variável relacionada a senha, por exemplo: 'const password = \"admin123\";' ou 'this.password = \"SenhaFixa@2024\";', confirmando a presença de uma credencial hard-coded no código-fonte.",
+          "resultado_esperado_falso_positivo": "Ao abrir o arquivo na linha 61, observa-se apenas a declaração de uma propriedade de classe ou binding de formulário sem valor literal fixo, como 'password: string;' (declaração de tipo), 'this.loginForm.get(\"password\").value' (binding de FormControl) ou um nome de campo em uma interface/DTO (ex.: 'interface Credentials { email: string; password: string; }'), indicando que não há uma senha fixa embutida no código."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Ao pesquisar o valor literal identificado (ex.: 'admin123') no restante do código ou em requisições de rede via DevTools, confirma-se que essa credencial é efetivamente utilizada para autenticação em algum endpoint da API (ex.: POST /rest/user/login), validando que se trata de uma credencial real e funcional embutida no frontend.",
+          "resultado_esperado_falso_positivo": "Não é encontrado nenhum valor de senha fixo sendo transmitido nas requisições de login via DevTools/Network; o campo 'password' é populado dinamicamente pelo usuário através da interface do formulário, confirmando que a variável serve apenas como referência de binding e não representa uma credencial hard-coded."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Ao executar 'git log -p -L 61,61:frontend/src/app/login/login.component.ts' ou equivalente, o histórico de commits revela que a linha foi introduzida com um valor de senha explícito (hard-coded), reforçando que não se trata de uma declaração de tipo ou binding dinâmico, mas sim de um valor sensível commitado de forma intencional ou acidental.",
+          "resultado_esperado_falso_positivo": "O histórico de commits mostra que a linha sempre fez parte de uma declaração de propriedade de classe, interface de tipos ou estrutura de FormGroup, sem qualquer valor de senha literal, confirmando a classificação como falso positivo do SonarQube."
+        }
+      ]
+    }
+  ]
+}
