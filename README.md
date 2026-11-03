@@ -136,7 +136,7 @@ Na raiz do projeto, veja se existe um arquivo `.env.example`. Se existir, crie o
 Copy-Item .env.example .env
 ```
 
-Preencha no `.env` somente as chaves dos provedores que pretende testar. A branches usam essas variáveis:
+Preencha no `.env` somente as chaves dos provedores que pretende testar. As branches usam estas variáveis:
 
 - `OPENAI_API_KEY` para GPT.
 - `GOOGLE_API_KEY` para Gemini.
@@ -433,7 +433,29 @@ python query.py --provider GPT --only GT01.json --snippets-dir data/code_snippet
 
 O primeiro uso do ChromaDB pode inicializar o modelo local de embeddings e demorar mais. A recuperação RAG usa a regra, mensagem e tags do finding; o trecho de código é adicionado depois ao contexto enviado à LLM.
 
-## 6. Testes e validação do experimento
+## 6. Solução de problemas de API
+
+### Kimi / Moonshot: erro de temperatura (HTTP 400)
+
+O modelo configurado como `kimi-k3.1-pro` pode rejeitar temperaturas diferentes de `1`. Na função `_generate_kimi`, em `backend/openai_service.py`, a chamada deve usar:
+
+```python
+temperature=1,
+```
+
+Se aparecer `invalid temperature: only 1 is allowed for this model`, confira a chamada real no arquivo local e confirme que não existe outra configuração de temperatura sendo aplicada ao Kimi. Depois de atualizar o código, rode novamente um relatório individual antes de processar o lote.
+
+### Kimi / Moonshot: limite de requisições (HTTP 429)
+
+A API pode limitar a quantidade de requisições por minuto por organização. Um erro como `organization max RPM: 3` indica que o limite foi atingido; não é um erro de leitura do relatório SAST. Aguarde o intervalo indicado pela API antes de repetir a chamada. Em lotes, execute poucos relatórios por vez e evite reiniciar repetidamente o processo, pois isso pode gerar novas chamadas e atingir o limite novamente.
+
+### Como interpretar erros
+
+- `*_ERROR.txt`: contém o provedor, o modelo e a mensagem da falha para aquele relatório.
+- `KeyboardInterrupt`: indica que a execução foi interrompida pelo usuário (por exemplo, com Ctrl+C); não identifica, por si só, a causa inicial.
+- `--simulate`: valida os JSONs localmente, mas não testa credenciais, disponibilidade do modelo, limites de uso ou geração real.
+
+## 7. Testes e validação do experimento
 
 Na raiz de cada branch, tente executar:
 
