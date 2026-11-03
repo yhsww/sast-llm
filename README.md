@@ -255,7 +255,7 @@ O runner dessa branch processa os relatórios `GT01.json` a `GT08.json`. O modo 
 
 Esta branch precisa do código-fonte do projeto analisado para adicionar trechos reais ao contexto do finding. Os trechos podem ser obtidos de duas formas:
 
-1. **Baixar o projeto para o computador:** clone ou baixe [SAST-COGNITIVE-LOAD-TEST-SECURITY](https://github.com/ASTRID-RESEARCH/SAST-COGNITIVE-LOAD-TEST-SECURITY) e informe a pasta do código com `--source-root` e `--auto-snippets`.
+1. **Baixar o projeto:** [SAST-COGNITIVE-LOAD-TEST-SECURITY](https://github.com/ASTRID-RESEARCH/SAST-COGNITIVE-LOAD-TEST-SECURITY) e informe a pasta do código com `--source-root` e `--auto-snippets`.
 2. **Consultar pelo GitHub:** abra o repositório, localize o arquivo e copie o trecho correspondente ao finding. Cole-o no terminal quando o programa solicitar e finalize a entrada digitando `###` sozinho em uma linha.
 
 Repositório com os códigos-fonte:  
@@ -311,7 +311,7 @@ Os resultados ficam em `results/`. Essa branch gera casos de teste; não executa
 
 ## 6. Solução de problemas de API
 
-### Kimi / Moonshot: erro de temperatura (HTTP 400)
+### Kimi: erro de temperatura (HTTP 400)
 
 O modelo configurado como `kimi-k3.1-pro` pode rejeitar temperaturas diferentes de `1`. Na função `_generate_kimi`, em `backend/openai_service.py`, a chamada deve usar:
 
@@ -321,7 +321,7 @@ temperature=1,
 
 Se aparecer `invalid temperature: only 1 is allowed for this model`, confira a chamada real no arquivo local e confirme que não existe outra configuração de temperatura sendo aplicada ao Kimi. Depois de atualizar o código, rode novamente um relatório individual antes de processar o lote.
 
-### Kimi / Moonshot: limite de requisições (HTTP 429)
+### Kimi: limite de requisições (HTTP 429)
 
 A API pode limitar a quantidade de requisições por minuto por organização. Um erro como `organization max RPM: 3` indica que o limite foi atingido; não é um erro de leitura do relatório SAST. Aguarde o intervalo indicado pela API antes de repetir a chamada. Em lotes, execute poucos relatórios por vez e evite reiniciar repetidamente o processo, pois isso pode gerar novas chamadas e atingir o limite novamente.
 
