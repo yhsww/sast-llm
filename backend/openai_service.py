@@ -197,7 +197,7 @@ def _generate_kimi(
             {"role": "user", "content": user_content},
         ],
         response_format={"type": "json_object"},
-        temperature=0,
+        temperature=1,
     )
 
     content = response.choices[0].message.content
