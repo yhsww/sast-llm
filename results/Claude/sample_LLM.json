@@ -3,123 +3,125 @@
     {
       "identificacao": {
         "id_sonarqube": "AX1a-sql-injection-001",
-        "arquivo": "src/main/java/com/example/app/repository/UserRepository.java",
+        "arquivo": "com.example.app:src/main/java/com/example/app/repository/UserRepository.java",
         "linha": 47,
         "severidade_sast": "CRITICAL",
         "regra": "java:S3649",
-        "categoria": "SQL Injection"
+        "categoria": "Injeção de SQL (SQL Injection)"
       },
       "classificacao": {
-        "veredicto": "Potencial Verdadeiro Positivo",
-        "cwe": "CWE-89",
-        "owasp_top_10": "A03:2021 - Injection",
-        "wstg": "WSTG-INPV-05",
-        "justificativa": "A regra S3649 detecta construção de queries SQL por concatenação de strings com dados controlados pelo usuário, o que é um padrão clássico de vulnerabilidade de SQL Injection. É necessário confirmar se o dado realmente chega sem sanitização/parametrização até a execução da query."
+        "veredicto": "Potencial Verdadeiro Positivo - requer validação manual do fluxo de dados (taint analysis)",
+        "cwe": "CWE-89 - Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')",
+        "owasp_top_10": "A03:2021 - Injection (equivalente ao A1:2017 - Injection, conforme tag original)",
+        "wstg": "WSTG-INPV-05 - Testing for SQL Injection",
+        "justificativa": "A regra S3649 do SonarQube detecta a construção de queries SQL por concatenação/interpolação direta de dados possivelmente controlados pelo usuário, sem uso de prepared statements ou parametrização, o que pode permitir a injeção de comandos SQL maliciosos."
       },
-      "descricao_tecnica": "O código em UserRepository.java na linha 47 constrói uma consulta SQL concatenando diretamente entradas de usuário, sem uso de prepared statements ou parametrização. Isso permite que um atacante manipule a estrutura da query, podendo extrair, modificar ou deletar dados do banco, além de potencialmente executar comandos administrativos dependendo do SGBD e dos privilégios da conexão.",
+      "descricao_tecnica": "O método identificado em UserRepository.java constrói uma instrução SQL concatenando diretamente variáveis que podem ter origem em entradas de usuário (parâmetros de requisição, formulários, etc.), sem o uso de PreparedStatement, binding de parâmetros ou mecanismos de ORM seguros (ex.: JPA Criteria/Named Parameters). Caso a entrada não seja validada/sanitizada em nenhuma camada anterior, um atacante pode manipular a query para extrair, alterar ou deletar dados, além de potencialmente escalar para execução de comandos no SO (dependendo do SGBD e privilégios).",
       "pre_condicoes_para_verificacao": [
-        "Acesso ao código-fonte do arquivo UserRepository.java",
-        "Ambiente de teste com banco de dados configurado e populado com dados de teste",
-        "Ferramenta de interceptação de requisições (Burp Suite, OWASP ZAP) ou acesso direto ao endpoint que invoca o método vulnerável",
-        "Usuário de teste com permissões mínimas para exercitar o fluxo que aciona a query"
+        "Acesso ao código-fonte completo do método em UserRepository.java (linha 47) e de todos os métodos que o invocam (análise de call stack)",
+        "Ambiente de testes (staging/dev) com banco de dados configurado de forma equivalente à produção",
+        "Ferramenta de interceptação de tráfego HTTP (ex.: Burp Suite, OWASP ZAP) ou acesso a cliente de API (Postman/cURL)",
+        "Conhecimento do endpoint/funcionalidade que expõe o parâmetro utilizado na query SQL vulnerável",
+        "Permissão formal para realizar testes de penetração no ambiente (autorização de pentest)"
       ],
       "passos_de_verificacao": [
         {
           "passo": "Passo 01",
-          "resultado_esperado_verdadeiro_positivo": "Ao inspecionar o código na linha 47, confirma-se que a string SQL é montada via concatenação (ex.: \"SELECT * FROM users WHERE id = \" + userInput) sem uso de PreparedStatement ou ORM com binding seguro.",
-          "resultado_esperado_falso_positivo": "O código utiliza PreparedStatement, StatementBuilder parametrizado ou ORM (JPA/Hibernate com named parameters) corretamente, e a concatenação identificada refere-se a valores estáticos/constantes não controláveis por usuário."
+          "resultado_esperado_verdadeiro_positivo": "Ao rastrear o fluxo de dados (taint tracing) desde a entrada do usuário (ex.: parâmetro de URL/corpo de requisição) até a linha 47, confirma-se que o valor não passa por sanitização, validação de whitelist ou parametrização antes de ser concatenado na string SQL.",
+          "resultado_esperado_falso_positivo": "O valor concatenado na query é proveniente de constante interna, enum, configuração fixa do sistema ou já foi validado/escapado por uma camada anterior (ex.: whitelist rígida ou tipo fortemente tipado como enum/UUID gerado internamente), não havendo influência direta do usuário."
         },
         {
           "passo": "Passo 02",
-          "resultado_esperado_verdadeiro_positivo": "Ao enviar um payload clássico de SQLi (ex.: ' OR '1'='1 ou '; DROP TABLE users;--) no parâmetro que alimenta a query, a aplicação retorna comportamento anômalo (erro de sintaxe SQL exposto, retorno de todos os registros, bypass de autenticação ou alteração inesperada de dados).",
-          "resultado_esperado_falso_positivo": "A aplicação trata o payload como texto literal, retornando resultado vazio ou mensagem de erro genérica sem indícios de interpretação pelo SQL, indicando sanitização/parametrização efetiva em camada superior."
+          "resultado_esperado_verdadeiro_positivo": "Ao enviar payloads clássicos de SQL Injection (ex.: ' OR '1'='1, '; DROP TABLE users; --, UNION SELECT) através do parâmetro identificado, observa-se comportamento anômalo da aplicação: erros de sintaxe SQL expostos na resposta, retorno de dados não autorizados, bypass de autenticação ou alteração de comportamento da consulta.",
+          "resultado_esperado_falso_positivo": "Os payloads de injeção são rejeitados por validação de entrada robusta (ex.: WAF, filtros de tipo, validação de schema) antes de chegarem ao método vulnerável, ou a aplicação retorna erro genérico sem qualquer alteração perceptível no comportamento da consulta."
         },
         {
           "passo": "Passo 03",
-          "resultado_esperado_verdadeiro_positivo": "Testes com ferramenta automatizada (sqlmap) apontam a existência de injeção SQL exploitável no endpoint associado ao método vulnerável, confirmando extração de dados ou execução de comandos no banco.",
-          "resultado_esperado_falso_positivo": "sqlmap ou testes manuais não conseguem identificar nenhum ponto de injeção, e o input é validado/escapado antes de chegar à camada de persistência."
+          "resultado_esperado_verdadeiro_positivo": "Utilizando ferramentas automatizadas de exploração (ex.: sqlmap) apontadas para o endpoint correspondente, confirma-se a extração de metadados do banco (nome do schema, versão do SGBD, nomes de tabelas) comprovando a exploração bem-sucedida da falha.",
+          "resultado_esperado_falso_positivo": "A ferramenta de exploração não consegue extrair nenhuma informação do banco de dados, indicando que a query é executada de forma parametrizada/segura apesar do padrão de código sinalizado pela ferramenta estática, ou que mecanismos de defesa em profundidade (least privilege do usuário de BD) impedem a exploração."
         }
       ]
     },
     {
       "identificacao": {
         "id_sonarqube": "AX1b-xss-001",
-        "arquivo": "src/main/java/com/example/app/controller/CommentController.java",
+        "arquivo": "com.example.app:src/main/java/com/example/app/controller/CommentController.java",
         "linha": 83,
         "severidade_sast": "CRITICAL",
         "regra": "java:S5131",
         "categoria": "Cross-Site Scripting (XSS)"
       },
       "classificacao": {
-        "veredicto": "Potencial Verdadeiro Positivo",
-        "cwe": "CWE-79",
-        "owasp_top_10": "A03:2021 - Injection",
-        "wstg": "WSTG-INPV-01",
-        "justificativa": "A regra S5131 identifica dados controlados por usuário sendo inseridos em resposta HTML sem sanitização adequada, caracterizando risco de XSS refletido ou armazenado. É necessário validar a existência de encoding de saída (output encoding) ou uso de bibliotecas de sanitização no fluxo de dados."
+        "veredicto": "Potencial Verdadeiro Positivo - requer validação manual do contexto de renderização",
+        "cwe": "CWE-79 - Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')",
+        "owasp_top_10": "A03:2021 - Injection (XSS passou a ser classificado sob Injection no Top 10 2021; equivalente ao A7:2017 - Cross-Site Scripting)",
+        "wstg": "WSTG-INPV-02 - Testing for Stored Cross Site Scripting",
+        "justificativa": "A regra S5131 indica que dados fornecidos pelo usuário (comentários) estão sendo inseridos na resposta HTML sem sanitização/encoding adequado, o que pode permitir a injeção de scripts maliciosos executados no navegador de outros usuários (XSS armazenado, dado o contexto de CommentController)."
       },
-      "descricao_tecnica": "O código em CommentController.java na linha 83 insere dados fornecidos pelo usuário (provavelmente o conteúdo de um comentário) diretamente na resposta HTML sem aplicar sanitização ou codificação de saída (output encoding). Isso pode permitir que um atacante injete scripts maliciosos que serão executados no navegador de outros usuários que visualizarem o conteúdo, possibilitando roubo de sessão, defacement ou redirecionamento malicioso.",
+      "descricao_tecnica": "No método localizado em CommentController.java (linha 83), o conteúdo de um comentário submetido pelo usuário é inserido na resposta HTML sem passar por um processo de encoding de saída (ex.: HTML entity encoding) ou uso de bibliotecas de sanitização (ex.: OWASP Java HTML Sanitizer). Como comentários normalmente são persistidos e exibidos para outros usuários, essa falha caracteriza um cenário de Stored XSS, onde um payload malicioso injetado por um atacante pode ser executado no navegador de qualquer usuário que visualize o comentário, permitindo roubo de sessão, redirecionamento malicioso ou outras ações no contexto da vítima.",
       "pre_condicoes_para_verificacao": [
-        "Acesso ao código-fonte do arquivo CommentController.java",
-        "Ambiente de teste com a funcionalidade de comentários habilitada e acessível via navegador",
-        "Usuário de teste autenticado com permissão para criar/visualizar comentários",
-        "Navegador com ferramentas de desenvolvedor (DevTools) para inspecionar o DOM renderizado"
+        "Acesso à funcionalidade de criação/exibição de comentários na aplicação em ambiente de testes",
+        "Usuário de teste com permissão para publicar comentários",
+        "Navegador com ferramentas de desenvolvedor habilitadas para inspeção do DOM/HTML renderizado",
+        "Conhecimento do template engine utilizado (JSP, Thymeleaf, Freemarker, etc.) para avaliar o mecanismo de encoding padrão",
+        "Autorização para realizar testes de injeção de script no ambiente de homologação"
       ],
       "passos_de_verificacao": [
         {
           "passo": "Passo 01",
-          "resultado_esperado_verdadeiro_positivo": "Ao inspecionar o código na linha 83, confirma-se que a variável contendo dados do usuário é escrita diretamente na resposta (ex.: via response.getWriter().write(userInput) ou template sem escaping) sem chamada a métodos de encoding como HtmlUtils.htmlEscape, OWASP Java Encoder ou equivalente.",
-          "resultado_esperado_falso_positivo": "O código utiliza mecanismo de template engine com auto-escaping habilitado (ex.: Thymeleaf com th:text, JSP com <c:out>) ou biblioteca de sanitização (OWASP Java HTML Sanitizer) aplicada ao dado antes da renderização."
+          "resultado_esperado_verdadeiro_positivo": "Ao inspecionar o código-fonte, confirma-se que o valor do comentário é escrito diretamente na resposta (ex.: via response.getWriter().write(), string concatenada em template, ou uso de utilitário de output sem escape) sem chamada a função de encoding HTML (ex.: StringEscapeUtils.escapeHtml4, Encode.forHtml, ou auto-escaping do template engine).",
+          "resultado_esperado_falso_positivo": "O template engine utilizado realiza auto-escaping por padrão (ex.: Thymeleaf com th:text, JSP com c:out) e o código analisado não desabilita essa proteção, ou existe uma camada de sanitização (ex.: OWASP Java HTML Sanitizer) aplicada antes da renderização."
         },
         {
           "passo": "Passo 02",
-          "resultado_esperado_verdadeiro_positivo": "Ao submeter um comentário contendo payload XSS (ex.: <script>alert(document.cookie)</script> ou <img src=x onerror=alert(1)>), o script é executado no navegador ao visualizar a página, confirmado pela exibição do alert ou execução do payload.",
-          "resultado_esperado_falso_positivo": "O payload é exibido como texto literal na página (ex.: &lt;script&gt;alert(1)&lt;/script&gt;) sem execução, indicando que o encoding de saída está funcionando corretamente."
+          "resultado_esperado_verdadeiro_positivo": "Ao submeter um comentário contendo um payload de teste (ex.: <script>alert(document.cookie)</script> ou <img src=x onerror=alert(1)>) e visualizar a página de comentários, o payload é executado no navegador (pop-up de alert, execução de JavaScript), confirmando a vulnerabilidade de XSS armazenado.",
+          "resultado_esperado_falso_positivo": "O payload é exibido como texto literal na página (ex.: &lt;script&gt;alert(1)&lt;/script&gt;) sem execução, confirmando que o encoding de saída está sendo aplicado corretamente, apesar do alerta da ferramenta estática."
         },
         {
           "passo": "Passo 03",
-          "resultado_esperado_verdadeiro_positivo": "Inspeção do DOM renderizado (via DevTools) mostra que o payload foi inserido como HTML/JavaScript executável e não como texto escapado, confirmando a vulnerabilidade de XSS armazenado/refletido.",
-          "resultado_esperado_falso_positivo": "O DOM mostra o conteúdo do comentário corretamente escapado (entidades HTML) e nenhuma execução de script ocorre, mesmo com payloads complexos de bypass de filtros."
+          "resultado_esperado_verdadeiro_positivo": "Testando variações de payload para contornar possíveis filtros (bypass de blacklist, uso de eventos HTML alternativos como onmouseover, onerror, ou encoding de caracteres), confirma-se que pelo menos uma variação consegue executar código JavaScript no contexto da vítima, validando a exploração real da falha.",
+          "resultado_esperado_falso_positivo": "Todas as variações de payload testadas são neutralizadas de forma consistente (encoding ou remoção de tags/atributos perigosos), indicando controle efetivo de sanitização/encoding e descartando a exploração prática da vulnerabilidade."
         }
       ]
     },
     {
       "identificacao": {
         "id_sonarqube": "AX1c-hardcoded-cred-001",
-        "arquivo": "src/main/java/com/example/app/config/DatabaseConfig.java",
+        "arquivo": "com.example.app:src/main/java/com/example/app/config/DatabaseConfig.java",
         "linha": 22,
         "severidade_sast": "BLOCKER",
         "regra": "java:S2068",
-        "categoria": "Hard-coded Credentials"
+        "categoria": "Exposição de Credenciais Sensíveis (Hard-coded Credentials)"
       },
       "classificacao": {
-        "veredicto": "Verdadeiro Positivo",
-        "cwe": "CWE-798",
-        "owasp_top_10": "A02:2021 - Cryptographic Failures / A07:2021 - Identification and Authentication Failures",
-        "wstg": "WSTG-CONF-05",
-        "justificativa": "A regra S2068 detecta credenciais (senhas) embutidas diretamente no código-fonte. Esse é um padrão de alta confiabilidade de detecção (baixa taxa de falso positivo), pois a simples presença da string de senha no código já representa risco de exposição, independentemente de uso real em produção, especialmente se o repositório for acessível por terceiros ou versionado em sistema de controle de versão."
+        "veredicto": "Verdadeiro Positivo provável - validação de contexto (código de produção vs. exemplo/teste) necessária",
+        "cwe": "CWE-798 - Use of Hard-coded Credentials",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures (equivalente ao A2:2017 - Broken Authentication, conforme tag original); também relacionado a A02:2021 - Cryptographic Failures",
+        "wstg": "WSTG-CONF-05 - Review de Gerenciamento de Configuração / Testing for Hardcoded Credentials (análise de código-fonte e artefatos de configuração)",
+        "justificativa": "A regra S2068 identifica literais de senha diretamente no código-fonte (DatabaseConfig.java, linha 22), o que constitui uma prática insegura de gerenciamento de credenciais, podendo expor segredos de produção caso o código seja vazado, versionado em repositório público ou acessado por pessoal não autorizado."
       },
-      "descricao_tecnica": "O arquivo DatabaseConfig.java contém, na linha 22, uma credencial de banco de dados (senha) codificada diretamente no código-fonte (hard-coded). Essa prática expõe a credencial a qualquer pessoa com acesso ao repositório de código, histórico de versionamento (Git), artefatos compilados (decompilação) ou logs de build, permitindo acesso não autorizado ao banco de dados caso a credencial seja válida em ambiente de produção ou homologação.",
+      "descricao_tecnica": "Na classe DatabaseConfig.java, uma senha de banco de dados (ou credencial equivalente) está definida como um literal de string diretamente no código-fonte, em vez de ser carregada de forma segura por meio de variáveis de ambiente, cofres de segredos (ex.: HashiCorp Vault, AWS Secrets Manager, Azure Key Vault) ou arquivos de configuração criptografados e fora do controle de versão. Essa prática expõe a credencial a qualquer pessoa com acesso ao repositório de código-fonte (incluindo histórico de commits), aumentando significativamente o risco de comprometimento do banco de dados caso o código seja exposto, vazado ou analisado por um atacante (interno ou externo).",
       "pre_condicoes_para_verificacao": [
-        "Acesso ao código-fonte do arquivo DatabaseConfig.java e ao histórico de commits do repositório",
-        "Acesso (ou simulação) ao ambiente onde a credencial é utilizada (banco de dados de teste/homologação)",
-        "Ferramenta de busca de segredos (ex.: GitLeaks, TruffleHog) para varredura do repositório",
-        "Permissão para tentar autenticação no serviço de banco de dados utilizando a credencial encontrada, em ambiente controlado"
+        "Acesso ao repositório de código-fonte, incluindo histórico de commits (git log/git blame) para a linha 22 de DatabaseConfig.java",
+        "Permissão para inspecionar pipelines de CI/CD e arquivos de configuração do ambiente (application.properties/yml, .env, etc.)",
+        "Conhecimento sobre se a credencial encontrada corresponde a um ambiente real (produção/homologação) ou é um valor de exemplo/placeholder/teste",
+        "Acesso (ou coordenação com a equipe de infraestrutura) para tentar validar se a credencial exposta é funcional em algum ambiente acessível"
       ],
       "passos_de_verificacao": [
         {
           "passo": "Passo 01",
-          "resultado_esperado_verdadeiro_positivo": "Ao inspecionar a linha 22 do arquivo, confirma-se a presença de uma string literal de senha (ex.: String password = \"Senha@123\";) diretamente no código-fonte, sem uso de variáveis de ambiente, cofre de segredos (Vault, AWS Secrets Manager) ou arquivo de configuração externo não versionado.",
-          "resultado_esperado_falso_positivo": "O valor identificado é um placeholder, exemplo de documentação, valor padrão para ambiente de desenvolvimento local isolado sem acesso externo, ou referência a variável de ambiente (ex.: System.getenv(\"DB_PASSWORD\")) incorretamente sinalizada pela ferramenta."
+          "resultado_esperado_verdadeiro_positivo": "A inspeção do código confirma que a senha na linha 22 é um valor real e específico (não um placeholder genérico como 'changeit', 'password123' de exemplo documental), e que a classe é utilizada em caminhos de configuração ativados em ambientes reais (produção/homologação) da aplicação.",
+          "resultado_esperado_falso_positivo": "O valor identificado é um placeholder claramente documental/de exemplo (ex.: usado apenas em classe de teste unitário, arquivo de exemplo 'application-example.yml', ou comentado como 'TODO: substituir'), sem uso em build de produção, ou a classe inteira está marcada como código morto/deprecated não compilado no artefato final."
         },
         {
           "passo": "Passo 02",
-          "resultado_esperado_verdadeiro_positivo": "A varredura do histórico do repositório (git log/git blame) confirma que a credencial está presente em múltiplos commits e pode ter sido exposta publicamente (ex.: repositório público no GitHub) ou está acessível a todos os desenvolvedores com acesso ao repositório privado, ampliando a superfície de exposição.",
-          "resultado_esperado_falso_positivo": "A credencial foi adicionada e removida no mesmo commit antes de qualquer push remoto, ou o repositório nunca teve acesso externo e a credencial já foi rotacionada/invalidada."
+          "resultado_esperado_verdadeiro_positivo": "A análise do histórico do repositório (git blame/git log) confirma que o commit com a credencial hard-coded foi enviado a um repositório acessível (público ou com múltiplos colaboradores internos sem necessidade de acesso ao segredo), configurando exposição real do segredo a um público maior do que o estritamente necessário.",
+          "resultado_esperado_falso_positivo": "O repositório é estritamente privado, com acesso restrito a uma equipe mínima e já segue processo de rotação de credenciais após qualquer exposição em código, mitigando o risco, embora a prática ainda seja considerada inadequada e deva ser corrigida."
         },
         {
           "passo": "Passo 03",
-          "resultado_esperado_verdadeiro_positivo": "Utilizando a credencial extraída do código, é possível autenticar com sucesso na instância do banco de dados correspondente (em ambiente de teste/produção), confirmando que a credencial é válida e ativa, representando risco real de comprometimento.",
-          "resultado_esperado_falso_positivo": "A tentativa de autenticação com a credencial extraída falha, indicando que a senha é fictícia, expirada, de exemplo, ou pertence a um ambiente totalmente isolado sem relevância de segurança (ex.: apenas container local de teste unitário descartável)."
+          "resultado_esperado_verdadeiro_positivo": "Mediante autorização formal, a tentativa de utilizar a credencial encontrada para autenticação no respectivo serviço de banco de dados (em ambiente de teste controlado) é bem-sucedida, comprovando que a credencial é válida e ativa, representando um risco crítico de comprometimento.",
+          "resultado_esperado_falso_positivo": "A tentativa de autenticação com a credencial encontrada falha (credencial expirada, rotacionada, ou nunca foi válida em nenhum ambiente real), ou o acesso ao ambiente é bloqueado por controles de rede adicionais (ex.: VPN, whitelist de IP), reduzindo o risco a um achado apenas de boas práticas de código e não de exposição ativa de segredo funcional."
         }
       ]
     }

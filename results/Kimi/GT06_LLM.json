@@ -1,0 +1,51 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "6829619d-3476-446f-8922-d2cb10e8a2c7",
+        "arquivo": "juice-shop:server.ts",
+        "linha": 182,
+        "severidade_sast": "MINOR",
+        "regra": "typescript:S5122",
+        "categoria": "SECURITY_HOTSPOT"
+      },
+      "classificacao": {
+        "veredicto": "Não conclusivo — requer validação manual",
+        "cwe": "CWE-942 — Permissive Cross-domain Policy with Untrusted Domains",
+        "owasp_top_10": "A05:2021 — Security Misconfiguration",
+        "wstg": "WSTG-CLNT-07 — Testing Cross Origin Resource Sharing",
+        "justificativa": "O achado é um Security Hotspot que sinaliza a ativação de CORS, mas não comprova, por si só, uma configuração insegura. É necessário examinar a política efetiva e o comportamento da aplicação para determinar se origens não confiáveis podem ler respostas sensíveis ou utilizar credenciais indevidamente. CORS restrito a origens confiáveis, ou acesso irrestrito limitado a recursos explicitamente públicos e sem credenciais, pode ser aceitável."
+      },
+      "descricao_tecnica": "Verificar a configuração de CORS associada à linha 182 de server.ts, incluindo origens permitidas, reflexão do cabeçalho Origin, tratamento da origem null, métodos e cabeçalhos autorizados e uso de Access-Control-Allow-Credentials. O risco existe quando uma origem controlada por um atacante obtém acesso cross-origin a dados ou operações que deveriam ser restritos. A validação deve considerar o conteúdo das respostas e o contexto de autenticação, não apenas a presença de cabeçalhos CORS.",
+      "pre_condicoes_para_verificacao": [
+        "Ter acesso ao código-fonte de server.ts e às configurações ou middlewares que possam alterar a política CORS em tempo de execução.",
+        "Disponibilizar um ambiente de teste com a mesma configuração CORS do ambiente analisado e identificar um endpoint representativo que retorne dados não públicos.",
+        "Controlar uma origem confiável e uma origem de atacante, como https://atacante.example, além de conseguir enviar requisições com Origin: null.",
+        "Utilizar um navegador ou automação de navegador para validar a aplicação real da política CORS, bem como um cliente HTTP para inspecionar os cabeçalhos.",
+        "Quando o endpoint exigir autenticação, utilizar exclusivamente uma conta e dados de teste, sem realizar ações destrutivas."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 — Inspecionar a linha 182 e reconstruir a política CORS efetiva, verificando valores como origin: *, reflexão arbitrária de Origin, validação por expressão regular, lista de origens confiáveis e credentials: true.",
+          "resultado_esperado_verdadeiro_positivo": "A configuração permite origens não confiáveis ou contém validação contornável e essa permissão alcança recursos sensíveis; origem arbitrária refletida com credenciais também constitui evidência relevante.",
+          "resultado_esperado_falso_positivo": "A política efetiva restringe corretamente as origens, métodos e cabeçalhos necessários, ou a configuração permissiva é limitada a recursos deliberadamente públicos, sem exposição de dados ou credenciais sensíveis."
+        },
+        {
+          "passo": "Passo 02 — Enviar requisições simples e preflight OPTIONS ao endpoint representativo usando Origin: https://atacante.example e Origin: null. Registrar Access-Control-Allow-Origin, Access-Control-Allow-Credentials, Access-Control-Allow-Methods e Access-Control-Allow-Headers, repetindo o teste com uma origem confiável como controle.",
+          "resultado_esperado_verdadeiro_positivo": "A origem não confiável recebe autorização CORS aplicável a recursos sensíveis, por reflexão, curinga indevido ou aceitação injustificada de null, com métodos ou cabeçalhos que viabilizem o acesso indevido.",
+          "resultado_esperado_falso_positivo": "A origem não confiável não recebe cabeçalhos que a autorizem, o preflight é negado ou a política permite somente a origem confiável; uma resposta permissiva exclusivamente sobre conteúdo público não demonstra vulnerabilidade."
+        },
+        {
+          "passo": "Passo 03 — Em uma página hospedada na origem do atacante, executar uma requisição fetch para um recurso sensível, inicialmente sem credenciais e, quando aplicável, com credentials: include e uma sessão de teste autenticada. Confirmar se o navegador permite à página ler o corpo da resposta.",
+          "resultado_esperado_verdadeiro_positivo": "O código da origem atacante consegue ler dados não públicos ou uma resposta autenticada, comprovando exposição cross-origin; em cenário credenciado, a origem autorizada indevidamente também pode ser combinada com Access-Control-Allow-Credentials: true.",
+          "resultado_esperado_falso_positivo": "O navegador bloqueia o acesso da origem atacante, a autenticação não é reutilizada indevidamente ou somente dados publicamente acessíveis podem ser lidos. A mera presença de Access-Control-Allow-Origin: * não deve ser tratada como acesso credenciado bem-sucedido."
+        },
+        {
+          "passo": "Passo 04 — Se houver lista ou expressão regular de origens permitidas, testar variações controladas, como subdomínio adicional, domínio que apenas contenha o nome confiável, esquema e porta diferentes, letras maiúsculas, caractere nulo ou codificado quando suportado pelo cliente e sufixos inesperados.",
+          "resultado_esperado_verdadeiro_positivo": "Pelo menos uma variação pertencente à origem do atacante é aceita como confiável e obtém acesso a um recurso sensível, evidenciando falha na comparação ou validação da origem.",
+          "resultado_esperado_falso_positivo": "Somente origens exatas e explicitamente confiáveis são aceitas, considerando corretamente esquema, host e porta, e todas as variações maliciosas são rejeitadas ou deixam sem autorização CORS."
+        }
+      ]
+    }
+  ]
+}

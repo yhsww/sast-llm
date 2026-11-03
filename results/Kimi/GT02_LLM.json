@@ -1,0 +1,45 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "6d4ecb57-73d4-482f-ae9c-2728da3971bb",
+        "arquivo": "lib/insecurity.ts",
+        "linha": 23,
+        "severidade_sast": "BLOCKER",
+        "regra": "secrets:S6706",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro positivo provável, sujeito a confirmação manual",
+        "cwe": "CWE-321: Use of Hard-coded Cryptographic Key",
+        "owasp_top_10": "A02:2021 - Cryptographic Failures",
+        "wstg": "WSTG-CRYP-04 - Testing for Weak Encryption",
+        "justificativa": "A regra identificou uma possível chave privada incorporada ao código-fonte. Se o material for uma chave privada válida, sua presença no repositório constitui exposição de segredo, independentemente de estar atualmente em uso, pois pode permitir impersonação, falsificação de assinaturas ou decifragem, conforme sua finalidade. A confirmação deve validar o conteúdo sem reproduzi-lo em evidências e verificar seu uso e alcance antes da rotação."
+      },
+      "descricao_tecnica": "Uma chave privada aparentemente codificada em lib/insecurity.ts pode ser obtida por qualquer pessoa com acesso ao código, ao histórico de versões ou a artefatos que a incluam. Caso seja utilizada pela aplicação para assinatura, autenticação ou criptografia, um atacante poderá derivar a respectiva chave pública, comparar sua impressão digital com configurações confiáveis e, em ambiente controlado, verificar se consegue produzir artefatos aceitos pelo sistema. O segredo deve ser tratado como comprometido até comprovação em contrário; remover somente a linha do código não revoga a chave nem elimina cópias do histórico.",
+      "pre_condicoes_para_verificacao": [
+        "Obter acesso somente leitura à mesma revisão analisada pelo SonarQube e às configurações relevantes de assinatura, criptografia e implantação.",
+        "Executar a análise em estação e ambiente controlados, sem publicar a chave, copiá-la para tickets, logs, saídas de teste ou outros sistemas.",
+        "Obter autorização para inspecionar configurações e, se necessário, realizar um teste criptográfico não destrutivo exclusivamente em ambiente isolado.",
+        "Manter disponível o responsável pelo serviço para coordenar revogação, rotação e invalidação de artefatos caso a chave seja confirmada como real ou ativa."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 - Inspecionar a linha 23 e seu contexto, preservando o conteúdo sensível. Confirmar se existe um bloco ou valor de chave privada completo, e não apenas uma referência a arquivo, variável de ambiente, cofre de segredos, chave pública ou placeholder.",
+          "resultado_esperado_verdadeiro_positivo": "O código contém material de chave privada completo e incorporado diretamente ao fonte, compatível com formatos como PEM ou outra representação privada suportada.",
+          "resultado_esperado_falso_positivo": "O trecho contém somente um placeholder inequívoco, exemplo não utilizável, chave pública ou referência externa ao segredo, sem qualquer material privado no código."
+        },
+        {
+          "passo": "Passo 02 - Validar o material offline, sem exibi-lo: verificar se ele é sintática e criptograficamente interpretável como chave privada, derivar somente sua chave pública ou impressão digital e rastrear no código onde o valor é carregado ou consumido.",
+          "resultado_esperado_verdadeiro_positivo": "O material é uma chave privada válida ou apresenta evidências claras de ter sido operacional, e seu uso ou distribuição pelo código, histórico ou artefatos confirma exposição de um segredo.",
+          "resultado_esperado_falso_positivo": "O conteúdo não pode constituir uma chave privada válida e a análise contextual comprova que a correspondência ocorreu apenas sobre texto ilustrativo ou estrutura semelhante, sem segredo real."
+        },
+        {
+          "passo": "Passo 03 - Comparar a impressão digital pública derivada com chaves confiáveis pelos ambientes e, somente se autorizado, testar em ambiente isolado se a configuração aceita um artefato de teste produzido com a chave. Verificar também se a chave aparece no histórico do repositório ou em pacotes distribuídos, usando apenas identificadores e impressões digitais nas evidências.",
+          "resultado_esperado_verdadeiro_positivo": "Há correspondência com uma chave ativa ou anteriormente confiável, aceitação do artefato de teste no ambiente isolado, ou distribuição comprovada do segredo. Deve-se acionar revogação e rotação, substituir o carregamento por um mecanismo seguro de segredos, remover o valor do código e avaliar a sanitização do histórico e a invalidação de artefatos emitidos com a chave antiga.",
+          "resultado_esperado_falso_positivo": "Não existe segredo privado real ou distribuído e nenhuma configuração confia no material, confirmando que o alerta decorreu de conteúdo inócuo. Se a chave for válida, porém aparentemente inativa, o achado não deve ser descartado apenas por esse motivo: sua origem e seu descarte seguro ainda precisam ser comprovados."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "87daf531-960b-43e8-a596-ca1b9293b5af",
+        "arquivo": "juice-shop:frontend/src/app/change-password/change-password.component.ts",
+        "linha": 92,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S5852",
+        "categoria": "SECURITY_HOTSPOT - Denial of Service por expressão regular (ReDoS)"
+      },
+      "classificacao": {
+        "veredicto": "Potencial verdadeiro positivo; requer confirmação de alcançabilidade, comportamento temporal e impacto",
+        "cwe": "CWE-1333 - Inefficient Regular Expression Complexity, com possível impacto relacionado a CWE-400 - Uncontrolled Resource Consumption",
+        "owasp_top_10": "Relacionado a A04:2021 - Insecure Design; ReDoS não possui categoria exclusiva no OWASP Top 10",
+        "wstg": "Sem mapeamento WSTG específico para ReDoS; aplicar validação de entrada e ensaio controlado de complexidade e disponibilidade do cliente",
+        "justificativa": "A regra S5852 identifica um risco estrutural de retrocesso superlinear, mas um SECURITY_HOTSPOT não comprova exploração. É necessário confirmar que uma entrada controlável e suficientemente longa alcança a expressão regular e provoca consumo excessivo de CPU. Como o código está no frontend, o impacto inicial esperado é o bloqueio da thread principal e da interface do navegador; indisponibilidade do servidor ou de outros usuários não deve ser presumida sem um fluxo adicional que o demonstre."
+      },
+      "descricao_tecnica": "Uma expressão regular suscetível a retrocesso superlinear pode reavaliar repetidamente partes da entrada, especialmente em cadeias de quase correspondência que terminam em falha. Isso pode elevar de forma desproporcional o tempo de execução e bloquear o event loop do navegador. A confirmação deve considerar a expressão exata da linha 92, o tamanho máximo realmente aceito, o motor JavaScript utilizado e a origem da entrada. Não se deve presumir um payload, uma complexidade específica ou impacto server-side sem examinar esses elementos.",
+      "pre_condicoes_para_verificacao": [
+        "Obter o código da mesma revisão analisada, incluindo a expressão regular completa, suas flags, o método que a executa e os fluxos de dados que chegam à linha 92.",
+        "Identificar os limites de tamanho aplicados antes da avaliação da regex e verificar se esses limites podem ser contornados ou se existem outras entradas que alcançam o mesmo código.",
+        "Executar os ensaios somente em ambiente local ou de teste autorizado, usando navegador representativo dos clientes suportados e sem gerar carga contra backends compartilhados.",
+        "Preparar medição com Performance API ou ferramenta equivalente, múltiplas repetições, limite de tempo e mecanismo de interrupção, preferencialmente isolando a regex em Web Worker ou teste unitário para evitar bloqueio prolongado da estação de teste.",
+        "Derivar entradas adversariais de quase correspondência a partir da estrutura real da regex, além de entradas válidas, inválidas curtas e controles de tamanho equivalente."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 - Confirmar estaticamente a regex e sua alcançabilidade. Localizar a expressão na linha 92, verificar se ela é efetivamente executada e rastrear se valores dos campos de senha ou de outras fontes controláveis chegam ao casamento sem uma restrição de comprimento suficiente para neutralizar o retrocesso.",
+          "resultado_esperado_verdadeiro_positivo": "A regex sinalizada existe, é alcançável em um fluxo real e processa texto cujo conteúdo e comprimento podem ser influenciados pelo usuário ou por outra origem não confiável, sem limite eficaz que impeça o pior caso.",
+          "resultado_esperado_falso_positivo": "Não há caminho executável para a operação, a regex indicada não é utilizada para casar texto variável ou toda entrada possível é fixa e confiável. Nesse caso, registrar a ausência de alcançabilidade; uma entrada apenas limitada ainda precisa ser avaliada dinamicamente antes de descartar o risco."
+        },
+        {
+          "passo": "Passo 02 - Medir a complexidade em ambiente isolado. Executar a mesma regex no mesmo motor JavaScript com entradas de quase correspondência em comprimentos crescentes e controlados, repetindo as medições e comparando a mediana dos tempos com entradas benignas. Interromper o ensaio ao atingir o limite de segurança previamente definido.",
+          "resultado_esperado_verdadeiro_positivo": "Pequenos aumentos de comprimento produzem crescimento de tempo claramente desproporcional ao crescimento linear, ou ocorrem estouros do tempo limite em tamanhos que a aplicação aceita. O comportamento é reproduzível e está associado à falha de correspondência da regex, não a operações externas.",
+          "resultado_esperado_falso_positivo": "Até o maior comprimento efetivamente aceito, o tempo permanece aproximadamente linear e dentro de margens seguras, sem crescimento abrupto, timeouts ou diferença relevante entre os casos adversariais e os controles."
+        },
+        {
+          "passo": "Passo 03 - Validar o efeito no fluxo real de alteração de senha. Submeter a entrada adversaria pelo caminho normal da aplicação, respeitando inicialmente suas validações, e registrar uma tarefa longa, atraso no event loop, responsividade da interface e o tempo gasto especificamente na avaliação da regex.",
+          "resultado_esperado_verdadeiro_positivo": "A entrada alcança a linha 92 e causa bloqueio reproduzível da thread principal, interface temporariamente inoperante ou atraso excessivo em um tamanho permitido, confirmando degradação de disponibilidade do cliente.",
+          "resultado_esperado_falso_positivo": "A entrada é rejeitada ou truncada antes da regex por um controle eficaz, ou o fluxo completo permanece responsivo e sem tarefas longas relevantes em todos os tamanhos permitidos."
+        },
+        {
+          "passo": "Passo 04 - Delimitar o impacto de segurança e a capacidade de entrega do ataque. Verificar se um atacante pode fazer outra vítima processar a cadeia, por dados persistidos, compartilhados ou refletidos, e se a mesma expressão é reutilizada em um componente compartilhado ou no servidor.",
+          "resultado_esperado_verdadeiro_positivo": "Existe um caminho pelo qual o atacante provoca processamento da entrada por outra vítima ou por componente compartilhado, causando impacto de disponibilidade além da própria sessão do atacante. Documentar separadamente qualquer evidência de impacto server-side.",
+          "resultado_esperado_falso_positivo": "Somente o próprio usuário pode fornecer o valor à sua própria aba, não há persistência, entrega a terceiros nem reutilização server-side e nenhum outro impacto relevante é demonstrado. Nesse cenário, não afirmar DoS remoto; classificar o resultado como ausência de explorabilidade de segurança no contexto, mantendo o defeito algorítmico como problema de robustez a ser corrigido."
+        }
+      ]
+    }
+  ]
+}

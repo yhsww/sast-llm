@@ -7,42 +7,37 @@
         "linha": 119,
         "severidade_sast": "CRITICAL",
         "regra": "typescript:S6268",
-        "categoria": "SECURITY_HOTSPOT"
+        "categoria": "Security Hotspot - Bypass de Sanitização Angular"
       },
       "classificacao": {
-        "veredicto": "A confirmar (Security Hotspot - requer revisão manual)",
-        "cwe": "CWE-79: Improper Neutralization of Input During Web Page Generation (Cross-site Scripting)",
+        "veredicto": "A Verificar (Potencial Falso Positivo - Requer Análise Manual)",
+        "cwe": "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')",
         "owasp_top_10": "A03:2021 - Injection",
         "wstg": "WSTG-CLNT-01: Testing for DOM-based Cross Site Scripting",
-        "justificativa": "A regra S6268 identifica o uso de métodos do Angular (como bypassSecurityTrustHtml, bypassSecurityTrustUrl, bypassSecurityTrustResourceUrl, bypassSecurityTrustScript ou bypassSecurityTrustStyle) que desabilitam a sanitização automática de conteúdo do framework. Isso é classificado como Security Hotspot pois a periculosidade depende diretamente da origem do dado que está sendo marcado como seguro. Se o dado renderizado tiver origem em entrada controlada pelo usuário (parâmetros de URL, resposta de API, campos de formulário, etc.) sem sanitização adequada antes do bypass, a aplicação fica vulnerável a XSS. Caso o dado seja estático, hardcoded ou passe por sanitização robusta anterior, trata-se de falso positivo."
+        "justificativa": "Trata-se de um Security Hotspot, não uma vulnerabilidade confirmada automaticamente. O Angular possui sanitização automática de HTML/URL/Style/Script contra DOM XSS. O uso de métodos como bypassSecurityTrustHtml, bypassSecurityTrustUrl, bypassSecurityTrustResourceUrl, bypassSecurityTrustScript ou bypassSecurityTrustStyle do DomSanitizer desabilita essa proteção nativa. A severidade real depende se o conteúdo injetado tem origem em input controlado pelo usuário (vulnerável) ou é estritamente estático/confiável (falso positivo)."
       },
-      "descricao_tecnica": "O Angular possui um mecanismo de sanitização automática (DomSanitizer) que neutraliza conteúdo potencialmente perigoso (HTML, URLs, scripts, estilos, recursos) antes de inseri-lo no DOM, mitigando ataques de Cross-Site Scripting (XSS). Ao utilizar métodos como bypassSecurityTrustHtml(), bypassSecurityTrustUrl(), bypassSecurityTrustResourceUrl(), bypassSecurityTrustScript() ou bypassSecurityTrustStyle(), o desenvolvedor instrui explicitamente o framework a confiar no conteúdo sem sanitização, assumindo total responsabilidade pela segurança do dado. No arquivo about.component.ts, linha 119, essa prática foi identificada, exigindo verificação manual da origem e do tratamento do dado antes do bypass para confirmar se há risco real de injeção de scripts maliciosos no contexto do componente 'About' da aplicação Juice Shop.",
+      "descricao_tecnica": "O código localizado em about.component.ts na linha 119 utiliza uma chamada ao DomSanitizer do Angular (ex: bypassSecurityTrustHtml, bypassSecurityTrustUrl, bypassSecurityTrustResourceUrl, bypassSecurityTrustScript ou bypassSecurityTrustStyle) que desativa a sanitização automática de conteúdo fornecida pelo framework. Essa prática é sensível porque, caso o valor passado para o método de bypass seja derivado — direta ou indiretamente — de uma fonte não confiável (parâmetros de URL, dados de API, input do usuário, localStorage, etc.), um atacante pode injetar HTML/JavaScript malicioso que será renderizado sem filtragem, resultando em um ataque de Cross-Site Scripting (XSS) baseado em DOM. É necessário inspecionar a origem do dado sanitizado manualmente para concluir sobre o risco real.",
       "pre_condicoes_para_verificacao": [
-        "Acesso ao código-fonte do componente frontend/src/app/about/about.component.ts para análise estática do trecho na linha 119 e do fluxo de dados (data flow) até a origem da variável.",
-        "Ambiente de execução do Juice Shop (local ou staging) com o componente 'About' acessível via navegador.",
-        "Ferramenta de inspeção de DOM/console do navegador (DevTools) para análise de renderização em tempo real.",
-        "Conhecimento sobre quais parâmetros, APIs ou configurações alimentam o conteúdo exibido na página About (ex.: arquivo de configuração de legal/terceiros)."
+        "Acesso ao código-fonte completo do componente about.component.ts e seus arquivos relacionados (template HTML, serviços injetados).",
+        "Capacidade de rastrear a origem (data flow) do valor passado ao método bypassSecurityTrust* na linha 119.",
+        "Ambiente de desenvolvimento ou build do Juice Shop configurado para teste dinâmico (DAST) complementar.",
+        "Conhecimento sobre quais rotas/parâmetros/inputs alimentam o componente About (ex: query strings, configurações administrativas, resposta de API externa)."
       ],
       "passos_de_verificacao": [
         {
-          "passo": "Passo 01: Identificar qual método de bypass está sendo utilizado na linha 119 (bypassSecurityTrustHtml, bypassSecurityTrustUrl, bypassSecurityTrustResourceUrl, bypassSecurityTrustScript ou bypassSecurityTrustStyle) e qual variável/dado está sendo passado como argumento.",
-          "resultado_esperado_verdadeiro_positivo": "O método recebe diretamente ou indiretamente um valor derivado de entrada controlada pelo usuário (query params, resposta de endpoint de API sem validação, dados de formulário, localStorage/sessionStorage manipulável) sem qualquer sanitização prévia (ex.: DOMPurify, escape de HTML).",
-          "resultado_esperado_falso_positivo": "O valor passado é uma string estática, constante hardcoded no código-fonte, ou provém de configuração de build/ambiente não manipulável pelo usuário final, tornando a exploração inviável."
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Inspeção do código revela que o valor passado para o método DomSanitizer.bypassSecurityTrust* é originado, direta ou indiretamente, de uma fonte externa/não confiável (ex: resposta de API de terceiros, parâmetro de rota, input de usuário, configuração editável por usuário), confirmando que não há sanitização/validação adequada antes do bypass.",
+          "resultado_esperado_falso_positivo": "O valor passado é uma constante estática definida no próprio código-fonte (hardcoded), não influenciável por nenhum agente externo, tornando a desativação da sanitização segura neste contexto específico."
         },
         {
-          "passo": "Passo 02: Rastrear a origem do dado (data flow analysis) desde a declaração da variável usada no bypass até sua fonte original, verificando se existe tratamento de sanitização (ex.: DOMPurify.sanitize) em algum ponto do fluxo antes de chegar ao bypass.",
-          "resultado_esperado_verdadeiro_positivo": "Não há nenhuma etapa de sanitização no fluxo de dados entre a fonte controlável e o ponto de bypass; o dado chega 'bruto' ao DomSanitizer.",
-          "resultado_esperado_falso_positivo": "Existe uma camada de sanitização robusta e comprovadamente eficaz (biblioteca reconhecida como DOMPurify, ou validação de whitelist rigorosa) aplicada ao dado antes do bypass ser invocado."
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Ao realizar um teste dinâmico (DAST) injetando um payload XSS (ex: <img src=x onerror=alert(document.cookie)>) na fonte identificada como controlável, o payload é renderizado e executado no DOM da página About, confirmando execução de script arbitrário.",
+          "resultado_esperado_falso_positivo": "O payload injetado não é refletido na página About ou é renderizado como texto puro (encoded), pois o fluxo de dados não alcança efetivamente o ponto de bypass identificado, ou existe uma camada adicional de sanitização/validação antes da chamada vulnerável."
         },
         {
-          "passo": "Passo 03: Em ambiente de teste, tentar injetar um payload de XSS (ex.: '<img src=x onerror=alert(document.cookie)>' ou 'javascript:alert(1)' para contexto de URL) através do canal identificado como fonte do dado (parâmetro de URL, campo de configuração, resposta de API mockada) e observar o comportamento da página About no navegador.",
-          "resultado_esperado_verdadeiro_positivo": "O payload é executado no navegador (gera alert, exfiltra cookie, ou executa JavaScript arbitrário), confirmando que a sanitização foi efetivamente contornada e o conteúdo malicioso foi renderizado/executado no DOM.",
-          "resultado_esperado_falso_positivo": "O payload não é executado; o navegador exibe o conteúdo como texto literal, bloqueia a URL (ex.: Angular ainda aplica alguma proteção residual), ou o canal de entrada não é acessível/manipulável externamente, impedindo a exploração."
-        },
-        {
-          "passo": "Passo 04: Caso a exploração seja bem-sucedida, avaliar o impacto no contexto da aplicação (ex.: se a página About é acessível sem autenticação, se o payload pode ser entregue via link malicioso a outros usuários - XSS refletido/armazenado) e documentar evidências (screenshot, HAR, payload utilizado).",
-          "resultado_esperado_verdadeiro_positivo": "Confirma-se um vetor de XSS explorável remotamente (ex.: via link compartilhado ou parâmetro manipulado), com potencial de roubo de sessão, phishing ou comprometimento de outros usuários da aplicação - validando a criticidade CRITICAL do achado.",
-          "resultado_esperado_falso_positivo": "O bypass está isolado em um contexto sem possibilidade real de entrada externa maliciosa (ex.: apenas dados internos confiáveis do próprio sistema, sem exposição a usuários não confiáveis), reclassificando o achado como aceito/mitigado (Hotspot revisado como seguro)."
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Revisão do histórico de commits/Git blame e documentação do projeto não evidencia controles compensatórios (allowlist de tags, sanitização customizada com DOMPurify, validação de schema) aplicados antes do uso do bypassSecurityTrust*, reforçando a existência de uma vulnerabilidade XSS explorável.",
+          "resultado_esperado_falso_positivo": "É identificada uma camada de sanitização customizada (ex: biblioteca DOMPurify) ou validação de allowlist aplicada ao valor antes de ser passado ao bypassSecurityTrust*, mitigando o risco e justificando a supressão do hotspot com comentário de revisão (ex: // NOSONAR com justificativa documentada)."
         }
       ]
     }

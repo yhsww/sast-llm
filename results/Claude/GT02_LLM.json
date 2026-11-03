@@ -7,37 +7,42 @@
         "linha": 23,
         "severidade_sast": "BLOCKER",
         "regra": "secrets:S6706",
-        "categoria": "Hardcoded Secrets / Cryptographic Key Management"
+        "categoria": "Vulnerability - Hardcoded Secrets / Exposure of Private Cryptographic Key"
       },
       "classificacao": {
         "veredicto": "Verdadeiro Positivo",
-        "cwe": "CWE-798: Use of Hard-coded Credentials / CWE-321: Use of Hard-coded Cryptographic Key",
+        "cwe": "CWE-798: Use of Hard-coded Credentials (relacionado a CWE-321: Use of Hard-coded Cryptographic Key)",
         "owasp_top_10": "A02:2021 - Cryptographic Failures",
-        "wstg": "WSTG-CRYP-04: Testing for Weak Encryption / WSTG-CONF-05: Testing for Content of Sensitive Files",
-        "justificativa": "O código-fonte contém uma chave privada embutida diretamente no arquivo lib/insecurity.ts, utilizada presumivelmente para assinatura de tokens JWT ou operações criptográficas da aplicação. Chaves privadas hardcoded no repositório são consideradas verdadeiros positivos críticos, pois qualquer pessoa com acesso ao código-fonte (incluindo histórico de versionamento, repositórios públicos ou vazamentos) pode extrair a chave e forjar tokens de autenticação, assinar payloads maliciosos ou descriptografar dados protegidos, comprometendo integralmente a segurança do mecanismo de autenticação/autorização da aplicação."
+        "wstg": "WSTG-CRYP-04: Testing for Weak Encryption (aplicado por analogia à exposição de chave privada em código-fonte, não havendo categoria WSTG exclusiva para 'hardcoded secrets')",
+        "justificativa": "O código-fonte do arquivo lib/insecurity.ts contém, na linha 23, uma chave privada embutida diretamente no código. Esse padrão é tipicamente utilizado para assinatura/verificação de tokens (ex.: JWT) ou operações criptográficas. A exposição de uma chave privada em texto claro no repositório constitui uma falha crítica de gerenciamento de segredos, pois qualquer pessoa com acesso ao código-fonte (incluindo histórico de versionamento) pode extrair a chave e forjar tokens, assinaturas ou decifrar dados protegidos por ela. Mesmo em aplicações intencionalmente vulneráveis (como o OWASP Juice Shop, usado para fins didáticos), o padrão de código identificado reproduz fielmente uma vulnerabilidade real e deve ser tratado como Verdadeiro Positivo para fins de validação da regra SAST."
       },
-      "descricao_tecnica": "A regra secrets:S6706 do SonarQube identificou a presença de uma chave privada (private key) codificada diretamente no arquivo-fonte lib/insecurity.ts, na linha 23. Esse tipo de chave normalmente é utilizado em operações criptográficas assimétricas, como assinatura e verificação de JSON Web Tokens (JWT), SSH, TLS ou criptografia de dados sensíveis. Ao embutir a chave privada no código-fonte, ela se torna parte do histórico de controle de versão (Git), sendo exposta a qualquer desenvolvedor, contribuidor, pipeline de CI/CD ou atacante que obtenha acesso ao repositório — mesmo que a chave seja removida em commits futuros, ela permanece recuperável através do histórico do VCS. Essa prática viola princípios fundamentais de gestão de segredos (secrets management), pois elimina a rotação segura de chaves, dificulta auditoria de acesso e cria um único ponto de falha estático e imutável.",
+      "descricao_tecnica": "A regra secrets:S6706 do SonarQube identificou uma chave privada criptográfica hard-coded (embutida diretamente no código-fonte) no arquivo lib/insecurity.ts, linha 23. Chaves privadas devem ser mantidas em cofres de segredos (vaults), variáveis de ambiente seguras ou serviços de gerenciamento de chaves (KMS/HSM), nunca versionadas junto ao código-fonte. A presença da chave no repositório expõe o segredo a qualquer desenvolvedor, colaborador externo ou atacante que obtenha acesso ao código (incluindo via vazamento de repositório, histórico de commits do Git, ou builds públicos), permitindo a falsificação de tokens de autenticação/autorização (ex.: JWT assinados com essa chave), personificação de usuários administrativos e comprometimento da integridade de dados assinados digitalmente.",
       "pre_condicoes_para_verificacao": [
-        "Acesso de leitura ao repositório de código-fonte (incluindo histórico de commits do Git).",
-        "Ferramenta de análise estática configurada (SonarQube) ou acesso direto ao arquivo lib/insecurity.ts.",
-        "Ambiente de teste/laboratório da aplicação Juice Shop em execução (local ou staging) para validação prática do uso da chave.",
-        "Permissão para realizar testes de segurança (pentest autorizado) no ambiente alvo, caso se deseje explorar o impacto (ex.: forjar tokens JWT)."
+        "Acesso de leitura ao código-fonte do repositório (incluindo histórico de commits/branches) do projeto juice-shop.",
+        "Permissão para inspecionar o arquivo lib/insecurity.ts na linha indicada (23).",
+        "Conhecimento de onde/como a chave privada é utilizada na aplicação (ex.: geração/validação de JWT, assinatura de payloads).",
+        "Ambiente de teste ou cópia do repositório para evitar exposição adicional do segredo em ambiente produtivo durante a análise."
       ],
       "passos_de_verificacao": [
         {
           "passo": "Passo 01",
-          "resultado_esperado_verdadeiro_positivo": "Ao abrir o arquivo lib/insecurity.ts na linha 23 (e linhas adjacentes), confirma-se a presença literal de uma chave privada (ex.: bloco PEM '-----BEGIN RSA PRIVATE KEY-----' ou string/Buffer representando material criptográfico sensível) codificada diretamente no código-fonte, sem uso de variáveis de ambiente, cofres de segredos (Vault, AWS Secrets Manager, etc.) ou arquivos externos ignorados pelo controle de versão.",
-          "resultado_esperado_falso_positivo": "O conteúdo identificado não é uma chave privada real, mas sim um valor de exemplo/placeholder claramente documentado como fictício (ex.: chave de teste gerada para fins educacionais, comentário explícito indicando 'EXAMPLE KEY - NOT FOR PRODUCTION'), ou trata-se de uma chave pública, certificado público, ou dado não sensível classificado incorretamente pela regra."
+          "resultado_esperado_verdadeiro_positivo": "Ao abrir o arquivo lib/insecurity.ts na linha 23, é possível observar uma string ou constante contendo material de chave privada (ex.: bloco PEM '-----BEGIN RSA PRIVATE KEY-----' ou equivalente) diretamente no código-fonte, confirmando que o segredo está hard-coded e versionado no repositório.",
+          "resultado_esperado_falso_positivo": "A linha 23 não contém uma chave privada real, mas sim uma referência/placeholder (ex.: variável de ambiente, chamada a um serviço de secrets manager, ou string de exemplo/documentação claramente identificada como não sensível), não configurando exposição real de segredo."
         },
         {
           "passo": "Passo 02",
-          "resultado_esperado_verdadeiro_positivo": "Busca no histórico do Git (git log -p --all -- lib/insecurity.ts ou ferramentas como git-secrets/trufflehog) confirma que a chave está presente em múltiplos commits, demonstrando exposição persistente e irreversível via histórico de versionamento, mesmo que removida futuramente do HEAD.",
-          "resultado_esperado_falso_positivo": "A chave foi adicionada apenas em um commit de teste local não publicado (branch não enviada ao repositório remoto) ou o arquivo nunca foi commitado ao histórico compartilhado, limitando a exposição real."
+          "resultado_esperado_verdadeiro_positivo": "Buscar no código onde a chave identificada é consumida (ex.: funções de assinatura/verificação JWT como jwt.sign() ou jwt.verify()) e confirmar que ela é efetivamente utilizada para operações criptográficas sensíveis da aplicação, validando o impacto real da exposição.",
+          "resultado_esperado_falso_positivo": "A suposta chave não é utilizada em nenhuma rotina criptográfica ativa da aplicação (código morto, exemplo não referenciado, ou arquivo de teste/mock isolado do fluxo de produção), reduzindo o achado a um falso positivo de impacto nulo."
         },
         {
           "passo": "Passo 03",
-          "resultado_esperado_verdadeiro_positivo": "Testa-se o uso funcional da chave extraída (ex.: utilizando-a para assinar um JWT customizado com jwt.io ou script Node.js e enviando-o à API da aplicação em execução); o servidor aceita o token como válido, comprovando que a chave extraída do código-fonte é efetivamente utilizada em produção para autenticação/autorização, confirmando o impacto crítico de comprometimento total do mecanismo de auth.",
-          "resultado_esperado_falso_positivo": "A chave extraída não corresponde à chave realmente utilizada em runtime pela aplicação (por exemplo, a aplicação sobrescreve a chave via variável de ambiente em produção, tornando o valor hardcoded apenas um fallback de desenvolvimento inofensivo e nunca utilizado em ambientes reais)."
+          "resultado_esperado_verdadeiro_positivo": "Utilizando a chave extraída do código-fonte, tentar forjar um token JWT válido (ou assinar um payload de teste) e submetê-lo a um endpoint protegido da aplicação, comprovando que o token forjado é aceito como legítimo pelo backend.",
+          "resultado_esperado_falso_positivo": "O token forjado com a chave extraída é rejeitado pela aplicação (ex.: a chave real em produção é diferente, foi rotacionada, ou há validação adicional de origem/assinatura), demonstrando que o segredo exposto não está mais em uso efetivo e não representa risco atual."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Verificar o histórico de commits do Git (git log -p ou git blame) para confirmar que a chave privada está presente em múltiplas revisões do repositório, evidenciando exposição persistente e necessidade de revogação/rotação da chave, além de reescrita do histórico (git filter-repo/BFG) para remoção completa.",
+          "resultado_esperado_falso_positivo": "A chave foi adicionada apenas em um commit isolado de teste/exemplo que nunca foi mesclado à branch principal (main/master) ou publicado, limitando significativamente a exposição real do segredo."
         }
       ]
     }

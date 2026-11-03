@@ -1,0 +1,45 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "101f6c6f-b415-47a0-961c-e577bac36edb",
+        "arquivo": "juice-shop:frontend/src/app/about/about.component.ts",
+        "linha": 119,
+        "severidade_sast": "CRITICAL",
+        "regra": "typescript:S6268",
+        "categoria": "SECURITY_HOTSPOT"
+      },
+      "classificacao": {
+        "veredicto": "A verificar",
+        "cwe": "CWE-79 - Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-02 - Testing for Stored Cross Site Scripting; usar WSTG-INPV-01 caso o fluxo identificado seja refletido e não persistente",
+        "justificativa": "O achado é um Security Hotspot: desativar a sanitização nativa do Angular não comprova, isoladamente, uma vulnerabilidade. Haverá XSS se HTML controlável por um atacante alcançar a operação da linha 119 sem validação ou sanitização adequada e for posteriormente renderizado como conteúdo ativo. Se o valor for exclusivamente estático e confiável, ou tiver passado por sanitização rigorosa baseada em lista de permissões, o achado poderá ser considerado falso positivo no fluxo analisado."
+      },
+      "descricao_tecnica": "A regra typescript:S6268 identifica o uso de mecanismo que marca conteúdo como confiável e contorna a sanitização nativa do Angular, como as APIs bypassSecurityTrust*. Na linha indicada, essa operação pode permitir que marcação HTML e manipuladores de eventos controlados por um atacante sejam preservados e interpretados pelo navegador. A confirmação exige rastrear a origem do valor, eventuais transformações e o local de renderização, seguida de teste dinâmico com carga não destrutiva.",
+      "pre_condicoes_para_verificacao": [
+        "Dispor de autorização e de um ambiente de teste isolado, sem utilizar dados reais de usuários.",
+        "Ter acesso ao código-fonte do componente, ao template que renderiza o valor e às funções ou serviços que o produzem.",
+        "Conseguir executar a aplicação e acessar a tela About com as ferramentas de desenvolvimento do navegador disponíveis.",
+        "Caso a análise estática identifique uma origem controlável, possuir as permissões necessárias para criar ou alterar essa entrada e, quando aplicável, fazê-la persistir."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A inspeção da linha 119 e do fluxo de dados confirma que o valor marcado como confiável contém, total ou parcialmente, dados provenientes de requisição, conteúdo persistido, configuração externa ou outra fonte que um atacante possa influenciar. Não há sanitização rigorosa baseada em lista de permissões antes do bypass, e o valor chega a um contexto de renderização HTML.",
+          "resultado_esperado_falso_positivo": "O argumento é uma constante ou conteúdo integralmente controlado pela aplicação, sem possibilidade de influência externa, ou passa por sanitização rigorosa e contextualmente adequada antes do bypass. Não existe caminho pelo qual um atacante possa introduzir elementos ou atributos ativos no valor renderizado."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Quando houver uma origem controlável, inserir nela a carga não destrutiva <img src=x onerror=\"window.__s6268_test=1\">, abrir ou recarregar a tela About e acionar a renderização do conteúdo. O elemento é criado como HTML ativo, o manipulador onerror é preservado e window.__s6268_test assume o valor 1, confirmando execução de script no contexto da aplicação e, portanto, XSS.",
+          "resultado_esperado_falso_positivo": "A carga é exibida como texto inerte, tem os elementos ou atributos perigosos removidos, ou não alcança o conteúdo renderizado. O manipulador não é executado, window.__s6268_test permanece indefinido e nenhuma outra execução de script originada da entrada é observada."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Inspecionar o DOM e repetir o teste após nova leitura do dado, incluindo novo acesso à tela quando a entrada for persistida. O HTML perigoso permanece ativo após o bypass e a execução é reproduzível, sem depender de extensões do navegador ou de modificações manuais no DOM. Registrar a origem da entrada, o sink, o DOM resultante e a evidência de execução.",
+          "resultado_esperado_falso_positivo": "A inspeção confirma codificação ou remoção eficaz do conteúdo ativo e o comportamento seguro se mantém nas renderizações subsequentes. Se não houver qualquer fonte controlável, documentar a justificativa de conteúdo confiável e estático; o resultado não deve ser classificado como falso positivo apenas porque uma carga de teste não foi aplicada."
+        }
+      ]
+    }
+  ]
+}

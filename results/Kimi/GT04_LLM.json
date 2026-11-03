@@ -1,0 +1,51 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "74de4cdb-5256-48b1-97af-c47eaa500ecc",
+        "arquivo": "juice-shop:routes/userProfile.ts",
+        "linha": 87,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S7790",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro positivo provável — requer confirmação dinâmica",
+        "cwe": "CWE-1336: Improper Neutralization of Special Elements Used in a Template Engine",
+        "owasp_top_10": "A03:2021 — Injection",
+        "wstg": "WSTG-INPV-18 — Testing for Server-Side Template Injection; WSTG-INPV-07, caso seja demonstrada execução de código",
+        "justificativa": "O achado é compatível com Server-Side Template Injection quando um valor controlável pelo usuário é incorporado ao código-fonte de um template antes de sua compilação, em vez de ser fornecido apenas como dado devidamente escapado. No fluxo de perfil do Juice Shop, o template dinâmico deve ser tratado como potencialmente explorável. Entretanto, o achado isolado não comprova quais valores alcançam a linha 87, nem se existem validações ou transformações anteriores; a confirmação exige análise do fluxo e um teste não destrutivo."
+      },
+      "descricao_tecnica": "A regra aponta a compilação ou utilização de um template formatado dinamicamente. Se dados do perfil, especialmente o nome de usuário, forem concatenados ao template antes da chamada ao mecanismo Pug, expressões e diretivas introduzidas pelo atacante poderão ser interpretadas no servidor. As consequências incluem alteração da resposta, acesso indevido a dados disponíveis ao template e, dependendo do contexto e das capacidades do mecanismo, execução de código no servidor. O risco é distinto de XSS: neste caso, a expressão é processada durante a renderização server-side. Se apenas um template fixo for compilado e os valores externos forem passados separadamente como variáveis escapadas, o achado poderá ser falso positivo.",
+      "pre_condicoes_para_verificacao": [
+        "Disponibilizar o código-fonte correspondente ao achado e identificar a instrução exata da linha 87, incluindo as operações de leitura, substituição e compilação do template.",
+        "Executar a verificação em ambiente isolado de homologação, sem dados reais e sem utilizar payloads de execução de comandos ou acesso a arquivos.",
+        "Possuir uma conta de baixo privilégio com permissão para cadastrar ou alterar o campo de perfil que potencialmente alimenta o template.",
+        "Habilitar logs do servidor e capturar a resposta HTTP bruta, antes de qualquer transformação realizada pelo navegador.",
+        "Confirmar a versão e a configuração do mecanismo de templates para selecionar uma expressão aritmética benigna e sintaticamente válida."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 — Rastrear estaticamente as origens dos dados até a linha 87. Verificar se username ou outro valor modificável pelo usuário é inserido no conteúdo do template por replace, concatenação ou interpolação antes de pug.compile ou operação equivalente. Verificar também se há escaping, allowlist ou compilação prévia que impeça a introdução de sintaxe Pug.",
+          "resultado_esperado_verdadeiro_positivo": "Existe um caminho alcançável no qual dados controlados pelo usuário modificam o código-fonte do template compilado, sem neutralização adequada da sintaxe do mecanismo.",
+          "resultado_esperado_falso_positivo": "A linha 87 compila somente conteúdo fixo ou integralmente confiável, e os dados externos são passados como valores separados, escapados e incapazes de alterar a estrutura do template."
+        },
+        {
+          "passo": "Passo 02 — Definir no campo rastreado um valor de controle, como perfil_controle_ssti, acessar o perfil e registrar a renderização normal. Em seguida, utilizar uma expressão aritmética Pug não destrutiva adequada ao contexto, por exemplo !{7*7}, evitando inicialmente construções que possam ser interceptadas por ramificações anteriores do código.",
+          "resultado_esperado_verdadeiro_positivo": "O perfil renderiza 49 no local do valor controlado, em vez de apresentar literalmente !{7*7}, demonstrando que a expressão influenciou o template e foi avaliada.",
+          "resultado_esperado_falso_positivo": "A aplicação apresenta o payload literalmente, aplica encoding que impede sua interpretação como template ou rejeita o valor antes que qualquer conteúdo controlável alcance a compilação."
+        },
+        {
+          "passo": "Passo 03 — Confirmar a origem server-side do resultado examinando o corpo HTML da resposta HTTP e correlacionando a requisição com os logs do servidor. Não utilizar somente a inspeção visual após a execução de scripts no navegador.",
+          "resultado_esperado_verdadeiro_positivo": "O valor 49 já está presente na resposta gerada pelo servidor e os logs ou o fluxo de código associam essa avaliação à renderização dinâmica do template.",
+          "resultado_esperado_falso_positivo": "A resposta original preserva a expressão como texto e não há evidência de avaliação pelo mecanismo de templates; eventual alteração observada é explicada por comportamento independente no cliente."
+        },
+        {
+          "passo": "Passo 04 — Se houver bloqueio, erro HTTP ou exceção, inspecionar o ponto de falha e repetir o teste apenas com uma expressão benigna válida para o contexto. Um erro isolado não deve ser considerado prova de exploração. Encerrado o teste, restaurar o perfil e remover os artefatos criados.",
+          "resultado_esperado_verdadeiro_positivo": "A investigação descarta uma falha anterior não relacionada e obtém evidência reproduzível de que sintaxe controlada pelo usuário é interpretada durante a compilação ou renderização server-side.",
+          "resultado_esperado_falso_positivo": "Não existe caminho explorável até o sink, ou toda sintaxe externa é tratada exclusivamente como dado; erros observados decorrem de validação ou de outro fluxo e não demonstram processamento do payload pela linha 87."
+        }
+      ]
+    }
+  ]
+}

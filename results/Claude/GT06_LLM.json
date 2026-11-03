@@ -11,38 +11,33 @@
       },
       "classificacao": {
         "veredicto": "Requer Verificação Manual",
-        "cwe": "CWE-942 (Permissive Cross-domain Policy with Untrusted Domains) / CWE-346 (Origin Validation Error)",
+        "cwe": "CWE-942: Permissive Cross-domain Policy with Untrusted Domains",
         "owasp_top_10": "A05:2021 - Security Misconfiguration",
-        "wstg": "WSTG-CLNT-07 (Testing Cross Origin Resource Sharing)",
-        "justificativa": "Trata-se de um Security Hotspot, não uma vulnerabilidade confirmada automaticamente. A regra S5122 sinaliza qualquer ponto onde o CORS é habilitado para que um revisor humano avalie se a configuração (origin, credentials, métodos permitidos) é segura no contexto da aplicação. É necessário inspecionar o código-fonte na linha indicada para determinar se há uso de wildcard (*) combinado com credentials, reflexão de origin arbitrária, ou lista de domínios insegura, o que classificaria como verdadeiro positivo."
+        "wstg": "WSTG-CLNT-07: Testing Cross Origin Resource Sharing",
+        "justificativa": "Trata-se de um Security Hotspot e não de uma vulnerabilidade confirmada automaticamente. A regra S5122 sinaliza qualquer configuração de CORS para revisão manual, pois a segurança depende de como a política de origem é definida (ex: uso de wildcard '*' combinado com credentials, ou reflexão dinâmica do header Origin sem validação de allowlist). É necessário inspecionar o código-fonte na linha indicada para determinar se a política implementada é permissiva (falso positivo) ou restritiva (verdadeiro positivo)."
       },
-      "descricao_tecnica": "O arquivo server.ts, na linha 182, realiza a configuração de CORS (Cross-Origin Resource Sharing) via middleware (ex.: pacote 'cors' do Express). A regra S5122 do SonarQube identifica este ponto como um hotspot de segurança porque uma configuração incorreta de CORS pode permitir que origens não confiáveis realizem requisições cross-origin autenticadas, resultando em exposição de dados sensíveis, CSRF-like attacks via APIs, ou vazamento de tokens/cookies de sessão caso 'Access-Control-Allow-Credentials: true' seja combinado com 'Access-Control-Allow-Origin: *' ou reflexão dinâmica de origin sem validação.",
+      "descricao_tecnica": "O arquivo server.ts habilita o middleware de CORS (Cross-Origin Resource Sharing) na linha 182. Essa configuração controla quais domínios externos (origens) têm permissão para realizar requisições HTTP ao backend da aplicação e acessar suas respostas via JavaScript no navegador. Se a configuração utilizar 'origin: *' combinado com 'credentials: true', ou refletir dinamicamente o header 'Origin' da requisição sem validação contra uma allowlist, a aplicação ficará vulnerável a ataques que permitem que sites maliciosos realizem requisições autenticadas (com cookies/tokens) em nome da vítima, possibilitando roubo de dados sensíveis, CSRF avançado, ou exfiltração de informações via respostas da API.",
       "pre_condicoes_para_verificacao": [
-        "Acesso ao código-fonte do arquivo server.ts na linha 182 e seu contexto (imports, middleware chain).",
-        "Ambiente de execução da aplicação Juice Shop disponível (local ou staging) para testes dinâmicos de requisições cross-origin.",
-        "Ferramenta de interceptação HTTP (Burp Suite, OWASP ZAP, curl ou Postman) para manipular o header 'Origin' nas requisições.",
-        "Conhecimento da lista de endpoints que utilizam autenticação via cookie ou header Authorization para testar exposição de credenciais."
+        "Acesso ao código-fonte do repositório juice-shop, especificamente ao arquivo server.ts na linha 182 e arquivos de configuração relacionados (ex: config.yml, middlewares de CORS customizados).",
+        "Ambiente de execução da aplicação (local ou staging) disponível para testes dinâmicos de requisições cross-origin.",
+        "Ferramenta de interceptação de requisições HTTP (Burp Suite, OWASP ZAP, Postman ou curl) para manipular o header 'Origin' em requisições de teste.",
+        "Conhecimento sobre quais endpoints da API manipulam dados sensíveis ou requerem autenticação (cookies de sessão, tokens JWT, etc.)."
       ],
       "passos_de_verificacao": [
         {
           "passo": "Passo 01",
-          "resultado_esperado_verdadeiro_positivo": "Inspeção do código revela que a configuração usa 'origin: \"*\"' ou 'origin: true' (reflexão automática de qualquer origem) e, ao mesmo tempo, 'credentials: true', permitindo que qualquer domínio externo envie requisições autenticadas com cookies/sessão válidos.",
-          "resultado_esperado_falso_positivo": "A configuração usa uma whitelist explícita e restritiva de domínios confiáveis (array de origins específicos) ou desabilita 'credentials' quando origin é amplo, mitigando o risco."
+          "resultado_esperado_verdadeiro_positivo": "O código na linha 182 (e arquivos de configuração associados) revela uma política CORS permissiva, como 'cors({ origin: \"*\" })', 'cors({ origin: true })', ou uma função que reflete o header 'Origin' recebido sem validá-lo contra uma lista de domínios confiáveis (allowlist), confirmando exposição a origens não autorizadas.",
+          "resultado_esperado_falso_positivo": "O código implementa uma política CORS restritiva, utilizando uma allowlist explícita de domínios confiáveis (ex: 'origin: [\"https://dominio-confiavel.com\"]') ou uma função de validação que rejeita origens não cadastradas, demonstrando controle adequado de acesso cross-origin."
         },
         {
           "passo": "Passo 02",
-          "resultado_esperado_verdadeiro_positivo": "Ao enviar uma requisição HTTP com header 'Origin: https://attacker-controlled.com' para um endpoint autenticado, a resposta retorna 'Access-Control-Allow-Origin: https://attacker-controlled.com' (reflexão) e 'Access-Control-Allow-Credentials: true', confirmando que a origem maliciosa é aceita.",
-          "resultado_esperado_falso_positivo": "A resposta retorna 'Access-Control-Allow-Origin' apenas para domínios da whitelist pré-configurada, rejeitando ou omitindo o header para origens não autorizadas (bloqueio efetivo pelo navegador)."
+          "resultado_esperado_verdadeiro_positivo": "Ao enviar uma requisição HTTP para um endpoint sensível (ex: /rest/user/whoami ou /rest/basket) com um header 'Origin: https://attacker-controlled.com' forjado, a resposta do servidor retorna o header 'Access-Control-Allow-Origin: https://attacker-controlled.com' (refletindo a origem maliciosa) e, opcionalmente, 'Access-Control-Allow-Credentials: true', confirmando que a aplicação aceitaria requisições cross-origin autenticadas de qualquer domínio.",
+          "resultado_esperado_falso_positivo": "A resposta do servidor não reflete a origem maliciosa enviada; em vez disso, retorna 'Access-Control-Allow-Origin' ausente, vazio, ou apenas com o domínio legítimo pré-configurado, e a requisição cross-origin é bloqueada pelo navegador (confirmado via console do DevTools), indicando que a política CORS está corretamente restritiva."
         },
         {
           "passo": "Passo 03",
-          "resultado_esperado_verdadeiro_positivo": "É possível, a partir de uma página HTML hospedada em domínio externo controlado pelo testador, realizar uma requisição fetch/XHR com 'credentials: include' para a API da aplicação e obter com sucesso dados de sessão autenticados do usuário vítima (prova de conceito de CSRF/data exfiltration via CORS).",
-          "resultado_esperado_falso_positivo": "A requisição cross-origin é bloqueada pelo navegador (CORS policy error no console), impedindo o acesso aos dados, confirmando que a política está corretamente restritiva."
-        },
-        {
-          "passo": "Passo 04",
-          "resultado_esperado_verdadeiro_positivo": "A análise do contexto de negócio confirma que os endpoints expostos via CORS manipulam dados sensíveis (perfil de usuário, carrinho de compras, tokens) e não há validação adicional (CSRF token, SameSite cookie) compensando a política CORS permissiva.",
-          "resultado_esperado_falso_positivo": "Os endpoints expostos via CORS são exclusivamente públicos/não sensíveis (ex.: catálogo de produtos sem autenticação) ou existem controles compensatórios (CSRF tokens, SameSite=Strict) que mitigam o risco mesmo com CORS amplo, justificando o uso como aceitável e marcando o hotspot como 'Revisado - Seguro'."
+          "resultado_esperado_verdadeiro_positivo": "É possível demonstrar um cenário de exploração realista: uma página HTML hospedada em um domínio de teste diferente (simulando o atacante) consegue, via JavaScript (fetch/XHR com 'credentials: include'), ler a resposta de um endpoint autenticado do Juice Shop (ex: dados do usuário logado), confirmando o vazamento de informações sensíveis para origens não autorizadas.",
+          "resultado_esperado_falso_positivo": "A página HTML de teste hospedada em domínio externo recebe um erro de CORS no console do navegador ('No Access-Control-Allow-Origin header' ou 'origin not allowed') ao tentar acessar o endpoint autenticado, e nenhum dado sensível é exposto, confirmando que a hotspot foi mitigada adequadamente ou nunca representou risco real."
         }
       ]
     }

@@ -1,0 +1,124 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "AX1a-sql-injection-001",
+        "arquivo": "com.example.app:src/main/java/com/example/app/repository/UserRepository.java",
+        "linha": 47,
+        "severidade_sast": "CRITICAL",
+        "regra": "java:S3649",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Potencial verdadeiro positivo; requer confirmação por análise de fluxo e teste controlado",
+        "cwe": "CWE-89",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-05 - Testing for SQL Injection",
+        "justificativa": "A regra java:S3649 e a mensagem indicam construção de SQL a partir de dados controláveis pelo usuário. Sem o código e o fluxo completo, não é possível confirmar se a consulta é executada sem vinculação de parâmetros nem se existe exploração prática."
+      },
+      "descricao_tecnica": "A linha 47 pode incorporar entrada não confiável diretamente a uma consulta SQL. Se esse valor alcançar uma execução no banco sem PreparedStatement, vinculação de parâmetros ou mecanismo equivalente, caracteres e operadores SQL poderão alterar a estrutura ou a lógica da consulta, afetando confidencialidade, integridade e disponibilidade. A ocorrência de um erro SQL isoladamente não comprova exploração.",
+      "pre_condicoes_para_verificacao": [
+        "Ter acesso ao código-fonte, ao método chamador e à entrada de usuário que alcança UserRepository.",
+        "Dispor de ambiente não produtivo, autorização para testes e banco de dados descartável com dados de teste.",
+        "Habilitar observação segura das consultas, sem registrar senhas ou dados pessoais, e estabelecer uma linha de base do comportamento normal."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A análise estática confirma que um valor controlável pelo usuário é concatenado ou interpolado na SQL executada na linha 47, sem vinculação de parâmetros; para partes estruturais da consulta, também não existe allowlist estrita.",
+          "resultado_esperado_falso_positivo": "Não há fluxo de dados não confiável até a consulta, ou todos os valores são vinculados como parâmetros e eventuais identificadores ou cláusulas dinâmicas são fixos ou rigorosamente permitidos por allowlist."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Ao enviar pela entrada real um valor de controle e, separadamente, uma sonda não destrutiva com metacaracteres SQL e condição booleana, o comportamento se altera de forma reproduzível e os logs ou a depuração mostram que a entrada modificou a sintaxe ou a lógica da consulta.",
+          "resultado_esperado_falso_positivo": "A consulta observada mantém placeholders e recebe a sonda apenas como valor literal; não há alteração da estrutura da SQL, e diferenças de resposta decorrem de validação ou regra de negócio, sem evidência de injeção."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "A alteração da consulta é reproduzida por mais de um caminho de entrada relevante ou deixa de ocorrer quando a mesma operação é executada em uma versão de controle com vinculação de parâmetros, confirmando a relação entre o fluxo identificado e o comportamento observado.",
+          "resultado_esperado_falso_positivo": "O comportamento não é reproduzível como injeção, e a inspeção conjunta do código, dos parâmetros efetivamente enviados ao driver e da consulta executada demonstra que o dado permanece estritamente como dado."
+        }
+      ]
+    },
+    {
+      "identificacao": {
+        "id_sonarqube": "AX1b-xss-001",
+        "arquivo": "com.example.app:src/main/java/com/example/app/controller/CommentController.java",
+        "linha": 83,
+        "severidade_sast": "CRITICAL",
+        "regra": "java:S5131",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Potencial verdadeiro positivo; requer confirmação do contexto de saída e do comportamento no navegador",
+        "cwe": "CWE-79",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-01 e WSTG-INPV-02, conforme o XSS seja refletido ou armazenado",
+        "justificativa": "A regra java:S5131 aponta inserção de dado fornecido pelo usuário na resposta HTML sem sanitização adequada. A confirmação depende de verificar o fluxo até o navegador, o contexto HTML, atributo ou JavaScript e a existência de codificação de saída ou sanitização apropriada."
+      },
+      "descricao_tecnica": "A linha 83 pode devolver conteúdo controlável pelo usuário sem neutralização adequada ao contexto. Se o navegador interpretar essa entrada como marcação ou código ativo, poderá ocorrer XSS refletido ou armazenado, permitindo execução de script no contexto da aplicação. Escape inadequado para um contexto diferente, templates com autoescape desativado e inserção posterior via DOM também devem ser considerados.",
+      "pre_condicoes_para_verificacao": [
+        "Ter acesso ao controller, ao template ou mecanismo de resposta e ao código que eventualmente persiste e recupera comentários.",
+        "Identificar a entrada controlável, o contexto exato da saída e se o conteúdo é refletido imediatamente ou armazenado.",
+        "Usar ambiente não produtivo, contas e conteúdo exclusivos de teste e navegador com ferramentas de inspeção do DOM e do console."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "O fluxo confirma que a entrada alcança a resposta na linha 83 sem codificação adequada ao contexto, ou que uma sanitização permissiva permite elementos, atributos ou sintaxe ativa; também se considera vulnerável a saída posteriormente inserida em um sink executável do DOM.",
+          "resultado_esperado_falso_positivo": "Todas as saídas aplicam codificação contextual correta ou sanitização rigorosa baseada em allowlist, o autoescape não é contornado e não existe conversão posterior do valor em HTML ou script executável."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Uma sonda não destrutiva, adaptada ao contexto e limitada a gerar um marcador de teste no navegador, aparece como estrutura ativa no DOM e executa JavaScript no contexto da aplicação, sem depender de modificações manuais na resposta.",
+          "resultado_esperado_falso_positivo": "A sonda é exibida como texto ou neutralizada, os caracteres relevantes permanecem codificados no contexto correto e a inspeção do DOM e do console não revela nó ativo nem execução de script."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Se o comentário for persistido, a execução também ocorre ao abrir a página em nova sessão ou com outra conta de teste, caracterizando XSS armazenado; se for apenas refletido, a execução se repete pela resposta vulnerável original.",
+          "resultado_esperado_falso_positivo": "Não há execução em nova renderização ou sessão e o conteúdo permanece inerte; eventual bloqueio apenas por CSP não é usado isoladamente para declarar falso positivo quando o sink continua vulnerável."
+        }
+      ]
+    },
+    {
+      "identificacao": {
+        "id_sonarqube": "AX1c-hardcoded-cred-001",
+        "arquivo": "com.example.app:src/main/java/com/example/app/config/DatabaseConfig.java",
+        "linha": 22,
+        "severidade_sast": "BLOCKER",
+        "regra": "java:S2068",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Potencial verdadeiro positivo; requer confirmação de que o literal é um segredo real e não apenas um identificador ou placeholder",
+        "cwe": "CWE-798",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-ATHN-02 - Testing for Default Credentials, complementado por revisão estática de código e configuração",
+        "justificativa": "A regra java:S2068 identifica uma possível senha embutida no código. O risco é confirmado se o valor fixo for utilizado para autenticação ou puder ser recuperado do código ou artefato; nomes de variáveis, referências a cofres e valores fictícios isolados podem gerar falso positivo."
+      },
+      "descricao_tecnica": "A linha 22 pode conter uma senha literal usada na configuração do banco de dados. Uma credencial efetiva embutida no código pode ser extraída do repositório, do histórico de versões ou do artefato compilado e reutilizada por terceiros, além de dificultar rotação e controle de acesso. O valor do segredo não deve ser copiado para relatórios, logs ou saídas do teste.",
+      "pre_condicoes_para_verificacao": [
+        "Ter autorização e acesso controlado ao código, ao artefato de build e à resolução da configuração de execução.",
+        "Adotar procedimento que mascare o valor suspeito e impeça sua inclusão em logs, capturas de tela ou evidências do teste.",
+        "Conhecer os ambientes nos quais a configuração é usada e limitar qualquer validação de autenticação a serviços autorizados e não produtivos."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A linha 22 contém um literal fixo e não vazio que é efetivamente atribuído ou transmitido como senha a um DataSource, fábrica de conexão ou mecanismo equivalente, sem que seja apenas o nome de uma chave de configuração.",
+          "resultado_esperado_falso_positivo": "O valor é apenas um identificador, uma referência a variável de ambiente ou cofre, um placeholder sem função de autenticação ou outro texto que não representa uma credencial."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "O segredo permanece recuperável no código ou artefato distribuído e a configuração de execução pode utilizá-lo, inclusive como fallback, sem exigir fornecimento externo da credencial.",
+          "resultado_esperado_falso_positivo": "O literal não integra os artefatos ou caminhos de execução relevantes, não funciona como fallback e a aplicação depende obrigatoriamente de um segredo fornecido por mecanismo externo adequado."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Uma validação autorizada e sem exposição do valor demonstra que a credencial é aceita pelo serviço correspondente ou que possui uso e escopo reais, confirmando o impacto da sua incorporação ao código.",
+          "resultado_esperado_falso_positivo": "O valor é comprovadamente fictício e inválido, está restrito a um teste isolado sem acesso a recursos reais e não constitui credencial ativa, padrão ou reutilizada; a simples invalidade momentânea de uma senha anteriormente real não elimina a necessidade de investigar exposição e rotação."
+        }
+      ]
+    }
+  ]
+}

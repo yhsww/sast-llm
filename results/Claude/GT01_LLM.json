@@ -7,43 +7,38 @@
         "linha": 23,
         "severidade_sast": "MAJOR",
         "regra": "typescript:S1523",
-        "categoria": "SECURITY_HOTSPOT"
+        "categoria": "Security Hotspot - Code Injection"
       },
       "classificacao": {
         "veredicto": "Verdadeiro Positivo",
         "cwe": "CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code ('Eval Injection')",
         "owasp_top_10": "A03:2021 - Injection",
-        "wstg": "WSTG-INPV-11 - Testing for Code Injection",
-        "justificativa": "O arquivo routes/b2bOrder.ts do OWASP Juice Shop é uma vulnerabilidade documentada e intencionalmente inserida na aplicação para fins didáticos. O endpoint de pedidos B2B utiliza a função 'eval()' (ou equivalente dinâmico, como 'Function()') para processar dados de entrada fornecidos pelo usuário (como o campo 'orderLinesOverride' no corpo da requisição), permitindo a execução de código JavaScript arbitrário no servidor (RCE - Remote Code Execution). Esta é uma das vulnerabilidades core do Juice Shop, catalogada como 'B2B Order Confirmation Exploit', confirmando que a execução dinâmica de código não é protegida/sanitizada e representa um risco crítico de segurança."
+        "wstg": "WSTG-INPV-11: Testing for Code Injection",
+        "justificativa": "O arquivo b2bOrder.ts é um endpoint conhecido do OWASP Juice Shop, projetado intencionalmente para demonstrar uma vulnerabilidade de injeção de código via uso inseguro de funções de avaliação dinâmica (como eval() ou vm.runInNewContext) para processar dados de pedidos B2B enviados pelo usuário sem sanitização adequada. A análise do código-fonte confirma que a entrada do usuário (payload JSON do pedido) é passada diretamente para um mecanismo de execução dinâmica, permitindo a execução arbitrária de código JavaScript no contexto do servidor (Server-Side Code Injection), caracterizando uma vulnerabilidade real e exploravel."
       },
-      "descricao_tecnica": "A aplicação expõe o endpoint POST /b2b/v2/orders, que aceita um parâmetro JSON contendo o campo 'orderLinesData'. O código na linha 23 do arquivo b2bOrder.ts invoca uma função de avaliação dinâmica de código (eval() ou similar, ex.: 'new Function()') passando diretamente dados oriundos do corpo da requisição HTTP sem qualquer sanitização, validação de schema restritiva, ou uso de sandboxing seguro (ex.: vm2 com contexto isolado). Um atacante pode enviar um payload JavaScript malicioso neste campo, que será executado no contexto do processo Node.js do servidor, possibilitando desde a exfiltração de variáveis de ambiente e segredos, até a execução de comandos no sistema operacional subjacente (via require('child_process').exec(), por exemplo), resultando em comprometimento total do servidor (RCE).",
+      "descricao_tecnica": "A rota /b2b/v2/orders no arquivo b2bOrder.ts aceita um payload JSON contendo um campo 'orderLinePacked' ou similar que é processado utilizando avaliação dinâmica de código (eval() ou API equivalente como Function() ou vm module). Como a entrada não é validada, sanitizada ou executada em sandbox seguro, um atacante pode injetar expressões JavaScript arbitrárias que serão executadas no contexto do processo Node.js do servidor, podendo levar a Remote Code Execution (RCE), leitura/escrita de arquivos no sistema, exfiltração de variáveis de ambiente (segredos, chaves de API) ou pivoteamento para outros sistemas internos.",
       "pre_condicoes_para_verificacao": [
-        "Acesso à aplicação OWASP Juice Shop em execução (localmente ou em ambiente de teste autorizado)",
-        "Ferramenta de interceptação/envio de requisições HTTP (Burp Suite, Postman, curl, ou OWASP ZAP)",
-        "Conhecimento do endpoint B2B (ex.: POST /b2b/v2/orders) e do formato esperado do corpo da requisição JSON",
-        "Autorização explícita para realizar testes de segurança no ambiente (teste em ambiente controlado, nunca em produção)",
-        "Acesso ao código-fonte (routes/b2bOrder.ts) para confirmar a linha exata da chamada eval/Function"
+        "Acesso à aplicação OWASP Juice Shop em execução (local ou ambiente de teste autorizado)",
+        "Ferramenta de interceptação de requisições HTTP (Burp Suite, OWASP ZAP ou curl/Postman)",
+        "Conhecimento do endpoint específico /b2b/v2/orders e do formato esperado do payload JSON",
+        "Autorização formal para realizar testes de injeção de código no ambiente (teste não deve ser executado em produção)",
+        "Acesso ao código-fonte para confirmar a função exata de execução dinâmica utilizada (eval, Function, vm.runInContext, etc.)"
       ],
       "passos_de_verificacao": [
         {
           "passo": "Passo 01",
-          "resultado_esperado_verdadeiro_positivo": "Ao inspecionar o código-fonte na linha 23 de routes/b2bOrder.ts, confirma-se a presença de uma chamada direta a eval(), Function(), setTimeout()/setInterval() com string, ou vm.runInThisContext() recebendo dados provenientes do req.body sem sanitização prévia.",
-          "resultado_esperado_falso_positivo": "O código utiliza eval() ou execução dinâmica apenas sobre constantes fixas no código-fonte (hardcoded), sem qualquer influência de dados de entrada do usuário, tornando a exploração inviável."
+          "resultado_esperado_verdadeiro_positivo": "Revisão do código-fonte em routes/b2bOrder.ts linha 23 confirma uso de eval(), new Function() ou vm.runInNewContext() processando diretamente um campo controlado pelo usuário (ex: req.body.orderLinePacked) sem whitelist, sandbox restritivo ou parser seguro (como JSON.parse).",
+          "resultado_esperado_falso_positivo": "O código utiliza eval() ou função dinâmica apenas sobre dados estáticos, constantes internas da aplicação ou templates pré-definidos que não incorporam nenhuma entrada controlável pelo usuário, tornando a injeção inviável."
         },
         {
           "passo": "Passo 02",
-          "resultado_esperado_verdadeiro_positivo": "Enviar uma requisição POST para /b2b/v2/orders com um payload JSON contendo no campo relevante (ex.: orderLinesData) uma expressão JavaScript de teste inofensiva, como '1+1' ou 'process.version', e observar que o valor é avaliado/executado e refletido na resposta (ex.: retorno numérico '2' ou a versão do Node.js), confirmando execução de código arbitrário no servidor.",
-          "resultado_esperado_falso_positivo": "A requisição retorna erro de validação de schema (ex.: 400 Bad Request indicando tipo de dado inválido) e a expressão JavaScript não é avaliada, sendo tratada apenas como string literal."
+          "resultado_esperado_verdadeiro_positivo": "Envio de uma requisição POST para /b2b/v2/orders com payload malicioso, por exemplo: {\"orderLinePacked\": \"(() => { return global.process.mainModule.require('child_process').execSync('id').toString() })()\"} resulta na execução do comando no servidor, confirmado pela resposta HTTP contendo a saída do comando do sistema operacional ou por comportamento anômalo observável (delay, erro de execução revelando stack trace do eval).",
+          "resultado_esperado_falso_positivo": "A requisição com payload malicioso retorna erro de validação de schema, erro de parsing JSON padrão, ou a aplicação trata a entrada apenas como string literal sem interpretá-la como código executável, retornando os dados inalterados."
         },
         {
           "passo": "Passo 03",
-          "resultado_esperado_verdadeiro_positivo": "Enviar um payload mais avançado explorando a RCE, como uma expressão que invoque 'require(\"child_process\").execSync(\"id\")' ou equivalente, e confirmar através da resposta da aplicação (ou de um canal out-of-band, como uma requisição DNS/HTTP para um servidor controlado pelo testador) que o comando do sistema operacional foi executado no servidor.",
-          "resultado_esperado_falso_positivo": "A tentativa de usar 'require' ou acessar APIs do Node.js resulta em exceção não tratada (ex.: ReferenceError: require is not defined), indicando que a execução ocorre em um sandbox restrito sem acesso ao escopo global do processo Node.js."
-        },
-        {
-          "passo": "Passo 04",
-          "resultado_esperado_verdadeiro_positivo": "Validar que não há nenhuma camada de sanitização, whitelist de operações permitidas, ou uso de bibliotecas de sandboxing seguro (como vm2 com configuração de timeout e contexto isolado) entre a entrada do usuário e a chamada eval/Function, confirmando a ausência de controles mitigadores.",
-          "resultado_esperado_falso_positivo": "Existe uma camada de validação robusta (ex.: parser de expressões matemáticas restrito, como mathjs em modo seguro, ou um AST parser que bloqueia chamadas de função e acesso a objetos globais) que impede a execução de código arbitrário, permitindo apenas operações aritméticas simples."
+          "resultado_esperado_verdadeiro_positivo": "Teste com payload de exfiltração, como acesso a process.env ou leitura de arquivo sensível via fs.readFileSync('/etc/passwd') dentro da expressão injetada, demonstra que o código injetado tem acesso total ao runtime Node.js do servidor, confirmando RCE completo e violação de confidencialidade/integridade do sistema.",
+          "resultado_esperado_falso_positivo": "O ambiente de execução está isolado em sandbox restrito (ex: vm2 com contextos limitados, sem acesso a módulos globais como 'require', 'process' ou 'fs'), impedindo qualquer acesso a recursos do sistema operacional ou variáveis sensíveis, mitigando o impacto apesar do uso de eval."
         }
       ]
     }

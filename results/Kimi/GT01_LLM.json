@@ -1,0 +1,51 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "208dea17-f27a-4e83-b216-484334328793",
+        "arquivo": "routes/b2bOrder.ts",
+        "linha": 23,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S1523",
+        "categoria": "SECURITY_HOTSPOT"
+      },
+      "classificacao": {
+        "veredicto": "Provável verdadeiro positivo, sujeito à confirmação do fluxo de dados e da alcançabilidade",
+        "cwe": "CWE-95 - Improper Neutralization of Directives in Dynamically Evaluated Code ('Eval Injection')",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-07 - Testing for Code Injection",
+        "justificativa": "O hotspot aponta execução dinâmica de código no fluxo de pedidos B2B. Se o campo orderLinesData, controlado pelo cliente, for interpolado e executado na linha 23 sem validação que o restrinja a dados, há injeção de código JavaScript. O uso de um contexto vm ou de timeout pode limitar determinados impactos, mas não torna segura a avaliação de entrada arbitrária. Como o achado não inclui o trecho-fonte nem a propagação da entrada, a execução de um canário não destrutivo deve confirmar o veredicto; execução dentro do contexto JavaScript não deve, isoladamente, ser reportada como execução de comandos no sistema operacional."
+      },
+      "descricao_tecnica": "A regra typescript:S1523 identifica uma operação de injeção ou execução dinâmica de código que requer revisão de segurança. A verificação deve determinar se dados do corpo da requisição, especialmente orderLinesData, alcançam a operação da linha 23, por exemplo vm.runInContext, e se o atacante consegue controlar o código avaliado. Um resultado positivo exige evidência de fluxo entrada-sink e de alcançabilidade; a simples presença da API de execução dinâmica não comprova explorabilidade.",
+      "pre_condicoes_para_verificacao": [
+        "Utilizar exclusivamente um ambiente isolado de teste, sem dados reais, com autorização para provocar erros controlados e com logs do servidor disponíveis.",
+        "Confirmar que o código implantado corresponde a routes/b2bOrder.ts e que a instrução reportada está efetivamente na linha 23.",
+        "Identificar a rota HTTP que invoca b2bOrder, seus requisitos de autenticação, Content-Type, estrutura do corpo e condições de configuração que tornam a linha 23 alcançável.",
+        "Preparar uma requisição legítima de linha de base e um identificador único e não sensível para o canário SAST_EVAL_CANARY_7F3A.",
+        "Não utilizar payloads de fuga de sandbox, comandos do sistema operacional, exfiltração ou negação de serviço; esses impactos exigiriam teste separado e autorização específica."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 - Inspecionar estaticamente a linha 23 e rastrear orderLinesData desde o corpo da requisição até o sink, verificando concatenação ou interpolação, validações, transformações, condições de alcance e eventuais valores fixos.",
+          "resultado_esperado_verdadeiro_positivo": "Existe um caminho alcançável no qual o cliente controla total ou parcialmente o código avaliado, sem uma validação estrutural que garanta interpretação exclusivamente como dados.",
+          "resultado_esperado_falso_positivo": "O código executado é constante ou provém exclusivamente de fonte confiável, a entrada do cliente não alcança o sink, ou ela é processada apenas por um parser de dados sem possibilidade de alterar o código avaliado."
+        },
+        {
+          "passo": "Passo 02 - Enviar a requisição legítima de linha de base com um valor orderLinesData benigno e sintaticamente válido, registrando resposta, duração e logs para comparação.",
+          "resultado_esperado_verdadeiro_positivo": "A requisição alcança o fluxo que contém a execução dinâmica e estabelece o comportamento normal necessário para comparar o canário.",
+          "resultado_esperado_falso_positivo": "Não existe configuração ou caminho funcional capaz de alcançar a instrução no componente analisado, ou a rota implantada não corresponde ao código do achado; essa divergência deve ser resolvida antes da classificação final."
+        },
+        {
+          "passo": "Passo 03 - Repetir a requisição, alterando somente orderLinesData para a expressão JavaScript não destrutiva (() => { throw new Error('SAST_EVAL_CANARY_7F3A') })(), e pesquisar o identificador na resposta controlada e nos logs do servidor.",
+          "resultado_esperado_verdadeiro_positivo": "O erro SAST_EVAL_CANARY_7F3A aparece nos logs ou em outra telemetria confiável, demonstrando que uma expressão fornecida pelo cliente foi efetivamente executada. Um erro HTTP genérico, isoladamente, não é evidência suficiente.",
+          "resultado_esperado_falso_positivo": "A entrada é rejeitada antes do sink ou tratada somente como dado, o canário nunca é executado e a inspeção confirma que não existe fluxo controlável até a execução dinâmica."
+        },
+        {
+          "passo": "Passo 04 - Consolidar as evidências estáticas e dinâmicas e revisar as mitigações, distinguindo injeção no contexto JavaScript de eventual comprometimento do processo ou do host.",
+          "resultado_esperado_verdadeiro_positivo": "O fluxo controlável e alcançável ou a execução do canário confirmam o hotspot como vulnerabilidade de injeção de código. Timeout e isolamento por vm devem ser documentados como possíveis limitadores de impacto, não como correção; impactos adicionais não devem ser afirmados sem evidência.",
+          "resultado_esperado_falso_positivo": "Não há execução de conteúdo controlado pelo cliente nem caminho explorável até o sink. Se a entrada continuar sendo avaliada como código, a presença de sandbox, timeout ou resposta genérica de erro não justifica classificar o achado como falso positivo."
+        }
+      ]
+    }
+  ]
+}

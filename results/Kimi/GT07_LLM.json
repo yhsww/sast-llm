@@ -1,0 +1,45 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "8a61c8f6-3bef-4b6e-9787-a9479df9ef26",
+        "arquivo": "juice-shop:frontend/src/app/login/login.component.ts",
+        "linha": 61,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S2068",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Inconclusivo — requer validação manual",
+        "cwe": "CWE-798 — Use of Hard-coded Credentials, se confirmado",
+        "owasp_top_10": "A07:2021 — Identification and Authentication Failures, se a credencial permitir autenticação ou acesso indevido",
+        "wstg": "WSTG-ATHN-02 — Testing for Default Credentials; complementar com WSTG-ATHN-04 caso a credencial possibilite contornar a autenticação",
+        "justificativa": "A mensagem do SonarQube indica apenas uma senha potencialmente embutida e não fornece o conteúdo da linha nem seu fluxo de dados. O achado será verdadeiro positivo se houver um segredo fixo no código cliente utilizado para autenticação; será falso positivo se a ocorrência representar apenas uma propriedade ou variável que manipula a senha fornecida pelo usuário, ou um valor sem função de credencial."
+      },
+      "descricao_tecnica": "A regra typescript:S2068 identificou uma possível senha hard-coded no componente de login. Caso um literal ou valor fixo equivalente seja incorporado ao frontend, ele poderá ser recuperado por qualquer pessoa que inspecione o código-fonte, o bundle JavaScript ou os source maps. Se essa credencial for aceita pelo backend ou por um serviço protegido, poderá ser reutilizada para acesso não autorizado. A simples presença de um campo denominado password, contendo dados digitados pelo usuário, não caracteriza credencial hard-coded.",
+      "pre_condicoes_para_verificacao": [
+        "Obter autorização para realizar a análise e os testes, restringindo a validação dinâmica a um ambiente isolado de homologação.",
+        "Acessar a mesma revisão analisada pelo SonarQube, incluindo a linha 61, seu contexto, os chamadores e o fluxo do valor até qualquer operação de autenticação.",
+        "Disponibilizar o build do frontend e, quando aplicável, os source maps, além de contas de teste sem privilégios reais.",
+        "Não utilizar credenciais de produção nem registrar o valor do segredo em logs, relatórios ou evidências; representá-lo de forma mascarada."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 — Inspecionar estaticamente a linha 61 e rastrear a origem e o destino do valor sinalizado, verificando se ele é um literal fixo e se alcança uma requisição de login, configuração de cliente ou operação protegida.",
+          "resultado_esperado_verdadeiro_positivo": "Existe uma senha ou segredo fixo, não vazio e efetivamente utilizado como credencial de autenticação, diretamente na linha ou por um fluxo de dados simples e determinístico.",
+          "resultado_esperado_falso_positivo": "A ocorrência é somente um nome de variável ou propriedade, recebe a senha digitada pelo usuário, ou contém um placeholder/dado público que não possui função de autenticação."
+        },
+        {
+          "passo": "Passo 02 — Gerar ou obter o build equivalente à revisão analisada e procurar, sem divulgar o valor, a credencial candidata nos arquivos JavaScript e source maps entregues ao navegador.",
+          "resultado_esperado_verdadeiro_positivo": "O segredo fixo pode ser recuperado nos artefatos públicos do frontend e permanece associado a um fluxo de autenticação ou acesso protegido.",
+          "resultado_esperado_falso_positivo": "Nenhum segredo de autenticação fixo é entregue ao navegador; os artefatos contêm apenas a lógica de tratamento da entrada do usuário ou valores públicos sem capacidade de acesso."
+        },
+        {
+          "passo": "Passo 03 — No ambiente autorizado, observar as requisições de autenticação e validar, com uma conta exclusiva de teste, se a credencial embutida é utilizada ou aceita independentemente de uma senha válida fornecida pelo usuário.",
+          "resultado_esperado_verdadeiro_positivo": "A credencial extraída é enviada ou reutilizada pela aplicação e concede autenticação ou acesso protegido, confirmando exposição e impacto explorável.",
+          "resultado_esperado_falso_positivo": "O valor sinalizado nunca é usado como credencial, não concede acesso e a autenticação depende exclusivamente de credenciais válidas fornecidas pelo usuário ou por um mecanismo seguro de provisionamento."
+        }
+      ]
+    }
+  ]
+}

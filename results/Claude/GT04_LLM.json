@@ -7,43 +7,38 @@
         "linha": 87,
         "severidade_sast": "MAJOR",
         "regra": "typescript:S7790",
-        "categoria": "Vulnerability - Injection / Server-Side Template Injection (SSTI)"
+        "categoria": "VULNERABILITY"
       },
       "classificacao": {
         "veredicto": "Verdadeiro Positivo",
-        "cwe": "CWE-1336 (Improper Neutralization of Special Elements Used in a Template Engine) / CWE-94 (Code Injection)",
+        "cwe": "CWE-1336: Improper Neutralization of Special Elements Used in a Template Engine",
         "owasp_top_10": "A03:2021 - Injection",
-        "wstg": "WSTG-INPV-18 (Testing for Server Side Template Injection)",
-        "justificativa": "O arquivo userProfile.ts é um componente conhecido do OWASP Juice Shop, propositalmente vulnerável a Server-Side Template Injection (SSTI). A linha 87 realiza a montagem de um template EJS dinamicamente a partir de entrada do usuário (campo 'username' do perfil), sem sanitização adequada, permitindo a injeção de expressões JavaScript que são executadas no servidor durante a renderização do template."
+        "wstg": "WSTG-INPV-18: Testing for Server-Side Template Injection",
+        "justificativa": "O arquivo userProfile.ts do OWASP Juice Shop é um alvo conhecido e intencional de SSTI (Server-Side Template Injection), onde dados fornecidos pelo usuário (como o campo 'username') são utilizados diretamente na construção dinâmica de um template (ex.: usando template engine como EJS/Handlebars) sem sanitização adequada, permitindo a execução de código arbitrário no servidor."
       },
-      "descricao_tecnica": "O código em userProfile.ts constrói uma string de template (EJS) utilizando concatenação ou interpolação direta de dados fornecidos pelo usuário (ex.: nome de usuário do perfil), e em seguida compila/renderiza esse template dinamicamente via engine de templates (ejs.render ou similar). Como o conteúdo do template não é tratado como dado estático, mas sim avaliado como código de template, um atacante pode injetar expressões EJS maliciosas (ex.: `<%= require('child_process').execSync('whoami') %>`) que serão executadas no contexto do servidor Node.js, resultando em Remote Code Execution (RCE) ou vazamento de informações sensíveis do processo do servidor.",
+      "descricao_tecnica": "A linha 87 do arquivo userProfile.ts constrói uma string de template dinamicamente, concatenando ou interpolando diretamente a entrada do usuário (ex.: req.body.username) dentro de uma estrutura de template (como EJS). Essa prática expõe a aplicação a ataques de Server-Side Template Injection (SSTI), nos quais um atacante pode injetar expressões de template maliciosas (ex.: `<%= process.mainModule.require('child_process').execSync('id') %>`) para executar comandos arbitrários no servidor, acessar o sistema de arquivos, ou comprometer totalmente a aplicação.",
       "pre_condicoes_para_verificacao": [
-        "Aplicação Juice Shop em execução localmente ou em ambiente de teste autorizado.",
-        "Acesso autenticado a uma conta de usuário válida (ou possibilidade de se registrar uma).",
-        "Acesso à funcionalidade de edição de perfil de usuário (endpoint /profile ou similar que utiliza userProfile.ts).",
-        "Ferramenta de interceptação de requisições HTTP (Burp Suite, OWASP ZAP ou curl/Postman) para manipular o payload enviado ao servidor.",
-        "Permissão formal para realizar testes de segurança no ambiente (autorização de pentest)."
+        "Ter acesso à aplicação OWASP Juice Shop em execução (localmente ou em ambiente de teste controlado).",
+        "Possuir uma conta de usuário válida ou capacidade de se registrar na aplicação.",
+        "Ter acesso ao endpoint de atualização de perfil de usuário (rota relacionada a /profile ou similar que utiliza userProfile.ts).",
+        "Possuir ferramenta de interceptação de requisições HTTP (ex.: Burp Suite, OWASP ZAP, ou Postman) para manipular o payload enviado ao servidor.",
+        "Conhecimento básico de sintaxe de template engines (ex.: EJS) para criação de payloads de teste."
       ],
       "passos_de_verificacao": [
         {
-          "passo": "Passo 01: Autenticar-se na aplicação e acessar a funcionalidade de atualização de perfil de usuário que utiliza o template dinâmico em userProfile.ts (linha 87).",
-          "resultado_esperado_verdadeiro_positivo": "O endpoint aceita o campo de entrada (ex.: nome de usuário) e o utiliza para montar/renderizar um template EJS no backend, confirmando a superfície de ataque.",
-          "resultado_esperado_falso_positivo": "O endpoint não utiliza o dado de entrada para montagem dinâmica de templates, ou o valor é tratado apenas como texto estático exibido via escaping padrão (ex.: `<%- %>` não utilizado, apenas `<%= %>` com conteúdo sanitizado), não havendo avaliação de código no template."
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Ao inspecionar o código-fonte na linha 87 de userProfile.ts, confirma-se que a entrada do usuário (ex.: req.body.username) é passada diretamente para uma função de renderização de template (ex.: ejs.render) sem sanitização ou uso de parâmetros seguros, validando a vulnerabilidade de SSTI.",
+          "resultado_esperado_falso_positivo": "O código utiliza a entrada do usuário apenas como dado de contexto do template (ex.: `<%= username %>`) sem permitir a execução de expressões de template arbitrárias, ou passa por uma camada de sanitização/escaping que impede a injeção de código, tornando o achado não explorável."
         },
         {
-          "passo": "Passo 02: Submeter um payload de teste inofensivo de SSTI no campo vulnerável, como `<%= 7*7 %>` ou `${7*7}`, e observar a resposta renderizada.",
-          "resultado_esperado_verdadeiro_positivo": "A resposta do servidor exibe o valor calculado '49' ao invés do texto literal do payload, confirmando que a entrada está sendo interpretada e executada como expressão de template no lado do servidor.",
-          "resultado_esperado_falso_positivo": "A resposta exibe o payload literal (ex.: '<%= 7*7 %>') sem avaliação, ou o valor é escapado/encodado como HTML entity, indicando que não há interpretação de código server-side."
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Ao autenticar na aplicação e enviar uma requisição PUT/POST para o endpoint de atualização de perfil com o payload `<%= 7*7 %>` no campo username, a resposta do servidor retorna o valor calculado '49' no HTML renderizado da página de perfil, confirmando que a entrada é interpretada como código de template executável.",
+          "resultado_esperado_falso_positivo": "A resposta do servidor retorna o payload como texto literal `<%= 7*7 %>` (sem execução) ou gera um erro de validação/sanitização, indicando que a entrada não é processada como template, invalidando a exploração."
         },
         {
-          "passo": "Passo 03: Caso o Passo 02 confirme a execução da expressão, escalar o teste com um payload que tente executar um comando no sistema operacional, como `<%= require('child_process').execSync('id') %>` (em ambiente controlado e autorizado).",
-          "resultado_esperado_verdadeiro_positivo": "O servidor retorna a saída do comando do sistema operacional (ex.: informações de UID/GID do processo Node.js), confirmando Remote Code Execution via SSTI e validando a criticidade da vulnerabilidade.",
-          "resultado_esperado_falso_positivo": "O servidor retorna erro de execução, sandboxing impede o acesso a módulos nativos (ex.: 'require is not defined'), ou uma camada de WAF/filtro bloqueia o payload, indicando mitigação efetiva ou ausência de SSTI exploitável."
-        },
-        {
-          "passo": "Passo 04: Revisar o código-fonte na linha 87 de userProfile.ts para confirmar se a renderização do template utiliza interpolação direta de entrada do usuário na string do template (ex.: `ejs.render('Hello ' + req.body.username)`) ao invés de passar a entrada como variável de contexto (ex.: `ejs.render(template, { username: req.body.username })`).",
-          "resultado_esperado_verdadeiro_positivo": "O código confirma que a entrada do usuário é concatenada diretamente na string do template antes da compilação/renderização, validando a causa raiz da vulnerabilidade de SSTI identificada pelo SonarQube.",
-          "resultado_esperado_falso_positivo": "O código utiliza corretamente a passagem de dados como variáveis de contexto do template (não concatenadas na string do template), e qualquer saída é devidamente escapada pela engine, tornando o alerta do SonarQube um falso positivo."
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Ao enviar um payload mais avançado de SSTI direcionado ao EJS, como `<%= process.mainModule.require('child_process').execSync('whoami') %>`, o servidor executa o comando no sistema operacional e retorna a saída (ex.: nome do usuário do processo Node.js) na resposta HTTP, confirmando execução remota de código (RCE) via SSTI.",
+          "resultado_esperado_falso_positivo": "O payload é rejeitado por validação de entrada, WAF, ou sandboxing do template engine, retornando erro HTTP (400/500) sem execução de comando, ou a aplicação não expõe a saída do comando executado, impossibilitando a confirmação de RCE."
         }
       ]
     }

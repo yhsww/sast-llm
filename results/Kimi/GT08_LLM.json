@@ -1,0 +1,45 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "fe05cc96-7ed2-4ea0-9c61-48e5a0304238",
+        "arquivo": "lib/insecurity.ts",
+        "linha": 44,
+        "severidade_sast": "BLOCKER",
+        "regra": "typescript:S6437",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Provável verdadeiro positivo; requer confirmação manual",
+        "cwe": "CWE-798 - Use of Hard-coded Credentials",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-ATHN-02 - Testing for Default Credentials",
+        "justificativa": "A regra typescript:S6437 e a mensagem do achado indicam uma senha incorporada ao código-fonte e potencialmente comprometida. Se o valor for uma credencial real ou reutilizável, sua exposição no repositório ou em artefatos distribuídos poderá permitir acesso indevido. Como o trecho de código, o fluxo de uso e a validade da senha não foram fornecidos, a explorabilidade e a condição de credencial ativa ainda precisam ser verificadas."
+      },
+      "descricao_tecnica": "O SonarQube identificou na linha 44 de lib/insecurity.ts uma possível senha codificada diretamente no fonte. Credenciais embutidas podem ser recuperadas por qualquer pessoa com acesso ao repositório, ao histórico de versões, ao código compilado ou aos artefatos da aplicação, permanecendo expostas mesmo após uma eventual remoção visual do trecho. A confirmação deve estabelecer se o valor é efetivamente uma senha, se participa de algum fluxo de segurança e se corresponde a uma credencial ativa ou reutilizada. O valor do segredo não deve ser reproduzido nas evidências do teste.",
+      "pre_condicoes_para_verificacao": [
+        "Obter a mesma revisão do código analisada pelo SonarQube e acesso autorizado ao arquivo lib/insecurity.ts e ao histórico relevante do repositório.",
+        "Dispor de autorização para rastrear o uso da credencial e, se necessário, realizar validação controlada exclusivamente em ambiente de homologação ou isolado.",
+        "Identificar os mecanismos de autenticação, arquivos de configuração, variáveis de ambiente e cofres de segredos relacionados ao componente.",
+        "Adotar manuseio seguro das evidências, mascarando a senha e evitando sua inclusão em logs, relatórios, tickets ou comandos compartilhados."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 - Inspecionar a linha 44 e seu contexto sintático, sem copiar o valor do segredo para as evidências. Determinar se existe um literal ou valor derivado estaticamente atribuído a uma senha ou credencial, diferenciando-o de placeholders, exemplos não funcionais e identificadores sem valor secreto.",
+          "resultado_esperado_verdadeiro_positivo": "A linha contém uma senha ou segredo efetivo, fixo ou derivável a partir do código, em vez de obtê-lo de um cofre de segredos ou de uma configuração protegida em tempo de execução.",
+          "resultado_esperado_falso_positivo": "O elemento destacado não representa uma credencial: trata-se, por exemplo, de placeholder inequívoco, dado fictício não funcional ou texto sem qualquer uso como senha."
+        },
+        {
+          "passo": "Passo 02 - Rastrear referências ao valor e à variável associada em todo o repositório, incluindo fluxos de autenticação, configuração, geração de artefatos e demais operações protegidas. Pesquisar também o histórico do repositório sem divulgar o conteúdo sensível.",
+          "resultado_esperado_verdadeiro_positivo": "O segredo é consumido por código executável, incorporado a um artefato ou associado a uma credencial real, e sua presença no fonte ou no histórico permite recuperá-lo fora de um mecanismo seguro de gestão de segredos.",
+          "resultado_esperado_falso_positivo": "Não existe fluxo executável ou artefato que utilize o valor como credencial, e a inspeção confirma que a detecção decorreu apenas de semelhança lexical ou de um exemplo inerte e não funcional."
+        },
+        {
+          "passo": "Passo 03 - Quando houver um fluxo de autenticação identificado e autorização expressa, validar em ambiente controlado se a credencial está ativa ou é reutilizada, utilizando conta e ambiente de teste. Não realizar tentativas em produção nem contra contas de terceiros.",
+          "resultado_esperado_verdadeiro_positivo": "A senha é aceita, corresponde a um segredo ativo ou possibilita concluir uma operação protegida no ambiente autorizado, confirmando risco de uso indevido. Nesse caso, ela deve ser tratada como comprometida e encaminhada para revogação e substituição.",
+          "resultado_esperado_falso_positivo": "O valor não é aceito em nenhum fluxo autorizado, não corresponde a segredo ativo ou reutilizado e as etapas anteriores comprovam que não se trata de uma credencial executável. A mera rejeição em um único ambiente não é suficiente para declarar falso positivo."
+        }
+      ]
+    }
+  ]
+}

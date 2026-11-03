@@ -7,42 +7,42 @@
         "linha": 92,
         "severidade_sast": "MAJOR",
         "regra": "typescript:S5852",
-        "categoria": "SECURITY_HOTSPOT"
+        "categoria": "Security Hotspot - Regular Expression Denial of Service (ReDoS)"
       },
       "classificacao": {
-        "veredicto": "Falso Positivo (requer confirmação manual do padrão de regex)",
-        "cwe": "CWE-1333 - Inefficient Regular Expression Complexity",
-        "owasp_top_10": "A03:2021 - Injection (ReDoS classificado como forma de ataque de negação de serviço via entrada não controlada)",
-        "wstg": "WSTG-DOS-06 - Testing for User Input as a Loop Counter (análogo a ReDoS por processamento exaustivo de entrada do usuário)",
-        "justificativa": "A regra S5852 sinaliza expressões regulares que podem sofrer backtracking catastrófico (ReDoS) quando processam entradas controladas pelo usuário. Trata-se de um Security Hotspot, exigindo análise manual do padrão exato da regex usada na validação de senha. Em componentes de troca de senha do Juice Shop, normalmente a regex valida comprimento/complexidade da senha (ex.: presença de letras, números e símbolos) com quantificadores simples e não aninhados, o que tipicamente não gera complexidade exponencial. Além disso, o campo de senha no formulário costuma ter um limite de caracteres (maxlength) no HTML, reduzindo a superfície de exploração mesmo que o padrão fosse levemente ineficiente. Por esses fatores, a hipótese inicial é de falso positivo, mas a confirmação definitiva depende da inspeção do código-fonte exato na linha 92 para verificar se há grupos aninhados com quantificadores sobrepostos (ex.: (a+)+, (a|aa)+) que caracterizariam backtracking catastrófico real."
+        "veredicto": "Necessita Verificação Manual",
+        "cwe": "CWE-1333 (Inefficient Regular Expression Complexity) / CWE-400 (Uncontrolled Resource Consumption)",
+        "owasp_top_10": "A04:2021 - Insecure Design",
+        "wstg": "WSTG-INPV-13 (Testing for Regular Expression Denial of Service)",
+        "justificativa": "A regra S5852 identifica padrões de expressão regular com potencial de backtracking catastrófico (ex.: quantificadores aninhados, grupos sobrepostos). Trata-se de um Security Hotspot — o SonarQube sinaliza o código como ponto de atenção, mas não confirma automaticamente a exploração. É necessário inspecionar manualmente o padrão regex na linha 92 do componente change-password para determinar se a estrutura realmente permite complexidade exponencial/polinomial em relação ao tamanho da entrada controlada pelo usuário (ex.: campo de senha), validando assim se constitui um verdadeiro positivo de DoS."
       },
-      "descricao_tecnica": "O código no arquivo change-password.component.ts, na linha 92, utiliza uma expressão regular para validação de senha (ou campos relacionados) em um componente Angular do lado do cliente. A regra S5852 do SonarQube identifica padrões regex que podem ser vulneráveis a Regular Expression Denial of Service (ReDoS), ataque em que uma entrada maliciosa cuidadosamente construída causa tempo de processamento exponencial devido a backtracking excessivo do motor de regex (geralmente causado por quantificadores aninhados ou alternâncias ambíguas, ex.: (a+)+$, (a|a)*b). Como o processamento ocorre no lado do cliente (TypeScript/Angular), o impacto direto é limitado ao navegador do próprio usuário atacante (self-DoS), a menos que a mesma lógica/regex seja reutilizada no backend (Node.js) para validação server-side, cenário em que o impacto seria mais crítico (negação de serviço no servidor, afetando múltiplos usuários).",
+      "descricao_tecnica": "O componente Angular 'change-password.component.ts' utiliza, na linha 92, uma expressão regular para validação de entrada (provavelmente da senha ou confirmação de senha). Caso essa regex contenha construções vulneráveis a backtracking catastrófico — como quantificadores aninhados (ex.: (a+)+, (a*)*), alternâncias sobrepostas (ex.: (a|a)*) ou repetições de grupos com sobreposição de caracteres — um atacante pode fornecer uma string cuidadosamente construída (geralmente contendo repetições de caracteres seguidas por um caractere que força falha de correspondência) que faça o motor de regex entrar em um laço de tentativas exponenciais, consumindo CPU excessiva no lado do cliente (navegador) e, dependendo da arquitetura, podendo propagar o impacto para o servidor caso a mesma lógica de validação seja replicada no backend. Isso resulta em negação de serviço (DoS) ao travar a thread de execução do JavaScript, tornando a aplicação não responsiva.",
       "pre_condicoes_para_verificacao": [
-        "Acesso ao código-fonte completo do arquivo frontend/src/app/change-password/change-password.component.ts para inspecionar a expressão regular exata na linha 92 e arredores.",
-        "Ambiente de desenvolvimento ou build do Juice Shop configurado localmente para testes dinâmicos (npm install && npm start).",
-        "Ferramenta de análise de regex (ex.: regex101.com, safe-regex, ou rxxr2) para testar a complexidade computacional do padrão identificado.",
-        "Conhecimento se a mesma regex ou lógica de validação é replicada no backend (routes/ ou models/ do Node.js) para avaliar o impacto real em produção."
+        "Acesso ao código-fonte do arquivo frontend/src/app/change-password/change-password.component.ts para análise da linha 92 e identificação exata do padrão regex utilizado.",
+        "Ambiente de desenvolvimento ou build local do Juice Shop configurado para permitir testes de carga client-side (navegador com DevTools ou Node.js para testar a regex isoladamente).",
+        "Ferramenta de análise de regex (ex.: regex101.com, safe-regex, ou scripts Node.js) para medição de tempo de execução com diferentes tamanhos de entrada.",
+        "Conhecimento do fluxo de uso do componente (campo de senha/confirmação de senha) para identificar quais dados são processados pela regex."
       ],
       "passos_de_verificacao": [
         {
           "passo": "Passo 01",
-          "resultado_esperado_verdadeiro_positivo": "Inspeção do código na linha 92 revela uma expressão regular com quantificadores aninhados ou alternâncias sobrepostas (ex.: padrões como (.*)+, (a+)+, (\\w+\\s*)+ etc.) que teoricamente permitem backtracking exponencial, confirmando o Security Hotspot como verdadeiro positivo.",
-          "resultado_esperado_falso_positivo": "Inspeção do código revela uma regex simples e linear (ex.: validações com quantificadores únicos como {8,}, classes de caracteres [A-Za-z0-9] sem agrupamentos aninhados), sem potencial real de backtracking catastrófico."
+          "resultado_esperado_verdadeiro_positivo": "Ao inspecionar a linha 92 do arquivo change-password.component.ts, identifica-se um padrão regex contendo construções classicamente vulneráveis a ReDoS, como grupos de quantificadores aninhados (ex.: (.*)+, (\\w+)*) ou alternâncias com sobreposição de caracteres, confirmando potencial de backtracking exponencial.",
+          "resultado_esperado_falso_positivo": "O padrão regex na linha 92 é simples, linear e não contém quantificadores aninhados nem alternâncias sobrepostas (ex.: apenas verificação de caracteres permitidos com quantificador único e fixo), indicando ausência de vulnerabilidade de backtracking catastrófico."
         },
         {
           "passo": "Passo 02",
-          "resultado_esperado_verdadeiro_positivo": "Ao submeter no formulário de troca de senha uma string de teste longa e adversarial (ex.: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!' repetida com padrão que explora o backtracking), observa-se travamento perceptível ou alto consumo de CPU no navegador (thread principal bloqueada), confirmando a exploração.",
-          "resultado_esperado_falso_positivo": "O mesmo teste com entradas longas e adversariais não causa travamento perceptível nem consumo anormal de CPU, pois o campo possui maxlength no HTML e/ou a regex processa a entrada em tempo linear."
+          "resultado_esperado_verdadeiro_positivo": "Ao extrair a regex isoladamente e testá-la em um ambiente Node.js/console com entradas crescentes (ex.: 'a'.repeat(25) + '!', 'a'.repeat(30) + '!', 'a'.repeat(35) + '!'), observa-se crescimento exponencial no tempo de processamento (de milissegundos para segundos/minutos), confirmando a complexidade superlinear.",
+          "resultado_esperado_falso_positivo": "Mesmo com entradas de tamanho crescente (até milhares de caracteres), o tempo de execução da regex permanece constante ou cresce de forma linear/previsível, sem travamentos perceptíveis."
         },
         {
           "passo": "Passo 03",
-          "resultado_esperado_verdadeiro_positivo": "Verificação cruzada confirma que a mesma lógica/regex de validação é reutilizada no backend (ex.: em models/user.js ou rotas de atualização de senha) sem limite de tamanho de entrada, elevando o risco para negação de serviço no servidor e justificando tratamento como vulnerabilidade real de alta prioridade.",
-          "resultado_esperado_falso_positivo": "A validação é exclusiva do lado cliente (apenas para UX) e o backend implementa suas próprias validações com bibliotecas seguras (ex.: validator.js) ou limites de tamanho de payload (body-parser com limit), eliminando o vetor de exploração no servidor."
+          "resultado_esperado_verdadeiro_positivo": "Ao simular a interação do usuário no formulário de troca de senha da aplicação Juice Shop (via navegador), inserindo a string maliciosa identificada no Passo 02 no campo correspondente, a interface do navegador trava ou fica não responsiva por um período perceptível (vários segundos), evidenciando o impacto de DoS no lado do cliente.",
+          "resultado_esperado_falso_positivo": "A interação no formulário com a mesma string maliciosa não causa travamento perceptível na interface, e o campo de validação responde normalmente dentro de milissegundos, indicando que o código avaliado não é explorável na prática (pode já conter proteções como timeout, truncamento de entrada ou lib de regex seguro)."
         },
         {
           "passo": "Passo 04",
-          "resultado_esperado_verdadeiro_positivo": "Testes com ferramentas de análise estática de regex (ex.: safe-regex, rxxr2) classificam o padrão como 'unsafe' com complexidade exponencial O(2^n), corroborando o achado do SonarQube como verdadeiro positivo que deve ser corrigido (ex.: reescrever regex, usar engine RE2, ou validar comprimento antes do match).",
-          "resultado_esperado_falso_positivo": "Ferramentas de análise estática classificam o padrão como 'safe' com complexidade linear O(n), reforçando a conclusão de falso positivo; recomenda-se apenas documentar a análise e marcar o hotspot como 'Revisado - Seguro' no SonarQube com justificativa técnica."
+          "resultado_esperado_verdadeiro_positivo": "Validação cruzada com ferramentas automatizadas de detecção de ReDoS (ex.: npm 'safe-regex', 'redos-detector' ou regex101 com análise de complexidade) confirma que o padrão identificado é classificado como inseguro/vulnerável a ataques de negação de serviço.",
+          "resultado_esperado_falso_positivo": "As ferramentas automatizadas de detecção de ReDoS classificam o padrão como seguro, não havendo indícios de complexidade exponencial, reforçando a conclusão de falso positivo levantada pela SAST."
         }
       ]
     }
