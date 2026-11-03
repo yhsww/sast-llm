@@ -1,0 +1,51 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "6829619d-3476-446f-8922-d2cb10e8a2c7",
+        "arquivo": "server.ts",
+        "linha": 182,
+        "severidade_sast": "MINOR",
+        "regra": "typescript:S5122",
+        "categoria": "SECURITY_HOTSPOT"
+      },
+      "classificacao": {
+        "veredicto": "A verificar",
+        "cwe": "CWE-942",
+        "owasp_top_10": "A05:2021 - Security Misconfiguration; A01:2021 - Broken Access Control, caso a política permita acesso indevido a dados ou operações protegidas",
+        "wstg": "WSTG-CLNT-07; WSTG-CONF-08 somente se a aplicação utilizar arquivos de política cross-domain de RIA",
+        "justificativa": "A habilitação de CORS, isoladamente, não comprova uma vulnerabilidade. É necessário determinar a política efetiva, as rotas abrangidas, o tratamento de credenciais e a sensibilidade das respostas. CWE-1385 não foi adotado como classificação principal porque o achado não fornece evidência de uso de WebSocket."
+      },
+      "descricao_tecnica": "O SonarQube identificou a habilitação de CORS em server.ts. Uma configuração que confie em origens arbitrárias pode permitir que conteúdo controlado por um atacante leia respostas sensíveis no navegador da vítima ou utilize indevidamente sua sessão, conforme a autenticação e os endpoints envolvidos. Entretanto, uma allowlist restrita, ou Access-Control-Allow-Origin: * limitado a recursos realmente públicos e sem credenciais, pode ser aceitável. A presença de Access-Control-Allow-Origin: * não deve, por si só, ser considerada exploração confirmada.",
+      "pre_condicoes_para_verificacao": [
+        "Ter acesso ao código ao redor da linha 182 e às configurações de CORS de todos os ambientes, incluindo opções do middleware, ordem de registro, proxies e possíveis substituições de cabeçalhos.",
+        "Dispor de uma instância de teste com configuração equivalente à de produção e identificar endpoints representativos com dados públicos, dados autenticados e operações sensíveis.",
+        "Controlar uma origem externa de teste, por exemplo https://attacker.example, e possuir uma origem legítima conhecida para comparação.",
+        "Utilizar curl ou ferramenta equivalente para inspecionar cabeçalhos e um navegador para validar a aplicação real da política; requisições via curl, isoladamente, não demonstram o comportamento do navegador.",
+        "Executar os testes com contas e dados de teste, sem provocar alterações reais em dados de produção."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A análise estática mostra que a política efetiva confia em origens arbitrárias ou controláveis por terceiros, por exemplo refletindo Origin sem validação ou usando correspondência excessivamente ampla, e que essa política alcança rotas com dados ou operações protegidas. Registre também quaisquer exceções por rota e o uso de Access-Control-Allow-Credentials.",
+          "resultado_esperado_falso_positivo": "A política efetiva restringe as origens a uma allowlist necessária e validada, com métodos e cabeçalhos limitados, ou abrange exclusivamente recursos públicos sem exposição de dados protegidos. Se houver apenas um curinga em recursos públicos e sem credenciais, registre o achado como configuração revisada, sem presumir vulnerabilidade."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Ao enviar OPTIONS e requisições reais para endpoints representativos com Origin: https://attacker.example, o servidor autoriza essa origem não confiável em uma rota sensível, retornando Access-Control-Allow-Origin com a origem refletida e, quando aplicável, permitindo os métodos, cabeçalhos e credenciais necessários. Um retorno Access-Control-Allow-Origin: * deve ser encaminhado aos testes seguintes para determinar se há impacto, e não tratado automaticamente como exploração.",
+          "resultado_esperado_falso_positivo": "A origem controlada pelo testador não recebe autorização para rotas sensíveis, seja por ausência de Access-Control-Allow-Origin, rejeição da requisição ou aplicação da allowlist. Respostas para a origem legítima continuam compatíveis com a política documentada."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Em uma página hospedada em https://attacker.example, um fetch no navegador para um endpoint que retorna dados da conta de teste consegue ler o corpo da resposta sem autorização legítima. Repita com credentials: include apenas quando a aplicação utilizar autenticação ambiente; a confirmação exige que dados protegidos da vítima fiquem acessíveis à origem atacante, e não apenas que a requisição HTTP tenha sido enviada.",
+          "resultado_esperado_falso_positivo": "O navegador impede a leitura da resposta pela origem atacante, o endpoint não exige autenticação e expõe somente dados publicamente acessíveis, ou o servidor não inclui os cabeçalhos necessários. Erros de CORS no console e respostas opaque sem acesso aos dados não confirmam o achado."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Se a política autorizar métodos ou cabeçalhos não simples, uma origem não confiável consegue executar uma operação sensível cross-origin no contexto autorizado da vítima, com evidência do efeito no ambiente de teste. Consolide como verdadeiro positivo somente quando houver confiança indevida na origem e impacto de confidencialidade, integridade ou controle de acesso.",
+          "resultado_esperado_falso_positivo": "A origem atacante não obtém acesso a dados protegidos nem autorização para operações sensíveis. Se houver apenas envio de uma requisição simples sem leitura da resposta, avalie separadamente CSRF e controles de autorização, sem usar esse fato isolado para confirmar a vulnerabilidade de CORS."
+        }
+      ]
+    }
+  ]
+}

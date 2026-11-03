@@ -1,0 +1,51 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "74de4cdb-5256-48b1-97af-c47eaa500ecc",
+        "arquivo": "routes/userProfile.ts",
+        "linha": 87,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S7790",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Não confirmado — requer análise de fluxo de dados e verificação dinâmica",
+        "cwe": "CWE-1336",
+        "owasp_top_10": "A03:2021 — Injection",
+        "wstg": "WSTG-INPV-18",
+        "justificativa": "O achado identifica uma operação sensível de formatação ou compilação dinâmica de template, mas a mensagem e a referência CWE não comprovam que um atacante controle o conteúdo compilado nem que expressões sejam efetivamente interpretadas. Será verdadeiro positivo para SSTI se dados controláveis pelo usuário forem incorporados à estrutura do template antes do processamento no servidor e uma expressão não destrutiva for avaliada. Se o template for estático e confiável, ou se os valores forem fornecidos apenas como dados devidamente neutralizados, o achado poderá ser classificado como falso positivo."
+      },
+      "descricao_tecnica": "A linha indicada deve ser examinada para determinar se o conteúdo do template é construído dinamicamente antes de sua compilação ou renderização. Nesse cenário, um valor controlado pelo usuário pode deixar de ser tratado como simples dado e passar a ser interpretado como expressão ou diretiva do motor de templates. Dependendo do motor, da versão e do contexto de execução, isso pode permitir alteração da saída, acesso indevido a objetos do servidor ou execução de código. A simples reflexão do payload, um erro HTTP 500 ou a ocorrência de XSS não são suficientes, isoladamente, para confirmar SSTI.",
+      "pre_condicoes_para_verificacao": [
+        "Dispor do código-fonte completo de routes/userProfile.ts, do arquivo de template utilizado e das funções chamadas, confirmando exatamente qual operação ocorre na linha 87.",
+        "Identificar o motor de templates, sua versão, as opções de compilação/renderização e quaisquer mecanismos de escape, sanitização ou sandbox aplicáveis.",
+        "Executar os testes somente em instância isolada e autorizada, sem dados reais, com configuração equivalente à versão analisada e com logs do servidor disponíveis.",
+        "Possuir uma conta de teste com privilégios mínimos e identificar, pela análise estática, pelo menos um campo controlável que possa alcançar o template, como o nome de usuário, caso esse fluxo seja confirmado.",
+        "Obter uma resposta baseline da página de perfil e utilizar somente payloads aritméticos não destrutivos; não executar comandos do sistema operacional durante a triagem."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 — Inspecionar a origem e o destino dos dados: reconstruir o fluxo desde os parâmetros da requisição, atributos do usuário e dados persistidos até a montagem e o processamento do template. Verificar se ocorrem concatenação ou substituições no texto do template antes da compilação, distinguindo-as da passagem de valores como variáveis de renderização.",
+          "resultado_esperado_verdadeiro_positivo": "Existe um caminho no qual uma origem controlável por usuário altera o texto ou a estrutura do template antes do processamento no servidor, sem neutralização adequada da sintaxe do motor.",
+          "resultado_esperado_falso_positivo": "O template processado é estático ou proveniente exclusivamente de fonte confiável, e os dados externos são fornecidos somente como valores de renderização com tratamento adequado, sem possibilidade de alterar diretivas ou expressões do template."
+        },
+        {
+          "passo": "Passo 02 — Realizar um teste aritmético controlado: após confirmar o motor e sua sintaxe, inserir no campo identificado um canário único acompanhado de uma expressão não destrutiva. Para Pug, por exemplo, utilizar SSTI_CANARY_#{7*7}. Submeter o valor pelo fluxo legítimo da aplicação e solicitar novamente a página afetada.",
+          "resultado_esperado_verdadeiro_positivo": "A resposta contém o canário e apresenta 49 no lugar da expressão, indicando que o conteúdo controlado foi avaliado pelo motor de templates.",
+          "resultado_esperado_falso_positivo": "A resposta preserva a expressão como texto literal, eventualmente codificado para o contexto de saída, e nenhuma avaliação ocorre. Rejeição validada da entrada ou simples erro de renderização, sem evidência de avaliação, não confirmam a vulnerabilidade."
+        },
+        {
+          "passo": "Passo 03 — Confirmar que a avaliação ocorre no servidor: capturar a resposta HTTP bruta, sem depender do DOM modificado pelo navegador, e repetir o teste com uma segunda expressão, como #{6*7}, se a sintaxe confirmada for Pug. Correlacionar as requisições com os logs do processo servidor.",
+          "resultado_esperado_verdadeiro_positivo": "A resposta HTTP bruta já contém os resultados esperados, como 49 e posteriormente 42, demonstrando avaliação repetível durante a renderização no servidor.",
+          "resultado_esperado_falso_positivo": "As expressões permanecem literais na resposta e no processamento do servidor. Se a avaliação ocorrer exclusivamente após a entrega ao navegador, o achado de SSTI não fica confirmado e deve-se avaliar separadamente a possibilidade de CSTI conforme WSTG-CLNT-15."
+        },
+        {
+          "passo": "Passo 04 — Consolidar a triagem e o impacto: documentar o campo de entrada, a rota, os privilégios necessários, a persistência do payload, os usuários afetados, a versão do motor e as evidências de requisição e resposta. Não é necessário demonstrar execução de comandos para confirmar a injeção.",
+          "resultado_esperado_verdadeiro_positivo": "A avaliação de expressões é reproduzível por um atacante dentro do modelo de ameaças e está ligada ao fluxo apontado na linha 87, permitindo classificar o achado como verdadeiro positivo de CWE-1336/SSTI e avaliar o impacto adicional conforme as capacidades do motor.",
+          "resultado_esperado_falso_positivo": "Não há origem controlável pelo atacante até o template, ou todos os testes permanecem estritamente como dados literais. Nesse caso, registrar o achado como falso positivo ou não explorável no fluxo analisado, mantendo a justificativa e as evidências do motivo."
+        }
+      ]
+    }
+  ]
+}

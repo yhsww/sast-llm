@@ -1,0 +1,56 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "208dea17-f27a-4e83-b216-484334328793",
+        "arquivo": "routes/b2bOrder.ts",
+        "linha": 23,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S1523",
+        "categoria": "SECURITY_HOTSPOT"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro positivo potencial; requer confirmação do fluxo de dados e da explotabilidade",
+        "cwe": "CWE-95, se for confirmado que entrada não confiável é avaliada como código",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-11; WSTG-CLNT-02 apenas como referência secundária, caso seja identificada execução adicional no navegador",
+        "justificativa": "O achado indica uma operação de execução dinâmica, mas a presença desse sink, isoladamente, não comprova que um atacante controla o código executado. É necessário confirmar a origem dos dados, o alcance da rota e a eficácia de eventuais validações ou sandboxes. Não há evidência fornecida para classificar o achado como XSS ou para afirmar execução de comandos no sistema operacional."
+      },
+      "descricao_tecnica": "A regra S1523 sinaliza uma possível avaliação dinâmica de código na rota de pedidos B2B. Se dados controlados pela requisição, como campos do corpo do pedido, alcançarem essa operação sem uma política rigorosa de conteúdo, um atacante poderá alterar a lógica avaliada pelo servidor. Mesmo que exista sandbox ou limite de tempo, é necessário verificar suas capacidades e restrições: esses mecanismos podem reduzir o impacto, mas não devem ser considerados automaticamente uma correção. A confirmação de CWE-95 exige evidência de execução de código controlado pelo atacante; impacto de RCE no hospedeiro somente deve ser registrado se houver demonstração adicional e não destrutiva de ultrapassagem da fronteira do avaliador.",
+      "pre_condicoes_para_verificacao": [
+        "Dispor do código-fonte e das dependências exatamente na versão analisada pelo SonarQube, incluindo o mapeamento da rota HTTP que invoca b2bOrder.",
+        "Identificar a instrução completa da linha 23, a função avaliadora utilizada e todos os parâmetros que ela recebe.",
+        "Executar os testes somente em ambiente isolado e autorizado, sem dados reais, com logs do servidor e possibilidade de reiniciar o processo.",
+        "Preparar uma requisição B2B válida como linha de base e utilizar uma conta com os privilégios mínimos necessários para acessar a funcionalidade.",
+        "Instrumentar o avaliador em ambiente de teste para registrar entrada, alcance do sink e erros, sem registrar segredos nem executar cargas destrutivas."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 - Revisar estaticamente o fluxo desde os parâmetros da requisição até a operação de execução dinâmica da linha 23, incluindo transformações, desserialização, valores padrão e validações intermediárias.",
+          "resultado_esperado_verdadeiro_positivo": "Um valor controlável pelo cliente alcança o avaliador como código, total ou parcialmente, sem allowlist de operações, assinatura de conteúdo ou outra restrição que impeça o atacante de modificar a lógica executada.",
+          "resultado_esperado_falso_positivo": "O código avaliado é uma constante ou modelo interno não influenciável pelo cliente, ou a entrada é tratada exclusivamente como dados por um parser sem semântica executável."
+        },
+        {
+          "passo": "Passo 02 - Enviar a requisição B2B válida de linha de base e acompanhar logs, rastreamento e instrumentação para confirmar que a rota externa alcança a instrução reportada.",
+          "resultado_esperado_verdadeiro_positivo": "A requisição alcança a operação de avaliação dinâmica e o valor derivado da entrada do cliente é observado no sink, demonstrando que o caminho é alcançável na versão implantada.",
+          "resultado_esperado_falso_positivo": "A instrução não é alcançável por qualquer fluxo externo relevante, pertence a código não implantado ou nunca recebe dados da requisição no comportamento observado."
+        },
+        {
+          "passo": "Passo 03 - Substituir somente o campo identificado no Passo 01 por um canário não destrutivo compatível com a gramática do avaliador, como uma expressão que produza um identificador único na instrumentação ou lance uma exceção contendo S1523_CANARY. Comparar o resultado com uma entrada inválida que apenas cause erro de parsing.",
+          "resultado_esperado_verdadeiro_positivo": "O identificador do canário é produzido pela execução do avaliador, ou a exceção canário é efetivamente lançada, comprovando que o conteúdo remoto foi executado e não apenas rejeitado ou desserializado.",
+          "resultado_esperado_falso_positivo": "O canário é rejeitado antes do sink, permanece como texto ou dado inerte e não produz qualquer efeito de execução. Um erro genérico de sintaxe, isoladamente, não deve ser usado como prova de vulnerabilidade."
+        },
+        {
+          "passo": "Passo 04 - Repetir o canário com pequenas variações e revisar as restrições do avaliador, incluindo objetos e funções acessíveis, gramática permitida, autorização da rota, timeout e limites de recursos. Não tentar acesso a arquivos, rede, processos ou escape de sandbox.",
+          "resultado_esperado_verdadeiro_positivo": "O cliente consegue controlar repetidamente código avaliado e as restrições existentes não impedem essa execução. O relatório deve limitar o impacto ao que foi demonstrado, distinguindo execução dentro de um avaliador restrito de execução de comandos no hospedeiro.",
+          "resultado_esperado_falso_positivo": "Controles efetivos impedem que o atacante altere código executável, ou o mecanismo aceita comprovadamente apenas uma gramática de dados sem efeitos, funções ou acesso a capacidades executáveis."
+        },
+        {
+          "passo": "Passo 05 - Consolidar a triagem comparando os resultados estáticos e dinâmicos e verificar separadamente se algum conteúdo é devolvido e executado no navegador antes de aplicar WSTG-CLNT-02.",
+          "resultado_esperado_verdadeiro_positivo": "Há evidência reproduzível de entrada remota alcançando e sendo executada pelo avaliador; classificar principalmente como injeção de código no servidor, registrando sandbox e demais limitações como fatores de impacto.",
+          "resultado_esperado_falso_positivo": "Não há caminho explorável de entrada não confiável para execução dinâmica. Na ausência de execução no navegador, não criar uma classificação adicional de JavaScript injection ou XSS."
+        }
+      ]
+    }
+  ]
+}

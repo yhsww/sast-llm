@@ -1,0 +1,142 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "AX1a-sql-injection-001",
+        "arquivo": "src/main/java/com/example/app/repository/UserRepository.java",
+        "linha": 47,
+        "severidade_sast": "CRITICAL",
+        "regra": "java:S3649",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Não confirmado — requer análise do fluxo de dados e verificação",
+        "cwe": "CWE-89; CWE-564 se a execução dinâmica ocorrer via Hibernate; CWE-566 somente se uma chave primária controlada pelo usuário também permitir acesso a registros não autorizados",
+        "owasp_top_10": "A03:2021 — Injection; a tag owasp-a1 corresponde à classificação legada A1:2017",
+        "wstg": "WSTG-INPV-05; WSTG-INPV-05-3 somente se o banco for Microsoft SQL Server",
+        "justificativa": "A mensagem indica um possível sink de SQL dinâmico, mas não foram fornecidos o código da linha 47, a origem do valor nem as proteções aplicadas. As referências de CWE e WSTG orientam o teste, porém não comprovam explorabilidade nem autorização indevida."
+      },
+      "descricao_tecnica": "Verificar se dados controláveis por um usuário alcançam a consulta da linha 47 por concatenação, interpolação ou outra composição que altere a estrutura SQL/HQL. A confirmação exige evidência de que o valor influencia a consulta sem vinculação adequada de parâmetros. Escape manual ou validação parcial não deve ser considerado equivalente a parametrização. Se o dado representar apenas um identificador de registro, também deve ser avaliada separadamente a autorização sobre esse registro antes de atribuir CWE-566.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código de UserRepository.java e aos métodos chamadores, incluindo controller e service que originam o argumento.",
+        "Acesso à configuração de persistência para identificar se o sink usa JDBC, Hibernate, HQL ou SQL nativo.",
+        "Ambiente isolado de testes com dados fictícios, autorização para testes e possibilidade de observar consultas e parâmetros sem registrar dados sensíveis.",
+        "Conhecimento do endpoint ou operação que alcança o método e dos valores de entrada válidos para estabelecer uma linha de base."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 — Inspecionar a linha 47 e rastrear cada elemento da consulta desde sua origem até a execução, identificando entradas de requisição, cabeçalhos, cookies, dados persistidos e valores provenientes de outros usuários.",
+          "resultado_esperado_verdadeiro_positivo": "Um valor controlável pelo usuário é incorporado diretamente ao texto SQL/HQL executado, ou controla cláusulas, ordenação ou identificadores sem uma allowlist estrita.",
+          "resultado_esperado_falso_positivo": "A consulta é estática ou todos os valores externos permanecem fora da estrutura da consulta, sendo transmitidos exclusivamente como parâmetros vinculados."
+        },
+        {
+          "passo": "Passo 02 — Examinar a API de execução e as defesas: verificar uso efetivo de placeholders e setParameter/bind equivalente, além de validar separadamente nomes de tabelas, colunas e direções de ordenação.",
+          "resultado_esperado_verdadeiro_positivo": "Há concatenação antes da chamada ao sink, parâmetros apenas aparentes sem vinculação, ou identificadores dinâmicos derivados da entrada sem mapeamento fixo por allowlist.",
+          "resultado_esperado_falso_positivo": "A estrutura da consulta é fixa, os valores são vinculados pela API de persistência e eventuais identificadores dinâmicos são selecionados somente entre constantes previamente permitidas."
+        },
+        {
+          "passo": "Passo 03 — Em ambiente isolado, executar a operação com uma entrada benigna e, depois, com entradas não destrutivas contendo aspas e metacaracteres SQL adequados ao contexto. Comparar resposta, exceções e a consulta instrumentada, sem depender apenas de erro ou diferença de tempo.",
+          "resultado_esperado_verdadeiro_positivo": "Os metacaracteres alteram de forma reproduzível a estrutura ou a semântica da consulta, confirmada por comportamento diferencial consistente e/ou pela consulta observada no sink.",
+          "resultado_esperado_falso_positivo": "A estrutura observada permanece idêntica, a entrada é tratada como valor literal e não há alteração de semântica atribuível à injeção."
+        },
+        {
+          "passo": "Passo 04 — Se o parâmetro for uma chave primária ou identificador de usuário, verificar adicionalmente, com duas contas de teste, se a consulta restringe os registros ao proprietário autorizado.",
+          "resultado_esperado_verdadeiro_positivo": "Além do problema de construção da consulta, quando aplicável, uma conta consegue selecionar ou modificar registro de outra conta apenas alterando o identificador, caracterizando também possível CWE-566.",
+          "resultado_esperado_falso_positivo": "A autorização é aplicada no servidor e impede acesso cruzado; nesse caso, não se deve atribuir CWE-566, embora isso isoladamente não elimine uma eventual injeção de SQL."
+        }
+      ]
+    },
+    {
+      "identificacao": {
+        "id_sonarqube": "AX1b-xss-001",
+        "arquivo": "src/main/java/com/example/app/controller/CommentController.java",
+        "linha": 83,
+        "severidade_sast": "CRITICAL",
+        "regra": "java:S5131",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Não confirmado — requer análise do contexto de saída e verificação",
+        "cwe": "CWE-79; CWE-80 quando a falha envolver especificamente neutralização inadequada de tags HTML relacionadas a script",
+        "owasp_top_10": "A03:2021 — Injection; a tag owasp-a3 corresponde à classificação legada A3:2017",
+        "wstg": "WSTG-CLNT-02; WSTG-CLNT-15 apenas se a entrada também for processada por um mecanismo de templates no cliente",
+        "justificativa": "O achado aponta possível inserção não neutralizada em HTML, mas a origem do dado, o tipo de resposta, o contexto de inserção e o encoding do template não foram fornecidos. Não é possível presumir XSS armazenado apenas porque o controller trata de comentários."
+      },
+      "descricao_tecnica": "Determinar se a linha 83 reflete imediatamente uma entrada ou insere na resposta um valor previamente persistido. A neutralização deve ser avaliada conforme o contexto real: texto HTML, atributo, JavaScript, URL ou template. Encoding para um contexto diferente, filtros por blacklist e CSP não substituem a proteção adequada no sink. Se a resposta for JSON, também é necessário verificar como o cliente a consome antes de concluir ausência de risco em outros sinks.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código do controller, ao template ou mecanismo que produz a resposta e ao fluxo que origina o valor da linha 83.",
+        "Ambiente de homologação com contas e navegador de teste, sem dados reais e sem payloads de exfiltração.",
+        "Ferramenta para inspecionar a resposta HTTP e o DOM renderizado, incluindo Content-Type e eventual política CSP.",
+        "Identificação de como submeter e visualizar o comentário ou valor correspondente, caso esse fluxo exista."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 — Rastrear o valor até a linha 83 e identificar se ele é controlável pelo usuário, se é refletido ou persistido e qual é o contexto exato de saída.",
+          "resultado_esperado_verdadeiro_positivo": "Dados controláveis alcançam uma resposta HTML ou fragmento posteriormente interpretado como HTML, sem uma fronteira segura entre dados e marcação.",
+          "resultado_esperado_falso_positivo": "O valor não é controlável, não alcança esse sink ou a saída não é interpretada como conteúdo ativo em nenhum fluxo associado."
+        },
+        {
+          "passo": "Passo 02 — Revisar o encoding ou sanitização aplicado e conferir se ele corresponde ao contexto de saída, incluindo configuração de autoescape do template e possíveis usos de escapes desativados ou HTML considerado confiável.",
+          "resultado_esperado_verdadeiro_positivo": "O valor é concatenado sem proteção, o autoescape é desativado, a sanitização permite marcação executável ou o encoding aplicado não corresponde ao contexto.",
+          "resultado_esperado_falso_positivo": "O framework aplica encoding contextual correto ou um sanitizador adequado remove toda capacidade de criar marcação ou código ativo, sem conversão posterior que desfaça essa proteção."
+        },
+        {
+          "passo": "Passo 03 — Submeter um marcador único e um payload não destrutivo adaptado ao contexto, como <img src=x onerror=window.__sast_xss_83=1> para conteúdo HTML. Inspecionar primeiro a resposta e depois o DOM, verificando apenas a presença do marcador de teste, sem acessar cookies ou dados de terceiros.",
+          "resultado_esperado_verdadeiro_positivo": "A entrada gera elementos ou atributos ativos não pretendidos e há execução de JavaScript ou criação de um sink executável no navegador, de forma reproduzível.",
+          "resultado_esperado_falso_positivo": "Os caracteres aparecem como texto corretamente codificado, a marcação perigosa é removida e nenhum comportamento ativo é criado."
+        },
+        {
+          "passo": "Passo 04 — Se a execução for bloqueada, distinguir neutralização de mitigação externa verificando a marcação entregue e o DOM; se houver framework de templates no cliente, testar separadamente se a entrada é interpretada como expressão de template.",
+          "resultado_esperado_verdadeiro_positivo": "A resposta ainda contém injeção ativa e depende apenas de CSP ou de outra mitigação para impedir execução, ou a entrada é avaliada como template pelo cliente, mantendo o problema no sink.",
+          "resultado_esperado_falso_positivo": "Não há marcação perigosa residual nem interpretação como template; o bloqueio não é a única barreira e a saída permanece inerte independentemente dessa mitigação."
+        }
+      ]
+    },
+    {
+      "identificacao": {
+        "id_sonarqube": "AX1c-hardcoded-cred-001",
+        "arquivo": "src/main/java/com/example/app/config/DatabaseConfig.java",
+        "linha": 22,
+        "severidade_sast": "BLOCKER",
+        "regra": "java:S2068",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Não confirmado — requer inspeção do literal e de seu uso",
+        "cwe": "CWE-798; CWE-259 quando o literal for efetivamente uma senha embutida",
+        "owasp_top_10": "A07:2021 — Identification and Authentication Failures; a tag owasp-a2 corresponde à classificação legada A2:2017",
+        "wstg": "WSTG-ATHN-02 e WSTG-ATHN-07 como referências de apoio; credencial padrão ou senha fraca só deve ser alegada se confirmada",
+        "justificativa": "O nome DatabaseConfig sugere possível autenticação outbound com o banco, mas o conteúdo da linha 22 não foi fornecido. É necessário diferenciar uma senha real de um placeholder, exemplo ou valor não sensível. As referências de autenticação não comprovam que a credencial seja padrão, fraca ou válida."
+      },
+      "descricao_tecnica": "Verificar se existe um segredo literal atribuído a senha ou credencial e se ele é utilizado para autenticação, especialmente na criação do DataSource. Uma senha real permanece sensível mesmo que esteja temporariamente sem uso ou seja sobrescrita em determinados ambientes, pois pode ser recuperada do código, do histórico ou de artefatos. Por outro lado, a simples presença de uma variável chamada password não confirma o achado se o valor vier de um provedor externo de segredos.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao conteúdo da linha 22, à classe DatabaseConfig e aos pontos que constroem ou configuram o DataSource.",
+        "Acesso controlado ao histórico do repositório e às configurações de execução, sem copiar o segredo para relatórios ou logs.",
+        "Inventário das variáveis de ambiente, arquivos externos e provedores de segredos que possam sobrescrever a configuração.",
+        "Autorização para validar a credencial somente em ambiente e sistemas dentro do escopo, preferencialmente sem tentativa de autenticação em produção."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 — Inspecionar o literal da linha 22 e a expressão completa, distinguindo senha efetiva de string vazia, placeholder, exemplo documental ou leitura de configuração externa.",
+          "resultado_esperado_verdadeiro_positivo": "Existe um valor não trivial embutido no código que representa uma senha ou outro segredo de autenticação.",
+          "resultado_esperado_falso_positivo": "Não há segredo literal: trata-se de placeholder inequívoco, valor sem função de autenticação ou apenas de uma variável cujo conteúdo é obtido externamente de forma segura."
+        },
+        {
+          "passo": "Passo 02 — Rastrear o uso do valor e verificar se ele alimenta credenciais do banco, autenticação inbound ou outro segredo, incluindo caminhos de fallback e perfis de execução.",
+          "resultado_esperado_verdadeiro_positivo": "O literal é usado diretamente ou como fallback para autenticação, ou contém uma credencial real ainda que determinado perfil sobrescreva seu uso em runtime.",
+          "resultado_esperado_falso_positivo": "O valor não possui qualquer função de credencial e não corresponde a um segredo real; a detecção decorreu apenas do nome da variável ou de padrão sintático."
+        },
+        {
+          "passo": "Passo 03 — Verificar, sem divulgar o valor, sua presença no histórico, em artefatos distribuídos e em outros ambientes, e determinar se corresponde a uma conta ou segredo real.",
+          "resultado_esperado_verdadeiro_positivo": "O segredo pode ser recuperado por quem tem acesso ao código ou artefato e está associado a uma credencial real ou reutilizada, ampliando o impacto além da execução atual.",
+          "resultado_esperado_falso_positivo": "O conteúdo é comprovadamente fictício, sem correspondência com credenciais ou ambientes, e não representa um segredo operacional."
+        },
+        {
+          "passo": "Passo 04 — Quando necessário e autorizado, validar em ambiente isolado a origem efetiva da credencial usada pela aplicação, comparando o comportamento com e sem configuração externa e sem registrar a senha.",
+          "resultado_esperado_verdadeiro_positivo": "A aplicação estabelece autenticação usando o literal ou o adota como fallback, ou a credencial embutida é confirmada como válida em algum ambiente dentro do escopo.",
+          "resultado_esperado_falso_positivo": "A validação, somada à inspeção estática, demonstra que o literal não é credencial e não participa de autenticação. A simples sobrescrita em runtime ou uma autenticação malsucedida não deve ser usada isoladamente para declarar falso positivo."
+        }
+      ]
+    }
+  ]
+}

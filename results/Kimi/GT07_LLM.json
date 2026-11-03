@@ -1,0 +1,56 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "8a61c8f6-3bef-4b6e-9787-a9479df9ef26",
+        "arquivo": "frontend/src/app/login/login.component.ts",
+        "linha": 61,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S2068",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Não confirmado - requer triagem",
+        "cwe": "CWE-798; CWE-259, caso o valor seja efetivamente uma senha codificada",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures, se a credencial for usada em autenticação; não aplicável se for falso positivo",
+        "wstg": "WSTG-ATHN-02 como referência principal; WSTG-ATHN-07 como contexto complementar",
+        "justificativa": "A regra S2068 é heurística e a mensagem solicita revisão, sem demonstrar que exista uma senha real ou explorável. Será verdadeiro positivo se um literal sigiloso ou credencial padrão estiver incorporado ao código e utilizado em autenticação ou comunicação com outro componente. Será falso positivo se o texto for apenas nome de propriedade, rótulo, placeholder ou outro valor sem função de credencial. As referências CWE e WSTG orientam a análise, mas não confirmam o achado."
+      },
+      "descricao_tecnica": "O achado aponta uma possível senha codificada no componente de login do frontend. Caso seja uma credencial funcional, ela poderá ser recuperada do código-fonte, do bundle JavaScript ou de source maps e reutilizada para autenticação, inclusive sem interação com a interface. Como o frontend é distribuído ao navegador, nenhum segredo deve ser considerado protegido apenas por ofuscação ou minificação. A triagem deve confirmar a natureza do literal, seu fluxo de dados, sua presença no artefato de produção e seu uso efetivo em autenticação.",
+      "pre_condicoes_para_verificacao": [
+        "Obter acesso ao código-fonte no mesmo commit analisado pelo SonarQube e inspecionar a linha 61 com seu contexto, pois a numeração pode variar entre versões.",
+        "Identificar se o trecho pertence ao fluxo de produção, a código legado, a demonstração ou exclusivamente a testes e mocks.",
+        "Disponibilizar o build de frontend correspondente ao código analisado, incluindo bundles e source maps quando publicados.",
+        "Utilizar ambiente de teste autorizado, conta exclusivamente criada para validação e navegador com ferramentas de inspeção ou proxy de interceptação.",
+        "Não registrar senhas, tokens ou outros segredos integralmente nas evidências; mascarar os valores e preservar apenas o necessário para reprodução e correção."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 - Inspecionar a linha 61 e o contexto ao redor, identificando o literal destacado, a variável ou propriedade associada e se existe atribuição, comparação ou inicialização de senha.",
+          "resultado_esperado_verdadeiro_positivo": "Há um valor fixo com característica de segredo atribuído a uma senha ou credencial, ou usado para validar/autenticar acesso, sem origem em entrada do usuário ou configuração protegida.",
+          "resultado_esperado_falso_positivo": "O elemento destacado é apenas o nome de uma propriedade, seletor, rótulo, placeholder, mensagem ou outro texto que não representa nem é tratado como credencial."
+        },
+        {
+          "passo": "Passo 02 - Rastrear estaticamente o fluxo do valor por meio de referências, chamadas de serviço, objetos de login e requisições HTTP, verificando também caminhos condicionais e código alcançável em produção.",
+          "resultado_esperado_verdadeiro_positivo": "O valor fixo alcança um mecanismo de autenticação, é enviado a um backend ou componente externo, ou é comparado com uma entrada para conceder acesso.",
+          "resultado_esperado_falso_positivo": "Não existe fluxo do valor para autenticação ou comunicação autenticada; o campo de senha recebe somente a entrada do usuário, ou o trecho é inalcançável e não possui efeito de segurança."
+        },
+        {
+          "passo": "Passo 03 - Examinar os bundles JavaScript e eventuais source maps entregues pelo ambiente de produção ou homologação, pesquisando a estrutura associada ao trecho sem divulgar o possível segredo.",
+          "resultado_esperado_verdadeiro_positivo": "A credencial funcional, ou material suficiente para reconstruí-la, está presente em um artefato acessível ao cliente e pode ser recuperada por qualquer usuário que obtenha esse artefato.",
+          "resultado_esperado_falso_positivo": "O código é exclusivamente de teste ou desenvolvimento, não é distribuído no escopo analisado, e o suposto valor não corresponde a uma credencial válida em nenhum fluxo implantado."
+        },
+        {
+          "passo": "Passo 04 - Em ambiente controlado, executar o login com valores distintos e conhecidos no campo de senha, observando o objeto enviado e a requisição de autenticação; verificar se algum valor fixo é inserido, sobrescrito ou utilizado independentemente da entrada.",
+          "resultado_esperado_verdadeiro_positivo": "A aplicação utiliza ou transmite a senha fixa identificada, mesmo quando o usuário fornece outra senha, ou o valor codificado permite autenticação em uma conta de teste associada ao fluxo.",
+          "resultado_esperado_falso_positivo": "A requisição contém apenas a senha fornecida pelo usuário e o literal destacado não participa da autenticação nem altera seu resultado."
+        },
+        {
+          "passo": "Passo 05 - Consolidar a explorabilidade e o escopo, verificando se o valor constitui credencial padrão, compartilhada ou reutilizada e se concede acesso a uma conta ou componente; documentar evidências estáticas e dinâmicas de forma mascarada.",
+          "resultado_esperado_verdadeiro_positivo": "Confirma-se que uma credencial codificada está acessível ou é funcional e que sua obtenção permite autenticação, assume identidade ou concede privilégios indevidos; classificar como CWE-798 e, quando aplicável, CWE-259.",
+          "resultado_esperado_falso_positivo": "As evidências demonstram que o alerta decorre apenas da nomenclatura ou de um valor sem sigilo e sem uso autenticador, não havendo credencial exposta, bypass de autenticação ou impacto de segurança."
+        }
+      ]
+    }
+  ]
+}

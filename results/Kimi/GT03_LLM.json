@@ -1,0 +1,61 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "101f6c6f-b415-47a0-961c-e577bac36edb",
+        "arquivo": "frontend/src/app/about/about.component.ts",
+        "linha": 119,
+        "severidade_sast": "CRITICAL",
+        "regra": "typescript:S6268",
+        "categoria": "SECURITY_HOTSPOT"
+      },
+      "classificacao": {
+        "veredicto": "Não confirmado - requer verificação de fluxo e exploração controlada",
+        "cwe": "CWE-79 (principal); CWE-80 (variante relacionada a tags HTML com script)",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-CLNT-02; WSTG-CLNT-15, somente se o conteúdo também for interpretado como template Angular",
+        "justificativa": "O achado aponta um possível sink perigoso: a desativação da sanitização nativa do Angular. Isso não comprova, isoladamente, que exista XSS explorável. Será verdadeiro positivo se um atacante puder influenciar o conteúdo que chega à linha 119 e esse conteúdo for renderizado como HTML confiável, permitindo injeção de HTML ativo ou execução de JavaScript. Poderá ser falso positivo do ponto de vista de segurança se o valor for estritamente estático e confiável, não houver caminho de controle por um atacante ou uma validação rigorosa impedir conteúdo perigoso antes do sink."
+      },
+      "descricao_tecnica": "O Angular normalmente sanitiza valores inseridos em contextos HTML, removendo elementos e atributos perigosos. Quando o componente usa DomSanitizer para marcar um valor como confiável, por exemplo por meio de bypassSecurityTrustHtml, essa proteção pode ser contornada. Se dados controláveis por usuário, API ou configuração modificável alcançarem esse valor e forem posteriormente renderizados, poderá ocorrer XSS armazenado, refletido ou baseado em DOM, conforme a origem e o fluxo dos dados. A simples renderização de tags inofensivas comprova perda de sanitização, mas a execução de script ou outro impacto de segurança deve ser verificada separadamente. Injeção de template cliente não deve ser presumida: exige evidência adicional de que o conteúdo injetado é compilado ou processado pelo mecanismo de templates, e não apenas inserido no DOM.",
+      "pre_condicoes_para_verificacao": [
+        "Disponibilizar o código-fonte correspondente ao build analisado e identificar na linha 119 o método exato de DomSanitizer, a variável envolvida, sua origem e o binding ou sink de renderização no template.",
+        "Executar a verificação somente em ambiente local ou de homologação autorizado, sem dados reais e com possibilidade de restaurar os valores alterados.",
+        "Obter uma forma controlada de alterar o valor de origem sem modificar ou recompilar o bundle Angular, caso esse valor seja proveniente de API, banco de dados ou configuração.",
+        "Disponibilizar navegador com ferramentas de desenvolvedor, acesso às respostas de rede e, quando aplicável, contas separadas para representar o atacante e a vítima.",
+        "Registrar a versão do Angular, a política CSP e eventuais validações ou sanitizadores adicionais, pois eles podem influenciar os resultados sem eliminar automaticamente o risco do sink."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 - Inspecionar estaticamente a linha 119 e rastrear o fluxo completo da origem até a renderização. Confirmar se há bypassSecurityTrustHtml ou mecanismo equivalente e localizar bindings como [innerHTML], atribuições ao DOM ou outro consumo do valor marcado como confiável.",
+          "resultado_esperado_verdadeiro_positivo": "O valor renderizado contém dados que podem ser influenciados por um atacante ou por uma fonte externa não integralmente confiável, e não existe validação por allowlist ou sanitização adequada antes da desativação da proteção do Angular.",
+          "resultado_esperado_falso_positivo": "O valor é uma constante ou conteúdo estritamente controlado, sem caminho de influência por atacante, ou passa por validação/sanitização rigorosa e contextual antes do sink; alternativamente, o valor confiável não chega a uma renderização HTML alcançável."
+        },
+        {
+          "passo": "Passo 02 - Confirmar dinamicamente a alcançabilidade do sink. Inserir na origem um marcador inofensivo e inequívoco, abrir a página About e observar a resposta de origem, o valor recebido pelo componente e o DOM renderizado.",
+          "resultado_esperado_verdadeiro_positivo": "O marcador controlado chega ao valor processado na linha 119 e aparece no conteúdo renderizado, comprovando o caminho origem-sink.",
+          "resultado_esperado_falso_positivo": "O marcador não alcança a linha 119 ou a renderização porque a origem é imutável no cenário testado, o fluxo está inacessível ou o valor é substituído por conteúdo fixo antes do sink."
+        },
+        {
+          "passo": "Passo 03 - Testar a perda de sanitização com o payload inofensivo <b data-s6268=html>S6268</b>. Comparar o texto exibido e o HTML no Inspetor do navegador com o comportamento esperado da sanitização normal do Angular.",
+          "resultado_esperado_verdadeiro_positivo": "O navegador cria um elemento b com o atributo de marcação e apresenta o texto formatado, demonstrando que a entrada é interpretada como HTML em vez de exibida literalmente.",
+          "resultado_esperado_falso_positivo": "O payload aparece como texto literal, é removido ou é neutralizado por outra camada antes da renderização, indicando que a entrada testada não obtém um contexto HTML confiável."
+        },
+        {
+          "passo": "Passo 04 - Após confirmar o fluxo, usar o payload não destrutivo <img src=x onerror=document.body.dataset.s6268='executado'> e verificar no console e no DOM se document.body.dataset.s6268 assume o valor executado. Repetir em uma sessão de vítima quando a origem for persistida ou compartilhada.",
+          "resultado_esperado_verdadeiro_positivo": "O manipulador é preservado e executado no contexto da origem da aplicação, inclusive na sessão da vítima quando aplicável, comprovando XSS e a possibilidade de alterar o DOM ou realizar ações com os privilégios dessa sessão.",
+          "resultado_esperado_falso_positivo": "O atributo de evento é removido ou codificado e nenhum código é executado. Se apenas a CSP bloquear o manipulador inline, o resultado deve ser registrado como injeção de HTML com exploração dependente da CSP, e não como falso positivo conclusivo sem análise de outros vetores."
+        },
+        {
+          "passo": "Passo 05 - Avaliar separadamente a referência WSTG-CLNT-15. Verificar no código se o HTML inserido é posteriormente compilado ou processado como template Angular; somente nesse caso, testar uma expressão inofensiva como {{7*7}} e observar sua avaliação.",
+          "resultado_esperado_verdadeiro_positivo": "Há uma etapa explícita de compilação/processamento de template e a expressão controlada é avaliada, caracterizando injeção de template cliente e exigindo análise adicional para possível escalada a XSS.",
+          "resultado_esperado_falso_positivo": "A expressão permanece como texto ou HTML comum e não existe compilação dinâmica do conteúdo, portanto não há evidência de CSTI, embora um XSS confirmado no passo anterior permaneça válido."
+        },
+        {
+          "passo": "Passo 06 - Consolidar o veredicto considerando controle da origem, alcançabilidade, neutralização e impacto, e remover todos os payloads e valores de teste ao final.",
+          "resultado_esperado_verdadeiro_positivo": "Existe um fluxo reproduzível de conteúdo controlável até a renderização sem sanitização adequada, com HTML ativo ou execução de JavaScript; classificar como XSS e documentar origem, sink, pré-requisitos, CSP e impacto observado.",
+          "resultado_esperado_falso_positivo": "Não há controle explorável da origem nem conteúdo perigoso capaz de atingir o sink, ou controles anteriores impedem efetivamente a injeção; documentar essas condições e manter a recomendação de evitar o bypass ou substituí-lo por sanitização com allowlist."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "87daf531-960b-43e8-a596-ca1b9293b5af",
+        "arquivo": "frontend/src/app/change-password/change-password.component.ts",
+        "linha": 92,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S5852",
+        "categoria": "SECURITY_HOTSPOT"
+      },
+      "classificacao": {
+        "veredicto": "A verificar",
+        "cwe": "CWE-1333; CWE-400, caso seja demonstrado consumo não controlado de recursos",
+        "owasp_top_10": "Sem mapeamento direto no OWASP Top 10:2021; o impacto potencial é perda de disponibilidade por DoS",
+        "wstg": "Sem procedimento WSTG específico para ReDoS; requer verificação manual de complexidade da expressão e do impacto em disponibilidade",
+        "justificativa": "O alerta identifica uma possível complexidade superlinear, mas não comprova, isoladamente, que existe um DoS explorável. É necessário confirmar a expressão exata, a controlabilidade e o tamanho da entrada, além do local de execução. Como o achado está em um componente de frontend, o travamento pode ficar restrito à aba do próprio usuário que forneceu a entrada, caracterizando auto-DoS, e não indisponibilidade do servidor ou de outros usuários."
+      },
+      "descricao_tecnica": "Uma expressão regular com ambiguidades e retrocessos excessivos pode consumir CPU de forma superlinear quando recebe uma entrada longa que percorre muitos caminhos de correspondência e termina em falha. Em JavaScript, essa execução síncrona pode bloquear o event loop ou a thread principal do navegador. A triagem deve distinguir vulnerabilidade estrutural da regex de explorabilidade real: entrada controlável por atacante, ausência de limite efetivo antes da avaliação, crescimento mensurável do tempo de execução e possibilidade de afetar recurso compartilhado ou a sessão de uma vítima. Se confirmada, a correção deve remover as ambiguidades da expressão e aplicar um limite de tamanho antes da avaliação, sem depender apenas de restrições da interface.",
+      "pre_condicoes_para_verificacao": [
+        "Obter o código correspondente à versão analisada e registrar a regex exata da linha 92, o método que a executa e a origem da entrada.",
+        "Mapear se a avaliação ocorre somente no navegador ou também em código compartilhado/backend e identificar validações de tamanho executadas antes da regex.",
+        "Preparar ambiente isolado de teste, sem usar produção, com timeout externo ou processo/worker descartável para interromper avaliações que travem.",
+        "Disponibilizar ferramentas para medir tempo de execução, CPU e responsividade da interface ou do processo servidor.",
+        "Se a verificação for ponta a ponta, possuir conta de teste e acesso autorizado ao fluxo de alteração de senha."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "A análise do fluxo confirma que a regex da linha 92 é alcançável com dados controláveis por um usuário e que não existe limite de comprimento suficientemente pequeno aplicado antes da avaliação. As repetições ou alternativas ambíguas identificadas permitem construir entradas que forçam backtracking.",
+          "resultado_esperado_falso_positivo": "A expressão não processa dados não confiáveis, está em caminho inalcançável, ou recebe somente uma entrada estritamente limitada antes da avaliação, de modo que o comportamento patológico não é alcançável na aplicação."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Em benchmark isolado no mesmo runtime JavaScript, executar entradas benignas e entradas derivadas da estrutura ambígua da regex, aumentando progressivamente o comprimento e acrescentando um sufixo que force a falha da correspondência. Após aquecimento e repetições, o tempo cresce de forma claramente superlinear, com longas pausas, estouro de timeout ou consumo elevado de CPU em comprimentos praticáveis.",
+          "resultado_esperado_falso_positivo": "As famílias de entrada derivadas da ambiguidade e os controles apresentam crescimento aproximadamente linear e permanecem dentro de limites operacionais até o tamanho máximo aceito, sem reproduzir travamento ou consumo desproporcional."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Ao reproduzir o caso pelo fluxo real ou por um harness que preserve suas validações, a entrada patológica alcança a regex em tamanho suficiente para causar a degradação observada. Restrições como maxlength apenas no navegador não são consideradas proteção caso possam ser contornadas e a entrada continue alcançando uma execução relevante.",
+          "resultado_esperado_falso_positivo": "O fluxo real rejeita ou trunca a entrada antes da regex, inclusive quando as restrições da interface são contornadas, e o tamanho efetivamente permitido mantém o tempo de avaliação insignificante."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "A avaliação ponta a ponta demonstra impacto de segurança em disponibilidade: um atacante consegue provocar bloqueio de processo compartilhado, degradação do serviço para outros usuários ou travamento da sessão de uma vítima por um caminho de entrega viável, sem depender de acesso administrativo ao ambiente.",
+          "resultado_esperado_falso_positivo": "O efeito ocorre apenas quando o próprio usuário cola ou digita a carga em sua própria página e fica limitado à sua aba, sem meio de induzir uma vítima ou afetar backend, outros usuários ou recursos compartilhados. Nesse cenário, o alerta pode representar problema de robustez local, mas não um DoS remoto explorável."
+        },
+        {
+          "passo": "Passo 05",
+          "resultado_esperado_verdadeiro_positivo": "Após substituir a regex por uma formulação sem backtracking ambíguo e/ou impor limite de tamanho antes da avaliação, repetir os mesmos casos e limites de tempo. A carga original deixa de causar crescimento patológico, enquanto entradas válidas e inválidas continuam sendo classificadas corretamente.",
+          "resultado_esperado_falso_positivo": "Se a conclusão da triagem for falso positivo, documentar os limites e o escopo de execução que impedem exploração e manter testes de regressão com os comprimentos máximos aceitos, sem apresentar a remediação como correção de um DoS remoto confirmado."
+        }
+      ]
+    }
+  ]
+}

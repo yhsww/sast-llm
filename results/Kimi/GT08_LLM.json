@@ -1,0 +1,50 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "fe05cc96-7ed2-4ea0-9c61-48e5a0304238",
+        "arquivo": "lib/insecurity.ts",
+        "linha": 44,
+        "severidade_sast": "BLOCKER",
+        "regra": "typescript:S6437",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro positivo provável — pendente de confirmação manual",
+        "cwe": "CWE-259 (primário); CWE-522 (secundário, quando houver armazenamento ou uso inseguro da credencial)",
+        "owasp_top_10": "A07:2021 — Identification and Authentication Failures",
+        "wstg": "WSTG-ATHN-02 — Testing for Default Credentials, como apoio à validação quando aplicável ao fluxo de autenticação",
+        "justificativa": "O achado indica um possível segredo de autenticação embutido no código, condição compatível com CWE-259 e potencialmente explorável por qualquer pessoa que obtenha o fonte ou o artefato. Contudo, sem o trecho da linha 44 e sem o fluxo de uso, não é possível confirmar se o valor é uma credencial válida, um segredo criptográfico, um dado fictício ou um falso reconhecimento da regra. As referências de CWE apoiam a análise, mas não confirmam o achado."
+      },
+      "descricao_tecnica": "Deve-se verificar se a linha 44 contém uma senha ou segredo equivalente em texto claro e se esse valor é utilizado para autenticação inbound ou outbound. Uma credencial real no repositório pode ser recuperada por usuários com acesso ao código, ao histórico de versões ou a artefatos distribuídos, permitindo acesso não autorizado e dificultando sua rotação. Se o valor for, na realidade, uma chave criptográfica, a classificação da fraqueza deverá ser refinada conforme seu uso. Caso se confirme uma credencial válida, ela deve ser tratada como comprometida, revogada ou rotacionada e substituída por um mecanismo seguro de configuração ou cofre de segredos, sem copiar seu valor para relatórios ou logs.",
+      "pre_condicoes_para_verificacao": [
+        "Obter acesso ao código na mesma revisão analisada pelo SonarQube, incluindo a linha 44, seu contexto e os pontos de chamada relacionados.",
+        "Identificar o fluxo de autenticação ou criptografia associado, os ambientes afetados e eventuais configurações que possam sobrescrever o valor do código.",
+        "Disponibilizar ambiente isolado e contas de teste, com autorização explícita para qualquer validação dinâmica; não testar a credencial contra produção ou sistemas de terceiros sem autorização.",
+        "Garantir acesso controlado ao histórico do repositório, às configurações de segredos e aos logs necessários, evitando registrar ou divulgar o valor do segredo."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 — Inspecionar a linha 44 e o código adjacente, identificando se existe um literal sensível atribuído a senha, segredo, chave ou parâmetro de autenticação, sem reproduzir seu valor nas evidências.",
+          "resultado_esperado_verdadeiro_positivo": "Há um valor fixo e não trivial no código que representa uma senha ou segredo de autenticação, sem ser obtido exclusivamente de uma fonte externa protegida.",
+          "resultado_esperado_falso_positivo": "O valor é um placeholder ou dado explicitamente fictício e não sensível, ou o detector interpretou incorretamente uma string que não representa credencial; alternativamente, a credencial efetiva é obtida de mecanismo externo protegido e o literal não é utilizado como segredo."
+        },
+        {
+          "passo": "Passo 02 — Rastrear o fluxo de dados do valor até comparações de senha, criação ou validação de tokens, clientes de serviços externos ou outras operações de segurança, verificando também caminhos alternativos e possíveis sobrescritas por configuração.",
+          "resultado_esperado_verdadeiro_positivo": "O valor embutido participa efetivamente de um mecanismo de autenticação ou proteção de acesso, ou continua sendo uma credencial válida mesmo quando o caminho atual é inalcançável.",
+          "resultado_esperado_falso_positivo": "O valor não participa de autenticação, não concede qualquer privilégio e não representa uma credencial válida; o fluxo demonstra que se trata apenas de dado não sensível."
+        },
+        {
+          "passo": "Passo 03 — Em ambiente controlado, exercitar o fluxo correspondente com uma conta de teste. Para autenticação inbound, verificar se a credencial embutida é aceita; para autenticação outbound, verificar se a aplicação a utiliza para estabelecer a conexão, sem expô-la em comandos, logs ou capturas.",
+          "resultado_esperado_verdadeiro_positivo": "A credencial embutida é aceita ou permite estabelecer a conexão autenticada, confirmando impacto funcional. O teste deve ser encerrado e a credencial tratada como comprometida.",
+          "resultado_esperado_falso_positivo": "A credencial não é aceita e a configuração, o código e os logs seguros comprovam que o fluxo utiliza outra credencial gerenciada, sendo o valor analisado apenas fictício ou não sensível. Uma falha de autenticação isolada, sem essa comprovação, não basta para descartar o achado."
+        },
+        {
+          "passo": "Passo 04 — Verificar escopo, exposição e histórico: determinar se o valor é compartilhado entre ambientes ou instalações, se aparece em versões anteriores ou artefatos e se possui privilégios reais, consolidando o veredicto e as ações de contenção.",
+          "resultado_esperado_verdadeiro_positivo": "Confirma-se que o valor é ou foi uma credencial real, válida ou reutilizada, ou que sua presença no código permite recuperação por terceiros. Mantém-se o achado, com revogação ou rotação e remoção segura do segredo do código e do histórico quando aplicável.",
+          "resultado_esperado_falso_positivo": "Há evidência objetiva de que o valor sempre foi fictício, nunca foi aceito por qualquer componente e não oferece acesso ou protege material sensível. A simples ausência do segredo no histórico ou em logs não é suficiente para classificar o achado como falso positivo."
+        }
+      ]
+    }
+  ]
+}

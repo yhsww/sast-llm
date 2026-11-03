@@ -1,0 +1,55 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "6d4ecb57-73d4-482f-ae9c-2728da3971bb",
+        "arquivo": "lib/insecurity.ts",
+        "linha": 23,
+        "severidade_sast": "BLOCKER",
+        "regra": "secrets:S6706",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Pendente de verificação — forte indício de verdadeiro positivo",
+        "cwe": "CWE-321 (primário); CWE-324 somente se também houver evidência de uso da chave além de seu período de validade ou vida útil segura",
+        "owasp_top_10": "A02:2021 — Cryptographic Failures",
+        "wstg": "WSTG-CRYP-04 — Testing for Weak Encryption",
+        "justificativa": "A regra e a mensagem indicam possível material de chave privada no código, mas o conteúdo da linha e seu fluxo até operações criptográficas não foram fornecidos. CWE-321 será aplicável se houver uma chave privada real e imutável embutida no artefato. A explorabilidade e a severidade efetiva dependem de a chave ser válida, estar acessível e ser utilizada pelo ambiente implantado. CWE-324 não deve ser presumido apenas pela referência da regra."
+      },
+      "descricao_tecnica": "Se a linha 23 contiver uma chave privada válida diretamente no código e essa chave for utilizada pela aplicação, qualquer pessoa com acesso ao repositório, pacote ou artefato poderá recuperá-la e reproduzir operações reservadas ao detentor da chave. Caso ela seja usada para assinatura de tokens, por exemplo, isso pode permitir a criação de tokens aceitos pela aplicação e comprometer autenticação e autorização. Uma referência a um cofre ou arquivo externo, uma chave pública ou um placeholder inválido não confirmaria o achado. Uma chave real usada exclusivamente em testes ainda pode exigir correção, embora o contexto possa alterar sua severidade.",
+      "pre_condicoes_para_verificacao": [
+        "Obter a revisão exata do código analisada, a localização original do achado no SonarQube e as configurações de implantação correspondentes.",
+        "Dispor de autorização para inspecionar o material criptográfico e executar testes somente em ambiente isolado ou de homologação.",
+        "Identificar, sem divulgar o segredo, os usos da variável da linha 23, os consumidores das operações criptográficas e a chave pública ou configuração de verificação correspondente.",
+        "Evitar copiar a chave privada para relatórios, logs, tickets ou ferramentas externas; preparar procedimento de rotação e revogação caso ela seja confirmada como real."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 — Inspecionar a linha 23 e seu contexto, distinguindo um literal de chave privada de uma referência externa, chave pública, comentário ou marcador de teste.",
+          "resultado_esperado_verdadeiro_positivo": "Há material de chave privada incorporado ao código ou a um artefato versionado, e não apenas o carregamento de um segredo fornecido externamente.",
+          "resultado_esperado_falso_positivo": "O trecho contém somente uma referência externa, chave pública, texto ilustrativo ou placeholder sem material privado utilizável, explicando a correspondência por padrão da regra."
+        },
+        {
+          "passo": "Passo 02 — Validar localmente a estrutura criptográfica, usando ferramenta apropriada em ambiente controlado e sem exibir a chave, e comparar sua identificação ou fingerprint com a configuração de verificação, quando aplicável.",
+          "resultado_esperado_verdadeiro_positivo": "O material é uma chave privada válida e corresponde, ou pode corresponder, a um par de chaves utilizado pela aplicação.",
+          "resultado_esperado_falso_positivo": "O conteúdo não pode ser interpretado como chave privada válida e comprovadamente serve apenas como dado sintético sem função criptográfica."
+        },
+        {
+          "passo": "Passo 03 — Rastrear estaticamente a variável até assinatura, verificação, cifragem ou decifragem e verificar se esse caminho está presente no código efetivamente implantado.",
+          "resultado_esperado_verdadeiro_positivo": "A chave embutida alimenta uma operação de segurança alcançável e o ambiente analisado não a substitui por uma chave independente antes do uso.",
+          "resultado_esperado_falso_positivo": "Não existe uso do suposto segredo em código executável e há evidência de que a detecção recaiu apenas sobre conteúdo sintético ou inerte."
+        },
+        {
+          "passo": "Passo 04 — Em homologação, executar uma prova de uso sem acessar contas de terceiros: gerar com a chave recuperada uma assinatura ou artefato destinado a uma identidade de teste e submetê-lo ao mecanismo correspondente da aplicação.",
+          "resultado_esperado_verdadeiro_positivo": "A assinatura ou o artefato produzido externamente com a chave recuperada é aceito, demonstrando que a posse do código permite reproduzir uma capacidade criptográfica confiável.",
+          "resultado_esperado_falso_positivo": "O artefato é rejeitado, a aplicação utiliza outro par de chaves e não há qualquer caminho no qual o material sinalizado produza efeito de segurança."
+        },
+        {
+          "passo": "Passo 05 — Consolidar as evidências de validade, alcance, exposição no histórico ou artefatos e reutilização entre ambientes antes de concluir o triage.",
+          "resultado_esperado_verdadeiro_positivo": "Confirmam-se chave privada real embutida e uso ou exposição relevante; classificar como verdadeiro positivo, tratá-la como comprometida e coordenar remoção, substituição e revogação, invalidando também versões anteriores quando necessário.",
+          "resultado_esperado_falso_positivo": "As evidências descartam a existência de segredo privado real ou utilizável e justificam marcar o achado como falso positivo. Se existir uma chave real apenas em testes, registrar o contexto e reavaliar a severidade em vez de descartá-la automaticamente."
+        }
+      ]
+    }
+  ]
+}
