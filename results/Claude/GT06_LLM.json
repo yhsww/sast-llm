@@ -1,0 +1,50 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "6829619d-3476-446f-8922-d2cb10e8a2c7",
+        "arquivo": "server.ts",
+        "linha": 182,
+        "severidade_sast": "MINOR",
+        "regra": "typescript:S5122",
+        "categoria": "SECURITY_HOTSPOT"
+      },
+      "classificacao": {
+        "veredicto": "Requer verificação manual (Potencial Verdadeiro Positivo)",
+        "cwe": "CWE-942",
+        "owasp_top_10": "A05:2021 - Security Misconfiguration",
+        "wstg": "WSTG-CLNT-07",
+        "justificativa": "O SonarQube sinalizou a habilitação de CORS como um hotspot de segurança que necessita de revisão manual. A regra S5122 não indica automaticamente uma vulnerabilidade confirmada, mas aponta para um trecho de código onde o middleware CORS é configurado, podendo permitir origens não confiáveis (ex.: uso de 'origin: true', wildcard '*' combinado com credentials, ou reflexão do header Origin sem validação). É necessário inspecionar a configuração exata (middleware 'cors' do Express) para confirmar se a política implementada é permissiva e explora domínios não confiáveis, e se há credenciais habilitadas (Access-Control-Allow-Credentials) em conjunto com uma origem permissiva, o que elevaria a severidade real do achado."
+      },
+      "descricao_tecnica": "O código na linha 182 de server.ts habilita CORS (Cross-Origin Resource Sharing), provavelmente através do middleware 'cors' do Express.js. Dependendo dos parâmetros utilizados (ex.: origin: '*', origin: true, ou reflexão dinâmica do header Origin sem lista de permissões), a aplicação pode aceitar requisições cross-origin de qualquer domínio, inclusive domínios maliciosos. Se combinado com 'credentials: true', isso pode permitir que um atacante, através de um site malicioso, realize requisições autenticadas (com cookies de sessão) ao backend e leia respostas sensíveis, violando a Same-Origin Policy e possibilitando ataques como roubo de dados autenticados, CSRF-like attacks e exfiltração de informações sensíveis via JavaScript malicioso hospedado em outro domínio.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte completo de server.ts para inspecionar a linha 182 e o contexto ao redor (importação e configuração do middleware cors)",
+        "Ambiente de execução da aplicação (local ou staging) para testes dinâmicos com requisições cross-origin",
+        "Ferramenta de interceptação de tráfego HTTP (Burp Suite, OWASP ZAP, curl ou Postman)",
+        "Conhecimento se a aplicação utiliza autenticação baseada em cookies/sessão (para avaliar risco de CORS com credentials)"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "Inspecionar o código-fonte na linha 182 e confirmar que o middleware CORS está configurado com 'origin: \"*\"', 'origin: true', ou uma função que reflete dinamicamente qualquer valor do header Origin sem validação de whitelist, confirmando política permissiva.",
+          "resultado_esperado_falso_positivo": "O código mostra uma configuração restritiva, como uma lista explícita de domínios confiáveis (whitelist) ou validação adequada do header Origin antes de refleti-lo, indicando que a política de CORS é segura."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "Enviar uma requisição HTTP com um header 'Origin' arbitrário (ex.: Origin: http://attacker.com) para um endpoint da API e observar que o servidor responde com 'Access-Control-Allow-Origin: http://attacker.com' (refletindo o Origin enviado) ou 'Access-Control-Allow-Origin: *', confirmando que qualquer domínio é aceito.",
+          "resultado_esperado_falso_positivo": "O servidor responde apenas com domínios pré-aprovados no header 'Access-Control-Allow-Origin', rejeitando ou ignorando origens não cadastradas, ou retornando erro/sem header CORS para origens desconhecidas."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Verificar se o header 'Access-Control-Allow-Credentials: true' está presente simultaneamente com uma política permissiva de origem, permitindo que um atacante realize requisições autenticadas (com cookies/sessão da vítima) a partir de um domínio malicioso e leia as respostas, confirmando um cenário de alto risco explorável.",
+          "resultado_esperado_falso_positivo": "O header 'Access-Control-Allow-Credentials' não está presente, ou a aplicação não utiliza autenticação baseada em cookies/sessão que dependa de CORS, reduzindo o impacto prático mesmo que a política seja permissiva."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Simular um ataque real hospedando uma página HTML/JS em outro domínio que realiza uma requisição XHR/fetch com 'credentials: include' para a API vulnerável e confirmar que os dados sensíveis da vítima autenticada são exfiltrados com sucesso para o domínio atacante.",
+          "resultado_esperado_falso_positivo": "A requisição cross-origin falha devido a validação adequada de origem no backend, uso de tokens CSRF, SameSite cookies configurados corretamente, ou outras camadas de proteção que impedem a exploração prática, mesmo com a configuração CORS presente."
+        }
+      ]
+    }
+  ]
+}

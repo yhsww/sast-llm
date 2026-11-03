@@ -1,0 +1,51 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "208dea17-f27a-4e83-b216-484334328793",
+        "arquivo": "routes/b2bOrder.ts",
+        "linha": 23,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S1523",
+        "categoria": "SECURITY_HOTSPOT"
+      },
+      "classificacao": {
+        "veredicto": "Potencial Verdadeiro Positivo - Requer Validação Dinâmica",
+        "cwe": "CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code ('Eval Injection')",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-11 (Code Injection) / WSTG-CLNT-02 (JavaScript Execution)",
+        "justificativa": "O arquivo b2bOrder.ts é conhecido por processar dados de pedidos B2B recebidos do usuário (ex: expressões de cálculo de quantidade/preço) utilizando uma função de avaliação dinâmica (eval ou biblioteca equivalente como 'safe-eval'). Caso a entrada do corpo da requisição (req.body) seja passada diretamente para a função eval sem sanitização adequada, um atacante pode injetar código JavaScript arbitrário que será executado no contexto do servidor Node.js, permitindo RCE (Remote Code Execution). A regra S1523 do SonarQube sinaliza corretamente o uso de construções de avaliação dinâmica como um ponto de risco que precisa ser confirmado através de rastreamento do fluxo de dados (taint analysis) desde a entrada HTTP até o sink eval."
+      },
+      "descricao_tecnica": "A linha 23 de routes/b2bOrder.ts contém uma chamada de avaliação dinâmica de código (eval, Function(), ou biblioteca como 'safe-eval'/'vm') que pode processar dados fornecidos pelo cliente através do corpo da requisição HTTP (req.body). Se o valor avaliado não for estritamente validado contra uma lista de caracteres/expressões permitidas (whitelist), um atacante pode fornecer um payload malicioso (ex: 'require(\"child_process\").exec(\"...\")' ou acesso a 'process', 'global') que será executado no contexto do servidor Node.js, resultando em Remote Code Execution (RCE), leitura/escrita de arquivos, exfiltração de variáveis de ambiente e comprometimento total do servidor.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte completo de routes/b2bOrder.ts para identificar a função exata chamada na linha 23 (eval, Function, vm.runInContext, ou biblioteca de terceiros)",
+        "Ambiente de testes (staging/dev) com a aplicação Juice Shop em execução para testes dinâmicos (DAST)",
+        "Identificar o endpoint HTTP (rota) que invoca o controlador b2bOrder e qual parâmetro do corpo da requisição chega até a linha 23",
+        "Ferramenta de interceptação de requisições (Burp Suite, OWASP ZAP ou curl/Postman)",
+        "Conhecimento do formato esperado do payload JSON da rota B2B (ex: orderLinqExpression, quantidade, etc.)"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Revisão de código estático - Inspecionar a linha 23 e seu contexto (10 linhas acima/abaixo) para confirmar qual função de avaliação dinâmica é usada e qual variável é passada como argumento",
+          "resultado_esperado_verdadeiro_positivo": "A variável avaliada é derivada direta ou indiretamente de req.body, req.query ou req.params sem sanitização/whitelist, confirmando um sink alimentado por entrada não confiável",
+          "resultado_esperado_falso_positivo": "A entrada avaliada é um valor fixo, gerado internamente pelo servidor, ou passa por uma validação estrita (whitelist de caracteres numéricos/operadores matemáticos apenas) antes de chegar ao eval"
+        },
+        {
+          "passo": "Passo 02: Rastreamento de fluxo de dados (taint tracing) - Mapear a rota Express associada ao controlador b2bOrder.ts e identificar todos os middlewares de validação/sanitização aplicados antes do handler",
+          "resultado_esperado_verdadeiro_positivo": "Não há middleware de validação de schema (ex: Joi, express-validator) ou sanitização que restrinja o conteúdo da string antes de alcançar a função eval",
+          "resultado_esperado_falso_positivo": "Existe um middleware que valida rigorosamente o payload (ex: schema JSON estrito, regex restritiva permitindo apenas dígitos e operadores matemáticos básicos) que impede a injeção de código arbitrário"
+        },
+        {
+          "passo": "Passo 03: Teste dinâmico (DAST) - Enviar uma requisição HTTP para o endpoint identificado com um payload de teste inofensivo que force uma avaliação JavaScript detectável, ex: um valor que resulte em concatenação de strings ou execução de uma função simples como '1+1' versus um payload malicioso como 'require(\"child_process\").execSync(\"id\").toString()' ou 'this.constructor.constructor(\"return process.env\")()'",
+          "resultado_esperado_verdadeiro_positivo": "O servidor executa o payload injetado, retornando na resposta HTTP (ou em efeitos colaterais observáveis, como atraso de tempo, log de erro revelando stack trace do Node, ou exfiltração de dados) evidência de execução de código arbitrário no backend",
+          "resultado_esperado_falso_positivo": "O servidor rejeita o payload com erro de validação (400 Bad Request), sanitiza a entrada removendo caracteres especiais, ou retorna um erro genérico sem evidência de execução de código"
+        },
+        {
+          "passo": "Passo 04: Teste de confirmação com payload de prova de conceito (PoC) não destrutivo - Utilizar um payload que gere um efeito observável sem causar dano, como um atraso controlado (ex: busy-loop cronometrado) ou leitura de uma variável de ambiente não sensível, para confirmar execução no contexto do servidor",
+          "resultado_esperado_verdadeiro_positivo": "O comportamento do servidor confirma inequivocamente a execução do código JavaScript injetado (ex: atraso de resposta correspondente ao tempo do busy-loop, ou retorno do valor da variável de ambiente consultada), confirmando RCE explorável",
+          "resultado_esperado_falso_positivo": "Nenhum efeito colateral é observado; a aplicação se comporta de forma idêntica a uma entrada benigna, indicando que a entrada não alcança de fato a função eval ou é tratada como dado inerte (ex: apenas armazenada como string sem avaliação)"
+        }
+      ]
+    }
+  ]
+}

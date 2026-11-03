@@ -1,0 +1,50 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "fe05cc96-7ed2-4ea0-9c61-48e5a0304238",
+        "arquivo": "lib/insecurity.ts",
+        "linha": 44,
+        "severidade_sast": "BLOCKER",
+        "regra": "typescript:S6437",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Requer verificação manual (Potencial Verdadeiro Positivo)",
+        "cwe": "CWE-259, CWE-522",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-AUTHN-04 (Testing for Credentials Transported over an Encrypted Channel) / WSTG-CONF-05 (Review Old, Backup and Unreferenced Files)",
+        "justificativa": "A regra S6437 identifica literais de código que correspondem a padrões de segredos/senhas conhecidos. É necessário confirmar manualmente se o valor na linha 44 é de fato uma credencial ativa e sensível (ex.: chave usada em produção) ou um valor de exemplo/teste sem risco real (ex.: dados de seed do Juice Shop, aplicação intencionalmente vulnerável para fins didáticos)."
+      },
+      "descricao_tecnica": "A análise estática detectou um valor de senha ou segredo codificado diretamente no arquivo lib/insecurity.ts, na linha 44. Hard-coded passwords representam risco crítico pois podem ser extraídos do código-fonte, binários ou repositórios versionados, permitindo autenticação não autorizada. É necessário validar o contexto de uso dessa credencial: se é utilizada para autenticação de usuários, assinatura de tokens (ex.: JWT secret), ou comunicação com serviços externos, e se o valor exposto possui validade funcional/real.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte completo do repositório juice-shop",
+        "Permissão para inspecionar o arquivo lib/insecurity.ts e seu histórico no controle de versão (git blame/log)",
+        "Entendimento do propósito do projeto (ex.: aplicação deliberadamente vulnerável para treinamento - OWASP Juice Shop)",
+        "Acesso a ambiente de teste/build para validar se o valor é efetivamente utilizado em tempo de execução"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01",
+          "resultado_esperado_verdadeiro_positivo": "O código-fonte confirma a presença de uma string literal usada como senha, chave secreta ou segredo criptográfico (ex.: JWT secret, chave de assinatura) diretamente no arquivo, sem uso de variáveis de ambiente ou cofre de segredos.",
+          "resultado_esperado_falso_positivo": "O valor identificado não é uma credencial real, mas sim um placeholder, comentário, dado de exemplo documental ou string não relacionada a autenticação/segredo."
+        },
+        {
+          "passo": "Passo 02",
+          "resultado_esperado_verdadeiro_positivo": "A credencial é efetivamente utilizada em rotinas de autenticação, geração de tokens ou comunicação com sistemas externos em tempo de execução, confirmando impacto funcional real.",
+          "resultado_esperado_falso_positivo": "O valor não é referenciado/usado em nenhum fluxo de autenticação ou comunicação; está morto no código (dead code) ou é exclusivo de ambiente de testes isolado sem conexão com produção."
+        },
+        {
+          "passo": "Passo 03",
+          "resultado_esperado_verdadeiro_positivo": "Verifica-se, via histórico do repositório e documentação do projeto, que a credencial é intencionalmente usada como segredo de aplicação real e não como parte de um cenário educacional/didático de vulnerabilidade proposital.",
+          "resultado_esperado_falso_positivo": "Trata-se do projeto OWASP Juice Shop, uma aplicação propositalmente vulnerável para fins de treinamento em segurança, onde a presença de segredos hard-coded é um comportamento esperado e documentado como vulnerabilidade de demonstração, não representando risco real a dados de produção."
+        },
+        {
+          "passo": "Passo 04",
+          "resultado_esperado_verdadeiro_positivo": "Testes de penetração confirmam que a credencial pode ser usada para autenticação não autorizada ou acesso indevido a recursos protegidos no ambiente avaliado.",
+          "resultado_esperado_falso_positivo": "Tentativas de uso da credencial em ambiente de produção real (fora do escopo de treinamento) falham ou não se aplicam, confirmando ausência de risco explorável."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "8a61c8f6-3bef-4b6e-9787-a9479df9ef26",
+        "arquivo": "frontend/src/app/login/login.component.ts",
+        "linha": 61,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S2068",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "A Confirmar (Potencial Falso Positivo)",
+        "cwe": "CWE-259 / CWE-798",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-ATHN-07 / WSTG-ATHN-02",
+        "justificativa": "A regra S2068 do SonarQube é baseada em heurística léxica (nomes de variáveis como 'password', 'pwd', 'secret' associados a atribuição de string literal) e é conhecida por gerar falsos positivos em componentes Angular de login, onde o identificador 'password' pode se referir apenas ao binding de um campo de formulário (ngModel/FormControl) e não a uma credencial realmente codificada no código-fonte. Sem a visualização do trecho exato da linha 61, não é possível confirmar se há de fato uma string de senha fixa atribuída a uma variável usada para autenticação (verdadeiro positivo) ou se trata apenas do nome de uma propriedade/campo de formulário vinculado à UI (falso positivo). É necessária inspeção manual do código-fonte para classificação definitiva."
+      },
+      "descricao_tecnica": "O SAST identificou um possível uso de senha codificada (hard-coded password) no arquivo login.component.ts, linha 61, dentro do componente de login do frontend Angular do Juice Shop. A regra S2068 detecta padrões onde um literal de string é atribuído a uma variável cujo nome sugere armazenamento de senha, o que pode indicar uma credencial fixa embutida no código-fonte, utilizável para autenticação indevida ou bypass de controles de acesso caso seja uma credencial real e funcional.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao repositório de código-fonte do Juice Shop para inspecionar o arquivo frontend/src/app/login/login.component.ts na linha 61 e seu contexto (classe, métodos, imports)",
+        "Ambiente de build/execução do frontend Angular disponível para testes dinâmicos, se necessário",
+        "Conhecimento da estrutura do componente de login (FormGroup, ngModel, propriedades do componente)",
+        "Acesso ao histórico de commits/blame do arquivo para entender a origem do trecho de código"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Inspecionar o código-fonte exato na linha 61 e no contexto ao redor (classe LoginComponent) para identificar o que está sendo atribuído à variável/propriedade suspeita.",
+          "resultado_esperado_verdadeiro_positivo": "A linha contém uma string literal fixa (ex: 'admin123', 'secret_pass') atribuída diretamente a uma variável usada para autenticação real contra um backend ou serviço, representando uma credencial codificada.",
+          "resultado_esperado_falso_positivo": "A linha refere-se apenas a uma propriedade de modelo de formulário (ex: this.password = '' ou binding de FormControl), nome de campo de interface, placeholder de UI, ou variável de teste/mock sem uso real em fluxo de autenticação de produção."
+        },
+        {
+          "passo": "Passo 02: Verificar se a variável/propriedade identificada é utilizada em alguma chamada de autenticação, requisição HTTP (login service) ou comparação de credenciais dentro do componente ou serviços associados.",
+          "resultado_esperado_verdadeiro_positivo": "A variável com valor fixo é efetivamente enviada em uma requisição de login (ex: body de POST /rest/user/login) ou comparada diretamente em lógica de autenticação, confirmando uso funcional da credencial hard-coded.",
+          "resultado_esperado_falso_positivo": "A variável é apenas vinculada à interface do usuário (two-way binding) para capturar input do usuário em tempo de execução, sem valor fixo funcional, ou é usada exclusivamente em testes unitários/mock de desenvolvimento."
+        },
+        {
+          "passo": "Passo 03: Buscar no restante do código do frontend (serviços de autenticação, arquivos de configuração, environment.ts) por referências adicionais a essa mesma credencial para avaliar se ela é usada de forma consistente como mecanismo de autenticação real.",
+          "resultado_esperado_verdadeiro_positivo": "A mesma credencial aparece reutilizada em múltiplos pontos do código ou em configurações de ambiente, indicando um mecanismo de autenticação de backdoor ou conta padrão codificada.",
+          "resultado_esperado_falso_positivo": "Não há reutilização da suposta credencial em nenhum outro ponto do sistema, reforçando que se trata de um nome de variável genérico sem valor sensível real."
+        },
+        {
+          "passo": "Passo 04: Caso uma credencial real seja identificada, tentar utilizá-la para autenticar na aplicação em execução (ambiente de teste/homologação) via interface de login ou diretamente via API de autenticação.",
+          "resultado_esperado_verdadeiro_positivo": "A autenticação é bem-sucedida utilizando a credencial codificada extraída do código-fonte, confirmando a exploração da vulnerabilidade (CWE-798/CWE-259) e viabilizando acesso não autorizado.",
+          "resultado_esperado_falso_positivo": "A tentativa de autenticação falha, indicando que o valor encontrado não é uma credencial válida funcional, corroborando o veredito de falso positivo (ex: era apenas um placeholder, label ou variável de template)."
+        }
+      ]
+    }
+  ]
+}

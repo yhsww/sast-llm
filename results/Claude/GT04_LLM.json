@@ -1,0 +1,51 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "74de4cdb-5256-48b1-97af-c47eaa500ecc",
+        "arquivo": "routes/userProfile.ts",
+        "linha": 87,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S7790",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo (requer confirmação dinâmica)",
+        "cwe": "CWE-1336 (Improper Neutralization of Special Elements Used in a Template Engine) / CWE-94 (relacionado a execução de código)",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-18 (Server-side Template Injection)",
+        "justificativa": "O arquivo routes/userProfile.ts é um componente conhecido do OWASP Juice Shop que utiliza o motor de templates EJS para renderizar dinamicamente o nome de usuário a partir de um campo de perfil controlado pelo usuário (username), concatenando-o diretamente em uma string de template antes de chamar ejs.render(). Essa é uma vulnerabilidade documentada e intencional da aplicação (desafio 'Server-Side XSS'), que permite injeção de expressões EJS arbitrárias (ex.: <%= 7*7 %>) e potencial execução remota de código no servidor Node.js. A regra do SonarQube corretamente identificou um padrão de formatação dinâmica de template com entrada não confiável, consistente com o comportamento conhecido do código-fonte."
+      },
+      "descricao_tecnica": "O código em routes/userProfile.ts constrói uma string de template de forma dinâmica utilizando dados fornecidos pelo usuário (como o campo 'username' submetido no formulário de perfil) e a repassa para o motor de templates EJS via chamada a ejs.render() ou função equivalente, sem sanitização ou escaping adequado das sintaxes de template (<% %>, <%= %>). Isso permite que um atacante injete expressões EJS que serão interpretadas e executadas no contexto do servidor, podendo resultar em divulgação de informações sensíveis do processo Node.js, leitura de arquivos do sistema ou execução arbitrária de comandos (RCE), dependendo das capacidades expostas pelo sandbox do motor de template (se houver).",
+      "pre_condicoes_para_verificacao": [
+        "Ambiente de teste do OWASP Juice Shop em execução localmente ou em staging, com acesso ao endpoint de atualização de perfil de usuário (/profile ou rota equivalente)",
+        "Usuário autenticado com sessão válida na aplicação",
+        "Ferramenta de interceptação de requisições HTTP (Burp Suite, OWASP ZAP ou curl) disponível",
+        "Acesso ao código-fonte para revisão estática da linha 87 de userProfile.ts e do fluxo de dados até a chamada do motor de template",
+        "Permissão para realizar testes de injeção controlados sem impactar dados de produção"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Revisar o código-fonte em routes/userProfile.ts na linha 87 para confirmar que a variável de entrada do usuário (ex.: username) é concatenada diretamente em uma string de template antes de ser passada para ejs.render() ou renderFile(), sem uso de sanitização, allowlist ou templates pré-compilados estáticos.",
+          "resultado_esperado_verdadeiro_positivo": "O código confirma que dados controláveis pelo usuário são inseridos diretamente na string de template (ex.: `let name = 'Welcome ' + username; ejs.render(name)`), sem nenhuma função de escaping (como ejs.escape ou encodeURIComponent) aplicada antes da renderização.",
+          "resultado_esperado_falso_positivo": "O código revela que a entrada do usuário é tratada como dado (variável de contexto passada ao template já compilado) e não como parte da string do template em si, ou que há sanitização/escaping adequado antes da renderização, eliminando a possibilidade de injeção de sintaxe EJS."
+        },
+        {
+          "passo": "Passo 02: Autenticar-se na aplicação e navegar até a funcionalidade de atualização de perfil de usuário. Submeter no campo de nome de usuário um payload de teste de template injection, como '<%= 7*7 %>' ou '${7*7}', dependendo da sintaxe do motor identificado.",
+          "resultado_esperado_verdadeiro_positivo": "A resposta da aplicação exibe o resultado calculado '49' em vez do payload literal, confirmando que a expressão foi avaliada pelo motor de template no servidor.",
+          "resultado_esperado_falso_positivo": "A aplicação reflete o payload como texto literal (ex.: '<%= 7*7 %>') sem avaliação, ou rejeita/sanitiza a entrada, codificando os caracteres especiais (ex.: '&lt;%= 7*7 %&gt;')."
+        },
+        {
+          "passo": "Passo 03: Caso o Passo 02 confirme avaliação da expressão, escalar o teste utilizando payloads mais avançados de SSTI específicos do EJS (ex.: acesso a process.mainModule.require('child_process').execSync('id') via sintaxe EJS) para avaliar o impacto real (RCE) em ambiente de teste controlado.",
+          "resultado_esperado_verdadeiro_positivo": "O payload avançado é executado com sucesso, retornando saída de comandos do sistema operacional ou informações internas do processo Node.js, confirmando execução remota de código (RCE) via SSTI.",
+          "resultado_esperado_falso_positivo": "O payload avançado falha devido a sandboxing efetivo do motor de template, tratamento de exceções que impede a execução, ou ausência de função require/process acessível no contexto de renderização, indicando que o impacto real é nulo ou mitigado apesar da aparente injeção."
+        },
+        {
+          "passo": "Passo 04: Documentar evidências (requisição/resposta HTTP, screenshots, trechos de código) e classificar definitivamente o achado como Verdadeiro Positivo caso a execução de expressões tenha sido confirmada nos passos anteriores, ou como Falso Positivo caso nenhuma avaliação de template tenha ocorrido.",
+          "resultado_esperado_verdadeiro_positivo": "Evidências coletadas comprovam injeção de template bem-sucedida (cálculo de expressão ou execução de comando), justificando classificação final como Verdadeiro Positivo com severidade crítica/alta e necessidade de remediação imediata (uso de templates pré-compilados estáticos e tratamento de username apenas como dado de contexto).",
+          "resultado_esperado_falso_positivo": "Nenhuma evidência de avaliação de expressão de template foi obtida; a entrada do usuário é sempre tratada como dado estático e exibida sem interpretação, justificando o encerramento do achado como Falso Positivo no SonarQube com a devida anotação técnica."
+        }
+      ]
+    }
+  ]
+}

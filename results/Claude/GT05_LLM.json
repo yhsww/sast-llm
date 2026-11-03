@@ -1,0 +1,56 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "87daf531-960b-43e8-a596-ca1b9293b5af",
+        "arquivo": "frontend/src/app/change-password/change-password.component.ts",
+        "linha": 92,
+        "severidade_sast": "MAJOR",
+        "regra": "typescript:S5852",
+        "categoria": "SECURITY_HOTSPOT"
+      },
+      "classificacao": {
+        "veredicto": "Potencial Verdadeiro Positivo - Requer Verificação Manual",
+        "cwe": "CWE-1333, CWE-400",
+        "owasp_top_10": "A05:2021 - Security Misconfiguration / A04:2021 - Insecure Design (DoS considerations)",
+        "wstg": "WSTG-INPV-13 (Testing for Regular Expression Denial of Service)",
+        "justificativa": "O SonarQube identificou um padrão de regex no código que pode conter quantificadores aninhados ou sobreposição de alternâncias que levam a backtracking exponencial. É necessário inspecionar a regex exata usada na linha 92, determinar se ela processa entrada controlada pelo usuário (ex: campo de senha) e testar empiricamente com strings maliciosas (ex: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!' ou padrões clássicos de ReDoS como '(a+)+$') para confirmar o comportamento de complexidade super-linear antes de classificar definitivamente como verdadeiro positivo."
+      },
+      "descricao_tecnica": "A regra S5852 do SonarQube detecta expressões regulares que, devido a construções como quantificadores aninhados (e.g., (a+)+), alternâncias sobrepostas, ou repetições ambíguas, podem causar backtracking catastrófico em motores de regex baseados em NFA (como o do JavaScript/TypeScript). Se o campo de senha ou outro input controlado pelo usuário for validado por essa regex no lado cliente (Angular) e possivelmente reutilizado no backend, um atacante pode submeter uma string cuidadosamente construída que force o motor de regex a entrar em um estado de processamento exponencial, consumindo CPU excessiva e potencialmente causando negação de serviço (DoS), especialmente se a mesma lógica de validação for executada no servidor.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte do arquivo change-password.component.ts para inspecionar a regex exata na linha 92",
+        "Ambiente de desenvolvimento ou teste do Juice Shop em execução (local ou staging)",
+        "Ferramenta para medição de tempo de execução de regex (ex: Node.js REPL, ferramentas online como regex101 com debugger, ou profiler de navegador)",
+        "Conhecimento do contexto de uso da regex (client-side apenas vs. também usada em validação server-side)",
+        "Lista de payloads clássicos de ReDoS para teste (strings com repetições ambíguas)"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Inspecionar o código-fonte na linha 92 para identificar a expressão regular exata e seu contexto de uso (validação de senha, campo de formulário, etc.)",
+          "resultado_esperado_verdadeiro_positivo": "A regex contém padrões vulneráveis conhecidos, como quantificadores aninhados (ex: (a+)+, (a*)*), alternâncias com sobreposição (ex: (a|a)*), ou repetições múltiplas sobre o mesmo conjunto de caracteres sem âncoras adequadas",
+          "resultado_esperado_falso_positivo": "A regex é simples, não contém quantificadores aninhados problemáticos, possui âncoras adequadas, ou tem limite de comprimento de entrada que impede exploração prática (ex: maxlength no input HTML combinado com regex simples)"
+        },
+        {
+          "passo": "Passo 02: Extrair a regex isoladamente e testá-la em ambiente controlado (Node.js ou navegador) com strings de entrada progressivamente maiores seguidas de um caractere que force falha de match (ex: 'aaaa...a!')",
+          "resultado_esperado_verdadeiro_positivo": "O tempo de execução do teste de regex cresce exponencialmente (ou polinomialmente de forma acentuada) conforme o tamanho da entrada aumenta, demonstrando comportamento de backtracking catastrófico - por exemplo, entrada de 30 caracteres leva milissegundos, mas 40 caracteres leva segundos ou minutos",
+          "resultado_esperado_falso_positivo": "O tempo de execução permanece linear ou constante independentemente do tamanho da entrada, mesmo com strings de centenas de caracteres"
+        },
+        {
+          "passo": "Passo 03: Verificar se existe limite de comprimento (maxlength) no campo de input do formulário no HTML/template Angular associado a este componente",
+          "resultado_esperado_verdadeiro_positivo": "Não há limite de comprimento implementado, ou o limite é alto o suficiente (ex: >50 caracteres) para permitir exploração prática do ReDoS",
+          "resultado_esperado_falso_positivo": "Existe um atributo maxlength restritivo (ex: 20 caracteres) que impede a submissão de strings longas o suficiente para causar impacto mensurável de performance"
+        },
+        {
+          "passo": "Passo 04: Determinar se a validação ocorre exclusivamente no lado cliente (Angular/TypeScript) ou se a mesma lógica/regex é replicada no backend (Node.js/Express) para validação server-side",
+          "resultado_esperado_verdadeiro_positivo": "A mesma regex vulnerável é utilizada no backend para validar a senha, permitindo que um atacante envie requisições diretamente à API (bypassando o frontend) com payloads maliciosos, impactando a disponibilidade do servidor",
+          "resultado_esperado_falso_positivo": "A regex é usada apenas para validação client-side (UX), sem impacto em disponibilidade do servidor; o backend usa validação diferente ou não re-executa essa regex específica, limitando o impacto a apenas o navegador do próprio atacante"
+        },
+        {
+          "passo": "Passo 05: Se houver validação server-side, simular um ataque de DoS enviando múltiplas requisições simultâneas com payloads maliciosos à API de mudança de senha e monitorar o consumo de CPU/tempo de resposta do servidor",
+          "resultado_esperado_verdadeiro_positivo": "O servidor apresenta degradação significativa de performance (alto consumo de CPU, aumento de latência ou timeout) ao processar as requisições maliciosas, confirmando viabilidade de ataque DoS real",
+          "resultado_esperado_falso_positivo": "O servidor não apresenta impacto perceptível de performance, seja porque a regex não é vulnerável na prática, porque há timeout/circuit breaker configurado, ou porque a validação não é replicada no backend"
+        }
+      ]
+    }
+  ]
+}

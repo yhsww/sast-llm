@@ -1,0 +1,106 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "AX1a-sql-injection-001",
+        "arquivo": "src/main/java/com/example/app/repository/UserRepository.java",
+        "linha": 47,
+        "severidade_sast": "CRITICAL",
+        "regra": "java:S3649",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Sob Revisão",
+        "cwe": "CWE-564: SQL Injection: Hibernate",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-05: SQL Injection",
+        "justificativa": "A regra identifica uma possível concatenação dinâmica ou interpolação de dados controlados pelo usuário em consultas SQL/HQL na camada de persistência. Caso a entrada não utilize PreparedStatements ou bind de parâmetros parametrizados do Hibernate, a consulta torna-se vulnerável à injeção de comandos SQL."
+      },
+      "descricao_tecnica": "Análise estática da linha 47 do UserRepository.java para verificar se a consulta dinâmica é construída concatenando variáveis de entrada sem a devida parametrização via query.setParameter() ou interfaces Criteria do Hibernate.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao repositório de código fonte do projeto.",
+        "Ambiente local de execução com banco de dados de teste configurado e logging de queries SQL ativado."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Inspecionar o método na linha 47 de UserRepository.java para determinar a técnica de construção da query.",
+          "resultado_esperado_verdadeiro_positivo": "A consulta utiliza concatenação direta de strings com parâmetros de entrada (ex: 'SELECT u FROM User u WHERE u.username = '' + username + ''') sem parametrização.",
+          "resultado_esperado_falso_positivo": "A consulta é parametrizada com marcadores nomeados ou posicionais (ex: ':username') utilizando métodos seguros como query.setParameter(), ou a entrada provém de uma constante de controle seguro."
+        },
+        {
+          "passo": "Passo 02: Executar requisição ao endpoint associado enviando caracteres delimitadores (ex: aspas simples) no parâmetro de entrada.",
+          "resultado_esperado_verdadeiro_positivo": "A query falha com erro de sintaxe SQL/HQL ou altera a estrutura lógica da consulta, confirmando o tratamento do dado como parte do comando.",
+          "resultado_esperado_falso_positivo": "O dado é tratado estritamente como literal através de prepared statement, sem causar alterações sintáticas ou erros no parser SQL."
+        }
+      ]
+    },
+    {
+      "identificacao": {
+        "id_sonarqube": "AX1b-xss-001",
+        "arquivo": "src/main/java/com/example/app/controller/CommentController.java",
+        "linha": 83,
+        "severidade_sast": "CRITICAL",
+        "regra": "java:S5131",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Sob Revisão",
+        "cwe": "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-CLNT-02: JavaScript Execution",
+        "justificativa": "O alerta aponta que dados fornecidos pelo usuário são inseridos diretamente na resposta HTTP ou renderizados na view sem sanitização ou context-aware encoding adequado, expondo a aplicação a Cross-Site Scripting (XSS)."
+      },
+      "descricao_tecnica": "Verificação do fluxo de renderização de comentários na linha 83 de CommentController.java para identificar se a saída é enviada com Content-Type text/html sem codificação de caracteres especiais como '<', '>' e '&'.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código fonte do controlador e às views/templates associados.",
+        "Ambiente de teste com aplicação em execução e navegador web com ferramentas de desenvolvedor habilitadas."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Inspecionar o código de CommentController.java na linha 83 e os métodos de renderização de resposta.",
+          "resultado_esperado_verdadeiro_positivo": "O conteúdo do comentário é gravado diretamente no corpo da resposta sem uso de template engine com auto-escaping ou funções de escape de saída (HTML encoding).",
+          "resultado_esperado_falso_positivo": "A resposta utiliza um template engine seguro com escaping contextual habilitado por padrão, ou os dados são explicitamente sanitizados/codificados antes da emissão."
+        },
+        {
+          "passo": "Passo 02: Submeter um comentário contendo marcadores de teste como '<b>teste</b>' e analisar o cabeçalho e corpo da resposta HTTP.",
+          "resultado_esperado_verdadeiro_positivo": "Os caracteres são retornados sem escape e interpretados como marcação HTML no navegador do cliente.",
+          "resultado_esperado_falso_positivo": "Os caracteres são convertidos em entidades HTML (&lt;b&gt;teste&lt;/b&gt;) ou a resposta é servida estritamente como JSON (application/json) com headers adequados."
+        }
+      ]
+    },
+    {
+      "identificacao": {
+        "id_sonarqube": "AX1c-hardcoded-cred-001",
+        "arquivo": "src/main/java/com/example/app/config/DatabaseConfig.java",
+        "linha": 22,
+        "severidade_sast": "BLOCKER",
+        "regra": "java:S2068",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Sob Revisão",
+        "cwe": "CWE-798: Use of Hard-coded Credentials",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures",
+        "wstg": "WSTG-ATHN-02: Default Credentials",
+        "justificativa": "A presença de senhas fixas diretamente no código fonte expõe credenciais de acesso a banco de dados a qualquer pessoa com permissão de leitura no repositório, violando o princípio de segregação de segredos de infraestrutura."
+      },
+      "descricao_tecnica": "Análise estática da linha 22 de DatabaseConfig.java para avaliar se a cadeia de caracteres atribuída para autenticação no banco de dados trata-se de uma credencial real em texto claro ou um valor fictício de ambiente de desenvolvimento/teste.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao arquivo DatabaseConfig.java e aos arquivos de configuração externa (application.properties, application.yml ou variáveis de ambiente).",
+        "Informações sobre a política de gestão de segredos do projeto."
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Inspecionar a linha 22 de DatabaseConfig.java para verificar a atribuição do valor de senha.",
+          "resultado_esperado_verdadeiro_positivo": "Há uma string literal contendo uma senha ou credencial de acesso atribuída diretamente à propriedade de conexão sem mecanismo de injeção externa.",
+          "resultado_esperado_falso_positivo": "A string é apenas o nome de uma propriedade de ambiente (placeholder), uma chave de lookup, ou um valor padrão para testes unitários em memória (ex: H2 com usuário sa e senha vazia)."
+        },
+        {
+          "passo": "Passo 02: Verificar se a aplicação suporta e utiliza a substituição de segredos via variáveis de ambiente ou cofre de senhas.",
+          "resultado_esperado_verdadeiro_positivo": "O valor no código é utilizado em tempo de execução para conectar a bancos de dados compartilhados ou de produção sem possibilidade de override seguro.",
+          "resultado_esperado_falso_positivo": "O valor é apenas fallback dummy e a aplicação carrega dinamicamente credenciais de variáveis de ambiente do sistema operacional ou secrets manager."
+        }
+      ]
+    }
+  ]
+}

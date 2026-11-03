@@ -1,0 +1,55 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "6d4ecb57-73d4-482f-ae9c-2728da3971bb",
+        "arquivo": "lib/insecurity.ts",
+        "linha": 23,
+        "severidade_sast": "BLOCKER",
+        "regra": "secrets:S6706",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Verdadeiro Positivo",
+        "cwe": "CWE-321 (Use of Hard-coded Cryptographic Key); CWE-324 (Use of a Key Past its Expiration Date) como referência secundária",
+        "owasp_top_10": "A02:2021 - Cryptographic Failures",
+        "wstg": "WSTG-CRYP-04: Testing for Weak Encryption",
+        "justificativa": "O arquivo lib/insecurity.ts é um componente conhecido do OWASP Juice Shop (aplicação intencionalmente vulnerável) que contém uma chave privada RSA embutida diretamente no código-fonte, utilizada para assinar tokens JWT. A presença de uma chave criptográfica hard-coded em um repositório versionado é uma vulnerabilidade real e crítica, pois qualquer pessoa com acesso ao código-fonte (incluindo repositórios públicos) pode extrair a chave e forjar tokens JWT válidos, falsificar assinaturas digitais ou comprometer a integridade dos mecanismos de autenticação/autorização da aplicação. Não há indícios de que se trate de um falso positivo (como uma chave de teste claramente inofensiva isolada em ambiente de desenvolvimento não produtivo e devidamente documentada como tal) — trata-se de uma prática insegura efetivamente presente no código de produção/distribuição do pacote."
+      },
+      "descricao_tecnica": "A regra secrets:S6706 do SonarQube detectou uma chave criptográfica privada embutida (hard-coded) no arquivo lib/insecurity.ts, linha 23. Esse padrão é classificado como CWE-321 (Use of Hard-coded Cryptographic Key). Chaves hard-coded são extremamente perigosas porque: (1) ficam expostas a qualquer pessoa com acesso ao código-fonte, incluindo repositórios públicos no GitHub, pacotes npm publicados, ou builds distribuídos; (2) não podem ser rotacionadas sem uma nova implantação de código, dificultando resposta a incidentes; (3) se a chave for usada para assinar tokens de autenticação (JWT) ou criptografar dados sensíveis, um atacante que extraia a chave pode forjar tokens válidos, personificar usuários (incluindo administradores) ou decifrar dados protegidos. O uso prolongado da mesma chave sem expiração também se relaciona ao CWE-324.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte do repositório juice-shop (ou ao artefato/pacote distribuído) para inspecionar lib/insecurity.ts na linha 23",
+        "Ambiente de teste/laboratório da aplicação Juice Shop em execução (local ou container Docker) para validar o uso prático da chave",
+        "Ferramenta para decodificar/verificar tokens JWT (ex.: jwt.io, jsonwebtoken CLI) e para inspecionar a chave extraída (ex.: openssl)",
+        "Permissão para realizar testes de segurança na instância (ambiente autorizado, não produção de terceiros)"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Inspecionar o código-fonte na linha reportada",
+          "resultado_esperado_verdadeiro_positivo": "A linha 23 de lib/insecurity.ts contém literalmente uma string com um bloco de chave privada RSA (formato PEM, ex.: '-----BEGIN RSA PRIVATE KEY-----') embutida diretamente no código, sem uso de variáveis de ambiente, cofre de segredos (vault) ou arquivo externo protegido.",
+          "resultado_esperado_falso_positivo": "A linha contém apenas uma referência/import a uma chave armazenada externamente (ex.: process.env.PRIVATE_KEY, leitura de arquivo .env não versionado, ou uso de um gerenciador de segredos), sem a chave em texto plano no código, ou trata-se de uma chave de exemplo/teste claramente documentada como não sensível e sem uso real em fluxos de autenticação."
+        },
+        {
+          "passo": "Passo 02: Confirmar se a chave é efetivamente utilizada em operações criptográficas sensíveis (ex.: assinatura de JWT)",
+          "resultado_esperado_verdadeiro_positivo": "Busca por referências à constante/variável que armazena a chave (ex.: 'privateKey') no restante do código revela que ela é usada em chamadas como jwt.sign() ou jwt.verify(), confirmando que a chave hard-coded protege tokens de autenticação/autorização da aplicação.",
+          "resultado_esperado_falso_positivo": "A chave não é referenciada em nenhuma rotina de assinatura/verificação ativa, sendo código morto, comentado ou usado apenas em testes unitários isolados que não afetam o comportamento de produção."
+        },
+        {
+          "passo": "Passo 03: Validar se a chave está publicamente acessível (ex.: repositório público do GitHub ou pacote npm publicado)",
+          "resultado_esperado_verdadeiro_positivo": "O repositório juice-shop é público no GitHub e a chave privada em lib/insecurity.ts está acessível a qualquer pessoa, confirmando exposição real e exploração trivial por qualquer atacante.",
+          "resultado_esperado_falso_positivo": "O código-fonte está em um repositório estritamente privado com controle de acesso rígido e a chave nunca foi publicada em nenhum artefato distribuído (build, pacote, imagem Docker pública), reduzindo a exposição (embora a prática ainda seja insegura)."
+        },
+        {
+          "passo": "Passo 04: Tentar explorar a vulnerabilidade forjando um token JWT com a chave extraída",
+          "resultado_esperado_verdadeiro_positivo": "Utilizando a chave privada extraída do código, é possível gerar um token JWT válido (assinado corretamente) que é aceito pela aplicação em execução, permitindo personificação de usuário ou escalonamento de privilégios (ex.: forjar um token de administrador), confirmando o impacto prático da vulnerabilidade.",
+          "resultado_esperado_falso_positivo": "A aplicação em execução não utiliza essa chave específica para validação de tokens (ex.: a chave foi rotacionada em runtime, substituída por variável de ambiente em produção, ou o mecanismo de autenticação foi alterado), tornando a chave encontrada no código obsoleta e sem efeito prático explorável."
+        },
+        {
+          "passo": "Passo 05: Verificar histórico de versionamento e presença de rotação de chave",
+          "resultado_esperado_verdadeiro_positivo": "A mesma chave está presente em múltiplos commits/releases ao longo do tempo sem rotação, confirmando uso prolongado de uma chave comprometível (correlacionando com CWE-324) e reforçando a criticidade do achado.",
+          "resultado_esperado_falso_positivo": "A chave é regenerada automaticamente a cada build/deploy (ex.: via script de inicialização que gera um par de chaves efêmero), reduzindo o risco de uma chave estática permanentemente exposta, ainda que a prática de embutir qualquer segredo no código continue não recomendada."
+        }
+      ]
+    }
+  ]
+}

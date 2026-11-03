@@ -1,0 +1,142 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "AX1a-sql-injection-001",
+        "arquivo": "src/main/java/com/example/app/repository/UserRepository.java",
+        "linha": 47,
+        "severidade_sast": "CRITICAL",
+        "regra": "java:S3649",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Requer Verificação Manual (Potencial Verdadeiro Positivo)",
+        "cwe": "CWE-89 (relacionado: CWE-564, CWE-566)",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-INPV-05 / WSTG-INPV-05-3",
+        "justificativa": "A regra S3649 indica construção dinâmica de consulta SQL/HQL a partir de dados potencialmente controlados pelo usuário. Sem acesso ao código-fonte completo não é possível confirmar se o dado é de fato controlado externamente, se passa por sanitização prévia, ou se já é tratado via prepared statement/parametrização (o que tornaria o achado um falso positivo). É necessária inspeção do código ao redor da linha 47 para confirmar o fluxo de dados (taint analysis manual) desde a origem (ex.: request parameter) até o sink (execução da query)."
+      },
+      "descricao_tecnica": "O SonarQube identificou na linha 47 de UserRepository.java uma construção de query SQL (possivelmente via Hibernate/JPQL/HQL ou JDBC) que concatena ou interpola diretamente uma entrada potencialmente controlada pelo usuário, sem uso de parâmetros nomeados ou positional parameters. Isso pode permitir que um atacante manipule a estrutura lógica da consulta, resultando em leitura/modificação não autorizada de dados, bypass de autenticação ou escalonamento de privilégios dentro do banco de dados.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte completo do repositório, incluindo o método que contém a linha 47",
+        "Identificação de todos os pontos de entrada (controllers, DTOs) que alimentam o parâmetro usado na query",
+        "Ambiente de teste/staging com banco de dados configurado para testes de injeção controlados",
+        "Ferramenta de interceptação de requisições (Burp Suite/OWASP ZAP) para testes dinâmicos (DAST) complementares"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 - Revisão do código-fonte",
+          "resultado_esperado_verdadeiro_positivo": "A query é construída via concatenação de strings (ex.: createQuery(\"... WHERE x = \" + input) ou Criteria/HQL dinâmico sem bind) usando uma variável que se origina diretamente de um parâmetro de entrada do usuário (request, header, cookie).",
+          "resultado_esperado_falso_positivo": "A query utiliza named parameters (setParameter) ou PreparedStatement com placeholders (?), e o valor é vinculado de forma segura, mesmo que a string base seja montada dinamicamente apenas na estrutura (não nos dados)."
+        },
+        {
+          "passo": "Passo 02 - Rastreamento da origem do dado (taint analysis)",
+          "resultado_esperado_verdadeiro_positivo": "O dado utilizado na query é rastreável até uma entrada externa (ex.: @RequestParam, @PathVariable, corpo JSON) sem validação/allowlist ou sanitização antes de chegar ao sink.",
+          "resultado_esperado_falso_positivo": "O dado é um valor fixo interno, gerado pelo sistema (ex.: ID de sessão validado, enum, constante) ou passa por validação estrita (allowlist) antes de ser utilizado."
+        },
+        {
+          "passo": "Passo 03 - Teste dinâmico de exploração (DAST manual)",
+          "resultado_esperado_verdadeiro_positivo": "Ao enviar payloads de SQL Injection (ex.: ' OR '1'='1, ' UNION SELECT NULL--) no parâmetro identificado, observa-se alteração no comportamento da aplicação (erro de sintaxe SQL exposto, retorno de dados não esperados, bypass de filtro).",
+          "resultado_esperado_falso_positivo": "A aplicação retorna erro de validação, rejeita a entrada maliciosa, ou o comportamento permanece inalterado mesmo com payloads de injeção, indicando uso correto de parametrização."
+        },
+        {
+          "passo": "Passo 04 - Verificação de privilégios do usuário de banco de dados",
+          "resultado_esperado_verdadeiro_positivo": "Mesmo que a injeção seja limitada, o usuário de banco de dados utilizado pela aplicação possui privilégios excessivos (DROP, DELETE em tabelas não relacionadas), amplificando o impacto.",
+          "resultado_esperado_falso_positivo": "O usuário de banco de dados segue o princípio do menor privilégio, restringindo o impacto potencial mesmo em caso de exploração."
+        }
+      ]
+    },
+    {
+      "identificacao": {
+        "id_sonarqube": "AX1b-xss-001",
+        "arquivo": "src/main/java/com/example/app/controller/CommentController.java",
+        "linha": 83,
+        "severidade_sast": "CRITICAL",
+        "regra": "java:S5131",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Requer Verificação Manual (Potencial Verdadeiro Positivo)",
+        "cwe": "CWE-79 (relacionado: CWE-80)",
+        "owasp_top_10": "A03:2021 - Injection (anteriormente A3:2017 - XSS)",
+        "wstg": "WSTG-CLNT-02 / WSTG-CLNT-15",
+        "justificativa": "A regra S5131 sinaliza que dados potencialmente fornecidos pelo usuário são inseridos na resposta HTML sem codificação/sanitização aparente. É necessário confirmar o contexto de saída (HTML body, atributo, JavaScript inline), o mecanismo de templating utilizado (Thymeleaf, JSP, etc., que podem ter auto-escaping habilitado por padrão) e se existe alguma camada de encoding anterior que neutralize o achado, podendo ser falso positivo caso o framework já realize escaping automático."
+      },
+      "descricao_tecnica": "Na linha 83 de CommentController.java, dados originados de entrada do usuário (ex.: comentário submetido) são inseridos na resposta HTTP/HTML sem evidência de sanitização ou codificação de saída (output encoding). Isso pode permitir a injeção de scripts maliciosos (Cross-Site Scripting refletido ou armazenado), possibilitando roubo de sessão, desfiguração de página ou execução de ações não autorizadas em nome da vítima.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte do controller e das views/templates associadas (Thymeleaf, JSP, FreeMarker, etc.)",
+        "Identificação do mecanismo de templating e configuração de auto-escape",
+        "Ambiente de teste com a funcionalidade de comentários acessível",
+        "Navegador com ferramentas de desenvolvedor e/ou proxy de interceptação (Burp Suite/OWASP ZAP)"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 - Revisão do código-fonte e template",
+          "resultado_esperado_verdadeiro_positivo": "O valor do comentário é inserido na view utilizando sintaxe de 'unescaped output' (ex.: th:utext no Thymeleaf, <%= %> sem encode no JSP, innerHTML direto) ou retornado em um ResponseEntity/String HTML manualmente concatenado sem encoding.",
+          "resultado_esperado_falso_positivo": "O template utiliza mecanismos de auto-escaping por padrão (ex.: th:text no Thymeleaf, ${} com encode automático), ou há uso explícito de biblioteca de sanitização (OWASP Java Encoder, ESAPI) antes da renderização."
+        },
+        {
+          "passo": "Passo 02 - Teste de injeção com payload básico",
+          "resultado_esperado_verdadeiro_positivo": "Ao submeter um comentário contendo payload como <script>alert(document.cookie)</script> ou <img src=x onerror=alert(1)>, o script é executado no navegador ao visualizar a página (alerta disparado), confirmando ausência de neutralização.",
+          "resultado_esperado_falso_positivo": "O payload é renderizado como texto literal na página (ex.: &lt;script&gt;alert(1)&lt;/script&gt;) sem execução, indicando que o encoding de saída está funcionando corretamente."
+        },
+        {
+          "passo": "Passo 03 - Verificação de cabeçalhos de segurança (defesa em profundidade)",
+          "resultado_esperado_verdadeiro_positivo": "Não há Content-Security-Policy (CSP) configurado ou a política é permissiva (unsafe-inline permitido), permitindo que o script injetado seja executado mesmo com outras proteções.",
+          "resultado_esperado_falso_positivo": "Existe uma CSP restritiva configurada que bloquearia a execução de scripts inline injetados, mitigando o impacto mesmo que o encoding de saída falhe (ainda assim recomenda-se corrigir a causa raiz)."
+        },
+        {
+          "passo": "Passo 04 - Teste de persistência (Stored XSS)",
+          "resultado_esperado_verdadeiro_positivo": "O payload malicioso persiste no banco de dados e é executado toda vez que outro usuário visualiza o comentário, caracterizando XSS armazenado (maior criticidade).",
+          "resultado_esperado_falso_positivo": "O comentário é sanitizado antes da persistência (tags HTML removidas/escapadas no banco) ou apenas texto puro é armazenado e devidamente escapado na exibição."
+        }
+      ]
+    },
+    {
+      "identificacao": {
+        "id_sonarqube": "AX1c-hardcoded-cred-001",
+        "arquivo": "src/main/java/com/example/app/config/DatabaseConfig.java",
+        "linha": 22,
+        "severidade_sast": "BLOCKER",
+        "regra": "java:S2068",
+        "categoria": "VULNERABILITY"
+      },
+      "classificacao": {
+        "veredicto": "Requer Verificação Manual (Alta Probabilidade de Verdadeiro Positivo)",
+        "cwe": "CWE-798 (relacionado: CWE-259)",
+        "owasp_top_10": "A07:2021 - Identification and Authentication Failures (anteriormente A2:2017)",
+        "wstg": "WSTG-ATHN-02 / WSTG-ATHN-07",
+        "justificativa": "Regras de detecção de senhas hard-coded (S2068) possuem historicamente baixa taxa de falso positivo quando identificam literais de string atribuídos a variáveis com nomes como 'password', 'pwd', 'secret' em arquivos de configuração. No entanto, é necessário confirmar se o valor encontrado é uma credencial real (produção/ambiente sensível) ou um valor de exemplo/placeholder/teste local sem risco real (ex.: 'changeit' em ambiente de desenvolvimento isolado, ou valor sobrescrito por variável de ambiente em runtime)."
+      },
+      "descricao_tecnica": "Na linha 22 de DatabaseConfig.java foi identificada uma senha codificada diretamente no código-fonte (hard-coded), utilizada aparentemente para autenticação em banco de dados. Essa prática expõe a credencial a qualquer pessoa com acesso ao repositório de código (incluindo histórico de versionamento), facilitando acesso não autorizado ao banco de dados caso o código seja vazado, compartilhado indevidamente ou o repositório seja comprometido.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte completo de DatabaseConfig.java e arquivos de propriedades associados (application.properties/yml)",
+        "Verificação do histórico de commits (git log/git blame) para identificar desde quando a credencial está exposta",
+        "Conhecimento sobre o ambiente de destino da credencial (desenvolvimento, homologação, produção)",
+        "Acesso (com autorização) para testar a validade da credencial no sistema de banco de dados, se aplicável"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01 - Identificar o contexto do valor hard-coded",
+          "resultado_esperado_verdadeiro_positivo": "O valor é uma string literal atribuída diretamente a uma propriedade de conexão (ex.: .password(\"S3nhaReal123\") ou String DB_PASSWORD = \"...\") sem uso de variável de ambiente, vault ou arquivo de configuração externo criptografado.",
+          "resultado_esperado_falso_positivo": "O valor é na verdade lido dinamicamente de uma variável de ambiente, Secrets Manager, Vault, ou é um placeholder claramente identificável como não funcional (ex.: 'CHANGE_ME_IN_PROD', 'xxxxxxxx') que é sobrescrito obrigatoriamente antes do deploy."
+        },
+        {
+          "passo": "Passo 02 - Validar se a credencial é real e ativa",
+          "resultado_esperado_verdadeiro_positivo": "A credencial encontrada corresponde a um usuário/senha válido e ativo em uma instância de banco de dados acessível (dev, staging ou produção), permitindo autenticação bem-sucedida.",
+          "resultado_esperado_falso_positivo": "A credencial é inválida, expirada, ou pertence a uma instância de banco de dados local/efêmera (ex.: H2 in-memory usada apenas em testes unitários) sem exposição a rede externa ou dados sensíveis."
+        },
+        {
+          "passo": "Passo 03 - Avaliar escopo de exposição do repositório",
+          "resultado_esperado_verdadeiro_positivo": "O repositório é privado mas acessível a um número amplo de desenvolvedores/terceiros, ou é público, ampliando significativamente a superfície de exposição da credencial.",
+          "resultado_esperado_falso_positivo": "O arquivo está presente apenas em um branch de exemplo/documentação claramente sinalizado como não produtivo, isolado do fluxo principal de deploy."
+        },
+        {
+          "passo": "Passo 04 - Verificar privilégios associados à credencial",
+          "resultado_esperado_verdadeiro_positivo": "A credencial hard-coded possui privilégios administrativos ou de leitura/escrita amplos no banco de dados, permitindo acesso a dados sensíveis de múltiplos usuários/tabelas.",
+          "resultado_esperado_falso_positivo": "Mesmo sendo uma credencial real, ela possui privilégios extremamente limitados (ex.: apenas leitura em uma tabela de metadados não sensível), reduzindo o impacto - ainda assim recomenda-se remoção por boas práticas."
+        }
+      ]
+    }
+  ]
+}

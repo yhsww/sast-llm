@@ -1,0 +1,50 @@
+{
+  "test_cases": [
+    {
+      "identificacao": {
+        "id_sonarqube": "101f6c6f-b415-47a0-961c-e577bac36edb",
+        "arquivo": "frontend/src/app/about/about.component.ts",
+        "linha": 119,
+        "severidade_sast": "CRITICAL",
+        "regra": "typescript:S6268",
+        "categoria": "SECURITY_HOTSPOT"
+      },
+      "classificacao": {
+        "veredicto": "Potencial Verdadeiro Positivo - Requer Verificação Manual",
+        "cwe": "CWE-79, CWE-80",
+        "owasp_top_10": "A03:2021 - Injection",
+        "wstg": "WSTG-CLNT-02 (JavaScript Execution), WSTG-CLNT-15 (Client-side Template Injection)",
+        "justificativa": "A regra S6268 identifica o uso de APIs do Angular que desabilitam explicitamente a sanitização DOM nativa (ex: bypassSecurityTrustHtml, bypassSecurityTrustStyle, bypassSecurityTrustScript, bypassSecurityTrustUrl ou bypassSecurityTrustResourceUrl do DomSanitizer). Esse padrão é historicamente associado a vulnerabilidades de XSS DOM-based na aplicação OWASP Juice Shop, especialmente em componentes que renderizam conteúdo dinâmico (como about.component.ts, que costuma exibir conteúdo de arquivos/markdown). A simples presença da chamada não confirma exploração, mas indica alto risco se a entrada não for controlada por fonte confiável e validada antes do bypass."
+      },
+      "descricao_tecnica": "O código em about.component.ts, na linha 119, desabilita o mecanismo de sanitização automática do Angular (provavelmente via DomSanitizer.bypassSecurityTrust*) para permitir a renderização de conteúdo HTML/URL/script sem filtragem. Se o valor desassanitizado for derivado, direta ou indiretamente, de entrada controlada pelo usuário (parâmetros de URL, resposta de API manipulável, conteúdo de arquivo enviado por terceiros, etc.), um atacante pode injetar HTML/JavaScript malicioso que será executado no contexto do navegador da vítima, resultando em XSS DOM-based ou Client-Side Template Injection.",
+      "pre_condicoes_para_verificacao": [
+        "Acesso ao código-fonte completo do componente about.component.ts e seus templates HTML associados",
+        "Capacidade de rastrear a origem do dado passado para a função bypassSecurityTrust* (fluxo de dados desde a entrada até o sink)",
+        "Ambiente de execução do Juice Shop (local ou staging) para testes dinâmicos (DAST/manual)",
+        "Conhecimento da versão do Angular utilizada e da API específica do DomSanitizer invocada"
+      ],
+      "passos_de_verificacao": [
+        {
+          "passo": "Passo 01: Identificar qual método bypassSecurityTrust* é utilizado na linha 119 e qual variável/expressão é passada como argumento.",
+          "resultado_esperado_verdadeiro_positivo": "O argumento é uma variável derivada de entrada do usuário, resposta de API externa, ou conteúdo de arquivo que pode ser manipulado por um atacante (ex: nome de arquivo, metadado, campo de formulário, query param).",
+          "resultado_esperado_falso_positivo": "O argumento é um valor estático, hardcoded no código-fonte, ou proveniente de uma fonte totalmente confiável e imutável (ex: constante de build, string literal)."
+        },
+        {
+          "passo": "Passo 02: Rastrear o fluxo de dados (taint analysis) desde a origem da variável até o ponto de uso no bypassSecurityTrust*, verificando se existe alguma validação, allowlist ou encoding aplicado antes do bypass.",
+          "resultado_esperado_verdadeiro_positivo": "Nenhuma validação ou sanitização adicional é aplicada antes do bypass; o dado flui sem filtragem desde uma fonte não confiável até o sink.",
+          "resultado_esperado_falso_positivo": "Existe validação robusta (allowlist de tags/atributos permitidos, escaping, ou verificação de origem) aplicada antes da chamada ao DomSanitizer, tornando a desativação da sanitização segura no contexto específico."
+        },
+        {
+          "passo": "Passo 03: Executar teste dinâmico (DAST/manual) na aplicação Juice Shop em execução, navegando até a página 'About' e tentando injetar um payload de teste (ex: <img src=x onerror=alert(document.cookie)>) através do canal identificado no Passo 01.",
+          "resultado_esperado_verdadeiro_positivo": "O payload é renderizado e executado no navegador, confirmando execução de JavaScript arbitrário (XSS DOM-based) via a desativação da sanitização.",
+          "resultado_esperado_falso_positivo": "O payload é exibido como texto literal, escapado, bloqueado por CSP, ou não há qualquer caminho de entrada do usuário alcançando o sink identificado."
+        },
+        {
+          "passo": "Passo 04: Verificar a presença e configuração de Content Security Policy (CSP) no response HTTP da aplicação como controle compensatório.",
+          "resultado_esperado_verdadeiro_positivo": "CSP ausente, mal configurada (ex: unsafe-inline permitido) ou facilmente contornável, não mitigando o impacto da falha de sanitização.",
+          "resultado_esperado_falso_positivo": "CSP estrita está em vigor e bloqueia efetivamente a execução de scripts injetados, reduzindo (mas não eliminando) o risco; ainda assim, deve-se registrar como risco residual mesmo se classificado como mitigado."
+        }
+      ]
+    }
+  ]
+}
