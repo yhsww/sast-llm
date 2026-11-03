@@ -251,12 +251,19 @@ python -m scripts.run_gt_experiment --execute
 
 O runner dessa branch processa os relatórios `GT01.json` a `GT08.json`. O modo sem `--execute` não comprova que a geração real pela LLM funciona. Confira o resumo no terminal e os arquivos em `results/`.
 
-## 5. Branch `branch-3-rag-code-context` — RAG + contexto do código-fonte
+## 5. Branch `branch-3-rag-code-context` — RAG + código-fonte
 
-**Esta é a branch que combina RAG com o trecho de código associado ao finding.** O passo mais importante é conferir que todos os achados receberam o trecho correto antes de chamar uma API.
-Para a branch 3, o fluxo recomendado é: **dry run de um relatório → confirmar `snippets=N/N` → executar com `--execute` → conferir o arquivo e o resumo final → só então ampliar para outros relatórios/provedores.**
+Esta branch precisa do código-fonte do projeto analisado para adicionar trechos reais ao contexto do finding. Os trechos podem ser obtidos de duas formas:
 
-### 5.1. Entrar na branch e verificar os argumentos
+1. **Baixar o projeto para o computador:** clone ou baixe [SAST-COGNITIVE-LOAD-TEST-SECURITY](https://github.com/ASTRID-RESEARCH/SAST-COGNITIVE-LOAD-TEST-SECURITY) e informe a pasta do código com `--source-root` e `--auto-snippets`.
+2. **Consultar pelo GitHub:** abra o repositório, localize o arquivo e copie o trecho correspondente ao finding. Cole-o no terminal quando o programa solicitar e finalize a entrada digitando `###` sozinho em uma linha.
+
+Repositório com os códigos-fonte:  
+https://github.com/ASTRID-RESEARCH/SAST-COGNITIVE-LOAD-TEST-SECURITY
+
+### Executar
+
+Entre na branch e instale as dependências:
 
 ```powershell
 git switch branch-3-rag-code-context
@@ -264,174 +271,43 @@ python -m pip install -r requirements.txt
 python query.py --help
 ```
 
-Principais argumentos:
-
-- `--provider GPT|Gemini|Kimi|Claude|all`: seleciona o provedor. Se omitido, o padrão é `all`.
-- `--only GT01.json`: processa um único relatório.
-- `--allreports`: processa os JSONs da pasta de relatórios.
-- `--input-file caminho\arquivo.json`: processa um JSON específico, inclusive fora de `data/sast_reports/`.
-- `--snippets-dir data/code_snippets`: local dos snippets salvos.
-- `--source-root "C:\caminho\para\codigo"`: raiz local do projeto analisado pelo SonarQube.
-- `--auto-snippets`: desativa a pergunta interativa e tenta carregar snippets salvos ou extrair do código local.
-- `--execute`: chama a API e gera resultados reais.
-- `--force`: permite sobrescrever um resultado existente.
-
-### 5.2. Primeiro teste: dry run com snippet colado manualmente
-
-Comece com apenas um relatório e um provedor. Este comando **não chama a API**:
-
-```powershell
-python query.py --provider GPT --only GT01.json --snippets-dir data/code_snippets
-```
-
-O programa mostrará a regra, mensagem, arquivo e linha do finding. Copie um trecho real do arquivo indicado no relatório e cole no terminal. Ao terminar o trecho, pressione Enter e digite `###` sozinho em uma linha:
-
-```text
-### 
-```
-
-O terminador encerra a entrada daquele finding. Se o relatório tiver vários findings, repita para cada um. Não digite `###` no meio do código.
-
-Exemplo conhecido de `GT01.json`:
-
-- Componente do finding: `juice-shop:routes/b2bOrder.ts`
-- O arquivo de código de referência fica em: [routes/b2bOrder.ts no projeto avaliado](https://github.com/ASTRID-RESEARCH/SAST-COGNITIVE-LOAD-TEST-SECURITY/blob/main/juice-shop/routes/b2bOrder.ts)
-- Use o código real da mesma versão/commit que foi analisada pelo SonarQube. Não invente ou reescreva o trecho.
-
-A saída deve conter uma linha semelhante a:
-
-```text
-[RAG] GT01.json: findings=1, snippets=1/1, docs=4
-```
-
-Os números de `docs` podem variar. O importante é `snippets=N/N): todos os findings do relatório receberam contexto de código. Se aparecer `snippets=0/1` ou `snippets=2/3`, corrija os snippets antes de executar a geração. O dry run prepara o prompt, mas não cria uma resposta nova da LLM.
-
-### 5.3. Executar a geração real
-
-Depois de conferir o dry run, execute novamente adicionando `--execute`:
-
-```powershell
-python query.py --provider GPT --only GT01.json --snippets-dir data/code_snippets --execute
-```
-
-A captura manual acontece novamente; cole o código e finalize cada finding com `###`. Para Gemini, Kimi ou Claude, altere o valor de `--provider`, por exemplo:
-
-```powershell
-python query.py --provider Gemini --only GT01.json --snippets-dir data/code_snippets --execute
-```
-
-Se houver saldo/cota insuficiente, erro 401/403 ou modelo não habilitado, a chamada pode falhar mesmo que o dry run tenha funcionado. Isso não significa que o trecho não foi recebido.
-
-### 5.4. Alternativa A — extrair snippets do código local automaticamente
-
-Se o código analisado pelo SonarQube estiver no computador, informe a pasta raiz e use **ambas** as opções `--source-root` e `--auto-snippets`. Sem `--auto-snippets`, o programa continua pedindo os trechos manualmente.
-
-Exemplo para um checkout do projeto de referência:
+**Opção A — usar o código local automaticamente**
 
 ```powershell
 python query.py --provider GPT --only GT01.json --source-root "C:\caminho\SAST-COGNITIVE-LOAD-TEST-SECURITY\juice-shop" --auto-snippets
 ```
 
-Confira `snippets=N/N`. Se o resultado estiver correto, faça a geração real:
+Confira no terminal se aparece `snippets=N/N`. Se todos os findings tiverem snippet, execute a geração real:
 
 ```powershell
 python query.py --provider GPT --only GT01.json --source-root "C:\caminho\SAST-COGNITIVE-LOAD-TEST-SECURITY\juice-shop" --auto-snippets --execute
 ```
 
-Substitua o caminho pelo caminho real da pasta no seu computador. O extrator tenta encontrar o arquivo pelo caminho do componente e, se necessário, pelo nome do arquivo. Se o arquivo ou a versão não corresponder ao relatório, o snippet pode ficar vazio ou o intervalo de linhas pode não representar o código analisado.
+Troque o caminho pelo local em que você salvou o projeto.
 
-### 5.5. Alternativa B — carregar snippets organizados por tipo de finding
+**Opção B — copiar do GitHub e colar no terminal**
 
-A branch 3 procura primeiro os snippets em `data/code_snippets/` e tenta associá-los ao tipo de vulnerabilidade identificado no finding. A associação usa a regra, as tags e a mensagem do relatório. Assim, o `sample.json` não precisa conter os trechos de código dentro de uma propriedade `code_snippets`.
-
-Organize os arquivos por tipo de vulnerabilidade. O tipo pode estar no nome do arquivo ou no nome de uma subpasta. São aceitos arquivos de texto/código (`.txt`, `.md`, `.java`, `.js`, `.ts`, entre outros) e JSON (`.json`).
-
-Exemplo ilustrativo de organização:
-
-```text
-data/
-  code_snippets/
-    sql_injection.txt
-    xss.txt
-    hardcoded_credentials.txt
-```
-
-Os nomes acima são exemplos: use os nomes e arquivos que realmente existem no seu repositório. Para os tipos presentes em `sample.json`, a associação procura rótulos relacionados a:
-
-- SQL Injection: regra `java:S3649`, tags/mensagem de SQL injection.
-- XSS: regra `java:S5131`, tags/mensagem de XSS ou cross-site scripting.
-- Credenciais/senha hardcoded: regra `java:S2068`, tags/mensagem relacionadas a credenciais ou senha hardcoded.
-
-Também é possível agrupar por subpastas, por exemplo `data/code_snippets/xss/trecho.ts`. Se houver vários arquivos que correspondam ao mesmo tipo, o carregador usa o primeiro em ordem alfabética; prefira manter um snippet de referência claro por tipo ou subpasta.
-
-Para arquivos JSON, o carregador aceita uma string, uma lista de strings ou um objeto com uma propriedade como `code_snippet`, `snippet`, `code`, `source`, `content` ou `code_snippets`. O trecho deve ser código real relacionado ao tipo de vulnerabilidade, não apenas a descrição da regra.
-
-Valide sem chamar uma API:
+Execute o dry run:
 
 ```powershell
-python query.py --input-file data/sast_reports/sample.json --provider GPT --snippets-dir data/code_snippets --auto-snippets
+python query.py --provider GPT --only GT01.json --snippets-dir data/code_snippets
 ```
 
-Confira a linha `[RAG]` e confirme que `snippets=N/N` corresponde à quantidade de findings do relatório. Se aparecer uma contagem menor, confira se os nomes dos arquivos/subpastas correspondem aos tipos e se os arquivos contêm snippets legíveis.
-
-Depois de confirmar os snippets, faça a chamada real (pode consumir créditos):
+Quando solicitado, abra no GitHub o arquivo indicado pelo finding, copie o código correspondente e cole no terminal. Para encerrar cada trecho, digite `###` sozinho em uma nova linha. Repita para cada finding. Depois, execute novamente com `--execute` para chamar a LLM:
 
 ```powershell
-python query.py --input-file data/sast_reports/sample.json --provider GPT --snippets-dir data/code_snippets --auto-snippets --execute
+python query.py --provider GPT --only GT01.json --snippets-dir data/code_snippets --execute
 ```
 
-Compatibilidade: o carregador ainda aceita snippets embutidos no relatório e um arquivo com o mesmo nome-base do relatório (por exemplo, `data/code_snippets/sample.json`) como alternativas de fallback quando não encontra snippets por tipo.
+Substitua `GPT` por `Gemini`, `Kimi` ou `Claude` para usar outro provedor.
 
-### 5.6. Processar vários relatórios
-
-Dry run de todos os relatórios `GT*.json`:
-
-```powershell
-python query.py --provider Gemini --allreports
-```
-
-Geração real para todos os relatórios com um provedor:
+**Antes de executar todos os relatórios:** teste um relatório, confirme que a contagem mostra `snippets=N/N` e só então use:
 
 ```powershell
 python query.py --provider Gemini --allreports --execute
 ```
 
-Para todos os provedores:
-
-```powershell
-python query.py --provider all --allreports --execute
-```
-
-Antes de uma execução em lote, é recomendável validar um relatório individual, verificar os snippets e confirmar que a chave e a cota do provedor estão funcionando.
-
-### 5.7. Onde ficam os resultados
-
-Cada branch grava os arquivos por provedor:
-
-| Provedor | Pasta de saída |
-|---|---|
-| GPT | `results/GPT5.5/` |
-| Gemini | `results/Gemini/` |
-| Kimi | `results/Kimi/` |
-| Claude | `results/Claude/` |
-
-Exemplo: `results/GPT5.5/GT01_LLM.json`. Erros de geração real podem ser registrados em `*_ERROR.txt`. Por padrão, resultados existentes são preservados; use `--force` somente se quiser sobrescrever:
-
-```powershell
-python query.py --provider GPT --only GT01.json --snippets-dir data/code_snippets --auto-snippets --execute --force
-```
-
-### 5.8. Como interpretar o resumo
-
-- `[RAG]`: informa quantos findings foram lidos, quantos snippets foram carregados e quantos documentos foram recuperados.
-- `[DRY RUN]`: o prompt foi preparado; não houve geração real pela API.
-- `[OK] Saved ...`: arquivo de resultado novo foi gravado.
-- `[SKIP] Preserving existing result ...`: o arquivo já existia e foi preservado.
-- `[SKIP] ... API key ... is not configured`: não foi feita chamada porque a variável da chave está ausente.
-- `ERROR` com HTTP 429, saldo ou quota: verifique cobrança/limites do provedor antes de repetir.
-- `FINAL SUMMARY`: resumo agregado dos provedores e relatórios processados.
-
-O primeiro uso do ChromaDB pode inicializar o modelo local de embeddings e demorar mais. A recuperação RAG usa a regra, mensagem e tags do finding; o trecho de código é adicionado depois ao contexto enviado à LLM.
+Os resultados ficam em `results/`. Essa branch gera casos de teste; não executa os testes na aplicação.
 
 ## 6. Solução de problemas de API
 
